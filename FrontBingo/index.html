@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/lb.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Love-Bingo</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    // Debug Telegram Web App loading
+    window.addEventListener('load', function () {
+      console.log('Page loaded, checking Telegram Web App...');
+      console.log('window.Telegram:', !!window.Telegram);
+      console.log('window.Telegram.WebApp:', !!window.Telegram?.WebApp);
+      console.log('initData:', window.Telegram?.WebApp?.initData);
+
+      // Initialize Telegram WebApp if available
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+        console.log('Telegram WebApp initialized and expanded');
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>

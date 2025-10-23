@@ -1,0 +1,301 @@
+/* Bingo Balls Styling - Normal CSS */
+
+/* Recent Numbers Container */
+.recent-numbers-container {
+    position: relative;
+    border-radius: 1rem;
+    padding: 0.25rem;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.7), rgba(88, 28, 135, 0.7));
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(16px);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 4rem;
+    max-height: 4rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Recent Numbers Balls */
+.recent-ball {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    color: white;
+    font-size: 0.5rem;
+    font-weight: bold;
+    box-shadow: 0 8px 12px -3px rgba(0, 0, 0, 0.1);
+    margin-right: 0.25rem;
+    flex-shrink: 0;
+    min-width: 2rem;
+    max-width: 2rem;
+}
+
+/* Recent Ball Colors */
+.recent-ball.ball-b {
+    background-color: #3b82f6;
+    /* blue-500 */
+}
+
+.recent-ball.ball-i {
+    background-color: #7c3aed;
+    /* purple-600 */
+}
+
+.recent-ball.ball-n {
+    background-color: #10b981;
+    /* green-500 */
+}
+
+.recent-ball.ball-g {
+    background-color: #f97316;
+    /* orange-500 */
+}
+
+.recent-ball.ball-o {
+    background-color: #f97316;
+    /* orange-500 */
+}
+
+/* Cartela Letter Ball Colors - Matching Recent Balls */
+.cartela-letter.ball-b {
+    background-color: #3b82f6;
+    /* blue-500 - same as recent ball-b */
+}
+
+.cartela-letter.ball-i {
+    background-color: #7c3aed;
+    /* purple-600 - same as recent ball-i */
+}
+
+.cartela-letter.ball-n {
+    background-color: #10b981;
+    /* green-500 - same as recent ball-n */
+}
+
+.cartela-letter.ball-g {
+    background-color: #f97316;
+    /* orange-500 - same as recent ball-g */
+}
+
+.cartela-letter.ball-o {
+    background-color: #f97316;
+    /* orange-500 - same as recent ball-o */
+}
+
+/* BINGO Grid Number Buttons */
+.cartela-number-btn {
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    width: 100%;
+    outline: none;
+}
+
+.cartela-number-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.cartela-number-btn:active {
+    transform: scale(0.95);
+}
+
+/* Current Number Container */
+.current-number-container {
+    position: relative;
+    border-radius: 1rem;
+    padding: 0.5rem;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.7), rgba(88, 28, 135, 0.7));
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(16px);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Current Number Ball */
+.current-ball {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background-color: white;
+    border: 6px solid #facc15;
+    /* yellow-400 */
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.current-ball-text {
+    color: #581c87;
+    /* purple-700 */
+    font-weight: 800;
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Waiting State */
+.current-ball.waiting {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-color: #d1d5db;
+    /* gray-300 */
+}
+
+.current-ball.waiting .current-ball-text {
+    color: #374151;
+    /* gray-700 */
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+/* Sound Button */
+.sound-button {
+    flex-shrink: 0;
+    color: white;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sound-button.muted {
+    background-color: rgba(255, 255, 255, 0.05);
+    opacity: 0.7;
+}
+
+.sound-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile-First Responsive Design */
+.mobile-first-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.375rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    margin-right: 0.375rem;
+    height: calc(100vh - 160px);
+    max-height: 450px;
+}
+
+/* Mobile-first info bar */
+.mobile-info-bar {
+    margin-bottom: 1.5rem;
+    padding: 0.5rem;
+}
+
+.mobile-info-bar .wallet-box {
+    padding: 0.375rem;
+    font-size: 0.75rem;
+}
+
+.mobile-info-bar .wallet-label {
+    font-size: 0.625rem;
+    margin-bottom: 0.125rem;
+}
+
+.mobile-info-bar .wallet-value {
+    font-size: 0.75rem;
+    line-height: 1.1;
+}
+
+/* Mobile-first responsive adjustments */
+@media (max-width: 480px) {
+    .mobile-first-grid {
+        gap: 0.5rem;
+        padding: 0.25rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        margin-right: 0.25rem;
+        height: calc(100vh - 140px);
+        max-height: 400px;
+    }
+
+    .current-ball {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    .current-ball-text {
+        font-size: 1rem;
+    }
+
+    .recent-ball {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.45rem;
+        margin-right: 0.2rem;
+    }
+
+    .recent-numbers-container {
+        padding: 0.25rem;
+        min-height: 2rem;
+        max-height: 2rem;
+    }
+
+    .current-number-container {
+        padding: 0.25rem;
+    }
+
+    .mobile-info-bar {
+        margin-bottom: 1rem;
+        padding: 0.375rem;
+    }
+
+    .mobile-info-bar .wallet-box {
+        padding: 0.25rem;
+        font-size: 0.625rem;
+    }
+
+    .mobile-info-bar .wallet-label {
+        font-size: 0.5rem;
+        margin-bottom: 0.125rem;
+    }
+
+    .mobile-info-bar .wallet-value {
+        font-size: 0.625rem;
+        line-height: 1;
+    }
+}
+
+@media (max-width: 640px) {
+    .mobile-first-grid {
+        gap: 0.5rem;
+        padding: 0.375rem;
+        margin-top: 0.75rem;
+        margin-bottom: 0.75rem;
+        margin-right: 0.375rem;
+        height: calc(100vh - 160px);
+        max-height: 450px;
+    }
+
+    .current-ball {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .current-ball-text {
+        font-size: 1.125rem;
+    }
+
+    .recent-ball {
+        width: 1rem;
+        height: 1rem;
+        font-size: 0.45rem;
+    }
+}

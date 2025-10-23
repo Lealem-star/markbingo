@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Telegram Web App Test</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+
+<body>
+    <h1>Telegram Web App Test</h1>
+    <div id="status">Loading...</div>
+
+    <script>
+        function updateStatus() {
+            const status = document.getElementById('status');
+            const hasTelegram = !!window.Telegram;
+            const hasWebApp = !!window.Telegram?.WebApp;
+            const initData = window.Telegram?.WebApp?.initData;
+
+            status.innerHTML = `
+                <p>Has Telegram: ${hasTelegram}</p>
+                <p>Has WebApp: ${hasWebApp}</p>
+                <p>InitData: ${initData ? 'Present' : 'Missing'}</p>
+                <p>InitData Length: ${initData?.length || 0}</p>
+                <p>Platform: ${window.Telegram?.WebApp?.platform || 'Unknown'}</p>
+                <p>Version: ${window.Telegram?.WebApp?.version || 'Unknown'}</p>
+                <p>User Agent: ${navigator.userAgent}</p>
+                <p>Current URL: ${window.location.href}</p>
+            `;
+
+            if (initData) {
+                status.innerHTML += '<p style="color: green;">✅ Telegram Web App is working!</p>';
+            } else {
+                status.innerHTML += '<p style="color: red;">❌ Telegram Web App is NOT working</p>';
+            }
+        }
+
+        window.addEventListener('load', updateStatus);
+        setTimeout(updateStatus, 2000);
+    </script>
+</body>
+
+</html>

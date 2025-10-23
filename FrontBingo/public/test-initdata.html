@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test InitData Reading</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+
+<body>
+    <h1>InitData Reading Test</h1>
+    <div id="results"></div>
+
+    <script>
+        function testInitDataReading() {
+            const results = document.getElementById('results');
+
+            // Test the same logic as the main app
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const searchParams = new URLSearchParams(window.location.search);
+            const initData = window?.Telegram?.WebApp?.initData ||
+                hashParams.get('tgWebAppData') ||
+                searchParams.get('tgWebAppData');
+
+            results.innerHTML = `
+                <h2>Test Results:</h2>
+                <p><strong>WebApp initData:</strong> ${window?.Telegram?.WebApp?.initData ? 'Present' : 'Missing'}</p>
+                <p><strong>Hash initData:</strong> ${hashParams.get('tgWebAppData') ? 'Present' : 'Missing'}</p>
+                <p><strong>Search initData:</strong> ${searchParams.get('tgWebAppData') ? 'Present' : 'Missing'}</p>
+                <p><strong>Final initData:</strong> ${initData ? 'Present' : 'Missing'}</p>
+                <p><strong>InitData Length:</strong> ${initData?.length || 0}</p>
+                <p><strong>Current URL:</strong> ${window.location.href}</p>
+                <p><strong>Hash:</strong> ${window.location.hash}</p>
+                <p><strong>Search:</strong> ${window.location.search}</p>
+                
+                ${initData ? '<p style="color: green; font-size: 20px;">✅ SUCCESS! InitData is being read correctly!</p>' : '<p style="color: red; font-size: 20px;">❌ FAILED! InitData is not being read.</p>'}
+            `;
+        }
+
+        window.addEventListener('load', testInitDataReading);
+        setTimeout(testInitDataReading, 2000);
+    </script>
+</body>
+
+</html>
