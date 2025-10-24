@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
 const UserService = require('../services/userService');
 const WalletService = require('../services/walletService');
 const Game = require('../models/Game');
@@ -15,6 +16,18 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         const bot = new Telegraf(BOT_TOKEN);
         const isHttpsWebApp = typeof WEBAPP_URL === 'string' && WEBAPP_URL.startsWith('https://');
         const webAppUrl = WEBAPP_URL;
+
+        // JWT secret for generating tokens
+        const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_here_change_this';
+
+        // Function to generate JWT token for user
+        function generateUserToken(userId) {
+            return jwt.sign(
+                { sub: userId.toString() },
+                JWT_SECRET,
+                { expiresIn: '1h' }
+            );
+        }
 
         (async () => {
             try {
@@ -287,7 +300,6 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         });
 
         bot.command('balance', async (ctx) => {
-            F
             try {
                 const userId = String(ctx.from.id);
                 const userData = await UserService.getUserWithWallet(userId);
@@ -397,10 +409,10 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 const keyboard = {
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: '🎮 ETB 10', web_app: { url: webAppUrl } }],
-                            [{ text: '🎮 ETB 25', web_app: { url: webAppUrl } }],
-                            [{ text: '🎮 ETB 50', web_app: { url: webAppUrl } }],
-                            [{ text: '🎮 ETB 100', web_app: { url: webAppUrl } }],
+                            [{ text: '🎮 ETB 10', web_app: { url: `${webAppUrl}?stake=10` } }],
+                            [{ text: '🎮 ETB 25', web_app: { url: `${webAppUrl}?stake=25` } }],
+                            [{ text: '🎮 ETB 50', web_app: { url: `${webAppUrl}?stake=50` } }],
+                            [{ text: '🎮 ETB 100', web_app: { url: `${webAppUrl}?stake=100` } }],
                             [{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]
                         ]
                     }
@@ -818,11 +830,23 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                     }
 
                     try {
+                        // Get user and generate JWT token
+                        const user = await UserService.getUserByTelegramId(userId);
+                        if (!user) {
+                            ctx.reply('❌ User not found. Please try again.');
+                            return;
+                        }
+
+                        const token = generateUserToken(user._id);
+
                         // Create withdrawal request via API
                         const apiBase = process.env.API_URL || 'http://localhost:3001';
                         const response = await fetch(`${apiBase}/wallet/withdraw`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
                             body: JSON.stringify({
                                 amount: withdrawalState.amount,
                                 destination
@@ -838,19 +862,21 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                             for (const admin of adminUsers) {
                                 try {
                                     await bot.telegram.sendMessage(admin.telegramId,
-                                        `🆕 New Withdrawal Request\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${ctx.from.id}\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}\n📋 Reference: ${result.reference}\n\n⏰ Process within 24-48 hours`,
-                                        { reply_markup: { inline_keyboard: [[{ text: '✅ Approve', callback_data: `approve_wd_${result.withdrawalId}` }, { text: '❌ Deny', callback_data: `deny_wd_${result.withdrawalId}` }]] } }
+                                        `🆕 New Withdrawal Request\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${ctx.from.id}\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}\n📋 Transaction ID: ${result.transactionId}\n\n⏰ Process within 24-48 hours`,
+                                        { reply_markup: { inline_keyboard: [[{ text: '✅ Approve', callback_data: `approve_wd_${result.transactionId}` }, { text: '❌ Deny', callback_data: `deny_wd_${result.transactionId}` }]] } }
                                     );
                                 } catch (e) { console.log('Failed to notify admin:', e?.message); }
                             }
 
-                            ctx.reply(`✅ Withdrawal Request Submitted!\n\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}\n📋 Reference: ${result.reference}\n\n⏰ Processing: 24-48 hours\n📞 Contact support for updates`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+                            ctx.reply(`✅ Withdrawal Request Submitted!\n\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}\n📋 Transaction ID: ${result.transactionId}\n\n⏰ Processing: 24-48 hours\n📞 Contact support for updates`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
                         } else {
                             const error = await response.json();
                             let errorMsg = '❌ Withdrawal request failed.';
-                            if (error.error === 'INSUFFICIENT_BALANCE') errorMsg = '❌ Insufficient balance in main wallet.';
-                            else if (error.error === 'MINIMUM_WITHDRAWAL_50') errorMsg = '❌ Minimum withdrawal is ETB 50.';
-                            else if (error.error === 'MAXIMUM_WITHDRAWAL_10000') errorMsg = '❌ Maximum withdrawal is ETB 10,000.';
+                            if (error.error === 'INSUFFICIENT_FUNDS') errorMsg = '❌ Insufficient balance in main wallet.';
+                            else if (error.error === 'INVALID_AMOUNT') errorMsg = '❌ Invalid amount. Minimum is ETB 50, maximum is ETB 10,000.';
+                            else if (error.error === 'DESTINATION_REQUIRED') errorMsg = '❌ Destination information is required.';
+                            else if (error.error === 'USER_NOT_FOUND') errorMsg = '❌ User not found. Please try again.';
+                            else if (error.error === 'INTERNAL_ERROR') errorMsg = '❌ Internal server error. Please try again later.';
 
                             ctx.reply(errorMsg, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
                         }
