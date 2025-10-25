@@ -295,47 +295,54 @@ function AppContent() {
 
   // Add loading state while WebSocket is connecting - but only if we're trying to connect to a specific stake
   // Don't block the main game page if no stake is selected
+  // Also add a timeout to prevent infinite loading
   if (!connected && selectedStake && currentPage !== 'game') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="relative mb-6 mx-auto w-fit">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto">
-              <img
-                src="/lb.png"
-                alt="Love Bingo Logo"
-                className="w-full h-full object-contain animate-pulse"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 border-3 border-pink-400/20 border-t-pink-400 rounded-full animate-spin"></div>
+    // If we've been trying to connect for more than 15 seconds, allow the app to continue
+    if (connectionTimeout) {
+      console.log('⚠️ WebSocket connection timeout - allowing app to continue without WebSocket');
+      // Don't return the loading screen, let the app continue
+    } else {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 flex items-center justify-center">
+          <div className="text-center text-white">
+            <div className="relative mb-6 mx-auto w-fit">
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto">
+                <img
+                  src="/lb.png"
+                  alt="Love Bingo Logo"
+                  className="w-full h-full object-contain animate-pulse"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 border-3 border-pink-400/20 border-t-pink-400 rounded-full animate-spin"></div>
+                </div>
               </div>
             </div>
+            <div className="text-lg font-semibold mb-3">
+              {connectionTimeout ? 'Connection taking longer than expected...' : 'Connecting to game...'}
+            </div>
+            <div className="text-sm text-white/60 mb-4">
+              {connectionTimeout
+                ? 'Please check your internet connection and try again'
+                : 'Please wait while we establish your connection'
+              }
+            </div>
+            <div className="flex justify-center space-x-2">
+              <div className="w-2 h-2 bg-pink-400/70 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-pink-400/70 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-pink-400/70 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+            {connectionTimeout && (
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-colors"
+              >
+                Retry Connection
+              </button>
+            )}
           </div>
-          <div className="text-lg font-semibold mb-3">
-            {connectionTimeout ? 'Connection taking longer than expected...' : 'Connecting to game...'}
-          </div>
-          <div className="text-sm text-white/60 mb-4">
-            {connectionTimeout
-              ? 'Please check your internet connection and try again'
-              : 'Please wait while we establish your connection'
-            }
-          </div>
-          <div className="flex justify-center space-x-2">
-            <div className="w-2 h-2 bg-pink-400/70 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-pink-400/70 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-pink-400/70 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-          </div>
-          {connectionTimeout && (
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-colors"
-            >
-              Retry Connection
-            </button>
-          )}
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   // Safety check - ensure we always have content to render

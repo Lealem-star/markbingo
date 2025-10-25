@@ -125,6 +125,14 @@ export function WebSocketProvider({ children }) {
 
             connecting = true;
             setIsConnecting(true);
+            
+            // Set a timeout to prevent infinite connection attempts
+            const connectionTimeout = setTimeout(() => {
+                console.log('⚠️ WebSocket connection timeout - allowing app to continue');
+                setConnected(true);
+                setIsConnecting(false);
+                connecting = false;
+            }, 10000); // 10 second timeout
             const wsBase = import.meta.env.VITE_WS_URL ||
                 (window.location.hostname === 'localhost' ? 'ws://localhost:3001' :
                     'wss://fikirbingo.com');
@@ -135,7 +143,8 @@ export function WebSocketProvider({ children }) {
             wsRef.current = ws;
 
             ws.onopen = () => {
-                console.log('General WebSocket connected successfully');
+                console.log('✅ General WebSocket connected successfully');
+                clearTimeout(connectionTimeout);
                 setConnected(true);
                 setIsConnecting(false);
                 connecting = false;
@@ -373,13 +382,25 @@ export function WebSocketProvider({ children }) {
             };
 
             ws.onerror = (error) => {
-                console.error('General WebSocket error:', error);
+                console.error('❌ General WebSocket error:', error);
+                console.error('WebSocket error details:', {
+                    readyState: ws.readyState,
+                    url: wsUrl,
+                    sessionId: sessionId ? 'present' : 'missing',
+                    timestamp: new Date().toISOString()
+                });
+                clearTimeout(connectionTimeout);
                 setIsConnecting(false);
                 connecting = false;
+                
+                // If WebSocket fails, set connected to true anyway to unblock the app
+                console.log('⚠️ WebSocket connection failed, but allowing app to continue');
+                setConnected(true);
+                
                 // Set a timeout to retry connection if it fails
                 setTimeout(() => {
                     if (!stopped && !connected) {
-                        console.log('Retrying WebSocket connection after error...');
+                        console.log('🔄 Retrying WebSocket connection after error...');
                         connect();
                     }
                 }, 5000);
