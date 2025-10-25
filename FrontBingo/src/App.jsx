@@ -312,27 +312,22 @@ function AppContent() {
             </div>
           </div>
           <div className="text-lg font-semibold mb-3">
-            {connectionTimeout ? 'Connection taking longer than expected...' : 'Connecting to game...'}
+            Connecting to game server...
           </div>
           <div className="text-sm text-white/60 mb-4">
-            {connectionTimeout
-              ? 'Please check your internet connection and try again'
-              : 'Please wait while we establish your connection'
-            }
+            Please wait while we establish your connection
           </div>
           <div className="flex justify-center space-x-2">
             <div className="w-2 h-2 bg-pink-400/70 rounded-full animate-bounce"></div>
             <div className="w-2 h-2 bg-pink-400/70 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
             <div className="w-2 h-2 bg-pink-400/70 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
           </div>
-          {connectionTimeout && (
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-colors"
-            >
-              Retry Connection
-            </button>
-          )}
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-colors"
+          >
+            Retry Connection
+          </button>
         </div>
       </div>
     );

@@ -60,12 +60,6 @@ export function AuthProvider({ children }) {
     const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
-        // Set a timeout to prevent infinite loading
-        const timeout = setTimeout(() => {
-            console.log('⚠️ AuthProvider timeout - forcing loading to false');
-            setIsLoading(false);
-        }, 15000); // 15 second timeout
-
         (async () => {
             // Check for Telegram WebApp user data first (with retry mechanism)
             for (let attempt = 0; attempt < 5; attempt++) {
@@ -305,10 +299,6 @@ export function AuthProvider({ children }) {
                 setIsLoading(false);
             }
         })();
-
-        return () => {
-            clearTimeout(timeout);
-        };
     }, []); // Remove sessionId and user dependencies to prevent infinite loops
 
     const value = useMemo(() => ({ sessionId, user, setSessionId, isLoading }), [sessionId, user, isLoading]);
@@ -354,22 +344,7 @@ export function AuthProvider({ children }) {
     if (!sessionId || !user) {
         console.log('AuthProvider: No valid session - checking for fallback options');
         
-        // Check if we're in development mode or have cached data
-        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
-        const hasCachedSession = localStorage.getItem('sessionId');
-        const hasCachedUser = localStorage.getItem('user');
-        
-        if (isDevelopment || (hasCachedSession && hasCachedUser)) {
-            console.log('AuthProvider: Using fallback authentication for development or cached data');
-            // Allow the app to load with cached data
-            return <AuthContext.Provider value={{ sessionId: hasCachedSession, user: hasCachedUser ? JSON.parse(hasCachedUser) : null, setSessionId, isLoading: false }}>{children}</AuthContext.Provider>;
-        }
-        
-        // Temporary bypass for testing - allow app to load even without authentication
-        console.log('AuthProvider: Using temporary bypass for testing');
-        return <AuthContext.Provider value={{ sessionId: 'test-session', user: { id: 'test-user', firstName: 'Test', lastName: 'User' }, setSessionId, isLoading: false }}>{children}</AuthContext.Provider>;
-        
-        console.log('AuthProvider: Showing access restricted screen');
+        console.log('AuthProvider: Showing access restricted screen - Authentication Required');
         // Get debug information
         const hasTelegram = !!window?.Telegram;
         const hasWebApp = !!window?.Telegram?.WebApp;

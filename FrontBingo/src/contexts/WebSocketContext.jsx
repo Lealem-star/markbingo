@@ -8,8 +8,8 @@ export function WebSocketProvider({ children }) {
     const wsRef = useRef(null);
     const [connected, setConnected] = useState(false);
     
-    // Add fallback for when sessionId is not available
-    const safeSessionId = sessionId || 'fallback-session';
+    // Require real sessionId - no fallback allowed
+    const safeSessionId = sessionId;
     const [gameState, setGameState] = useState({
         phase: 'waiting',
         gameId: null,
@@ -126,13 +126,7 @@ export function WebSocketProvider({ children }) {
             connecting = true;
             setIsConnecting(true);
             
-            // Set a timeout to prevent infinite connection attempts
-            const connectionTimeout = setTimeout(() => {
-                console.log('⚠️ WebSocket connection timeout - allowing app to continue');
-                setConnected(true);
-                setIsConnecting(false);
-                connecting = false;
-            }, 10000); // 10 second timeout
+            // No timeout - require real WebSocket connection
             const wsBase = import.meta.env.VITE_WS_URL ||
                 (window.location.hostname === 'localhost' ? 'ws://localhost:3001' :
                     'wss://fikirbingo.com');
@@ -144,7 +138,6 @@ export function WebSocketProvider({ children }) {
 
             ws.onopen = () => {
                 console.log('✅ General WebSocket connected successfully');
-                clearTimeout(connectionTimeout);
                 setConnected(true);
                 setIsConnecting(false);
                 connecting = false;
@@ -389,13 +382,11 @@ export function WebSocketProvider({ children }) {
                     sessionId: sessionId ? 'present' : 'missing',
                     timestamp: new Date().toISOString()
                 });
-                clearTimeout(connectionTimeout);
                 setIsConnecting(false);
                 connecting = false;
                 
-                // If WebSocket fails, set connected to true anyway to unblock the app
-                console.log('⚠️ WebSocket connection failed, but allowing app to continue');
-                setConnected(true);
+                // WebSocket failed - app will show connection error
+                console.log('⚠️ WebSocket connection failed - app requires real connection');
                 
                 // Set a timeout to retry connection if it fails
                 setTimeout(() => {
