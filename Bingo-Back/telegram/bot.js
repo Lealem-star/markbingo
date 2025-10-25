@@ -547,7 +547,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
 
             try {
                 const apiBase = process.env.API_URL || 'http://localhost:3001';
-                const response = await fetch(`${apiBase}/admin/withdrawals/${withdrawalId}/approve`, {
+                const response = await fetch(`${apiBase}/admin/internal/withdrawals/${withdrawalId}/approve`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -572,7 +572,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
 
             try {
                 const apiBase = process.env.API_URL || 'http://localhost:3001';
-                const response = await fetch(`${apiBase}/admin/withdrawals/${withdrawalId}/deny`, {
+                const response = await fetch(`${apiBase}/admin/internal/withdrawals/${withdrawalId}/deny`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });

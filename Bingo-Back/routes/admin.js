@@ -150,6 +150,73 @@ router.post('/withdrawals/:id/deny', adminMiddleware, async (req, res) => {
     }
 });
 
+// Internal admin endpoints (no auth required for bot calls)
+// POST /admin/internal/withdrawals/:id/approve
+router.post('/internal/withdrawals/:id/approve', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const transaction = await Transaction.findById(id);
+
+        if (!transaction) {
+            return res.status(404).json({ error: 'TRANSACTION_NOT_FOUND' });
+        }
+
+        if (transaction.type !== 'withdrawal' || transaction.status !== 'pending') {
+            return res.status(400).json({ error: 'INVALID_TRANSACTION_STATUS' });
+        }
+
+        // Deduct from user's main wallet
+        const WalletService = require('../services/walletService');
+        const result = await WalletService.processWithdrawalApproval(transaction.userId, transaction.amount);
+
+        if (!result.success) {
+            return res.status(400).json({ error: result.error });
+        }
+
+        // Update transaction status
+        transaction.status = 'completed';
+        transaction.processedAt = new Date();
+        await transaction.save();
+
+        res.json({
+            success: true,
+            message: 'Withdrawal approved successfully'
+        });
+    } catch (error) {
+        console.error('Internal withdrawal approval error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
+// POST /admin/internal/withdrawals/:id/deny
+router.post('/internal/withdrawals/:id/deny', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const transaction = await Transaction.findById(id);
+
+        if (!transaction) {
+            return res.status(404).json({ error: 'TRANSACTION_NOT_FOUND' });
+        }
+
+        if (transaction.type !== 'withdrawal' || transaction.status !== 'pending') {
+            return res.status(400).json({ error: 'INVALID_TRANSACTION_STATUS' });
+        }
+
+        // Update transaction status
+        transaction.status = 'cancelled';
+        transaction.processedAt = new Date();
+        await transaction.save();
+
+        res.json({
+            success: true,
+            message: 'Withdrawal denied successfully'
+        });
+    } catch (error) {
+        console.error('Internal withdrawal denial error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
 // GET /admin/withdrawals
 router.get('/withdrawals', adminMiddleware, async (req, res) => {
     try {

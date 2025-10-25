@@ -181,39 +181,47 @@ export function AuthProvider({ children }) {
                     }
                 }
             }
-            // Wait a bit for Telegram WebApp to initialize
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Wait longer for Telegram WebApp to initialize (bot context can be slow)
+            // Retry up to 3 times with increasing delays
+            let initData = null;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                // Increasing delay: 2s, 3s, 5s
+                await new Promise(resolve => setTimeout(resolve, attempt === 0 ? 2000 : attempt === 1 ? 3000 : 5000));
 
-            // Support both SDK initData and URL param fallback (tgWebAppData)
-            // Check URL hash first, then search params, then WebApp initData
-            const hashParams = new URLSearchParams(window.location.hash.substring(1));
-            const searchParams = new URLSearchParams(window.location.search);
-            const initData = window?.Telegram?.WebApp?.initData ||
-                hashParams.get('tgWebAppData') ||
-                searchParams.get('tgWebAppData');
+                // Support both SDK initData and URL param fallback (tgWebAppData)
+                // Check URL hash first, then search params, then WebApp initData
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const searchParams = new URLSearchParams(window.location.search);
+                initData = window?.Telegram?.WebApp?.initData ||
+                    hashParams.get('tgWebAppData') ||
+                    searchParams.get('tgWebAppData');
 
-            console.log('Telegram WebApp check:', {
-                hasTelegram: !!window?.Telegram,
-                hasWebApp: !!window?.Telegram?.WebApp,
+                console.log(`Telegram WebApp check (attempt ${attempt + 1}/3):`, {
+                    hasTelegram: !!window?.Telegram,
+                    hasWebApp: !!window?.Telegram?.WebApp,
+                    initData: initData ? 'present' : 'missing',
+                    initDataLength: initData?.length || 0,
+                    urlParams: window.location.search,
+                    urlHash: window.location.hash,
+                    initDataFromWebApp: window?.Telegram?.WebApp?.initData,
+                    initDataFromHash: hashParams.get('tgWebAppData'),
+                    initDataFromSearch: searchParams.get('tgWebAppData'),
+                    isExpanded: window?.Telegram?.WebApp?.isExpanded,
+                    version: window?.Telegram?.WebApp?.version,
+                    userAgent: navigator.userAgent,
+                    isTelegramWebApp: window?.Telegram?.WebApp?.platform === 'web'
+                });
+
+                if (initData) {
+                    console.log('✅ Telegram initData found on attempt', attempt + 1);
+                    break;
+                }
+            }
+
+            console.log('Final initData check result:', {
                 initData: initData ? 'present' : 'missing',
-                initDataLength: initData?.length || 0,
-                urlParams: window.location.search,
-                urlHash: window.location.hash,
-                initDataFromWebApp: window?.Telegram?.WebApp?.initData,
-                initDataFromHash: hashParams.get('tgWebAppData'),
-                initDataFromSearch: searchParams.get('tgWebAppData'),
-                fullInitData: initData,
-                telegramWebApp: window?.Telegram?.WebApp,
-                isExpanded: window?.Telegram?.WebApp?.isExpanded,
-                version: window?.Telegram?.WebApp?.version,
-                userAgent: navigator.userAgent,
-                isTelegramWebApp: window?.Telegram?.WebApp?.platform === 'web'
-            });
-
-            console.log('initData check result:', {
-                initData: initData,
                 initDataType: typeof initData,
-                initDataLength: initData?.length,
+                initDataLength: initData?.length || 0,
                 isEmpty: !initData,
                 isFalsy: !initData
             });
@@ -221,13 +229,11 @@ export function AuthProvider({ children }) {
             // No bypasses - require proper Telegram authentication
 
             if (!initData) {
-                console.error('No Telegram initData available - this should only happen when not accessed through Telegram');
+                console.error('❌ No Telegram initData available after all attempts');
                 console.error('Debug info:', {
                     windowTelegram: !!window?.Telegram,
                     windowWebApp: !!window?.Telegram?.WebApp,
                     initDataFromWebApp: window?.Telegram?.WebApp?.initData,
-                    initDataFromHash: hashParams.get('tgWebAppData'),
-                    initDataFromSearch: searchParams.get('tgWebAppData'),
                     currentURL: window.location.href,
                     urlHash: window.location.hash,
                     urlSearch: window.location.search,
@@ -235,8 +241,23 @@ export function AuthProvider({ children }) {
                     userAgent: navigator.userAgent
                 });
 
-                // No hash bypasses - require proper Telegram WebApp initData
-                // No test sessions - require real Telegram authentication
+                // Check if we have a valid cached session to fall back on
+                if (sessionId && user) {
+                    console.log('⚠️ No initData but have cached session - attempting to use cached session');
+                    // Try to fetch profile to validate the cached session
+                    try {
+                        const prof = await fetchProfileWithSession(sessionId);
+                        if (prof?.user) {
+                            console.log('✅ Cached session is valid - using cached session');
+                            setIsLoading(false);
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('❌ Cached session validation failed:', error);
+                    }
+                }
+
+                // No valid cache - require proper Telegram WebApp initData
                 console.log('No Telegram initData found - authentication required');
                 setSessionId(null);
                 setUser(null);
@@ -315,6 +336,13 @@ export function AuthProvider({ children }) {
     // Show error message if no valid Telegram data
     if (!sessionId || !user) {
         console.log('AuthProvider: Showing access restricted screen');
+        // Get debug information
+        const hasTelegram = !!window?.Telegram;
+        const hasWebApp = !!window?.Telegram?.WebApp;
+        const hasInitData = !!window?.Telegram?.WebApp?.initData;
+        const urlParams = new URLSearchParams(window.location.search);
+        const stake = urlParams.get('stake');
+
         return (
             <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto p-6">
@@ -323,7 +351,7 @@ export function AuthProvider({ children }) {
                     <p className="text-white/80 mb-6">
                         This application can only be accessed through Telegram. Please open this app from within the Telegram bot.
                     </p>
-                    <div className="bg-white/10 rounded-lg p-4">
+                    <div className="bg-white/10 rounded-lg p-4 mb-4">
                         <p className="text-white text-sm">
                             <strong>How to access:</strong><br />
                             1. Open the Love Bingo bot in Telegram<br />
@@ -331,7 +359,23 @@ export function AuthProvider({ children }) {
                             3. The web app will open automatically
                         </p>
                     </div>
-                    {/* Removed debug info panel */}
+
+                    {/* Debug Information */}
+                    <details className="mt-4 text-left">
+                        <summary className="text-white/60 text-sm cursor-pointer mb-2">🔍 Debug Information (click to expand)</summary>
+                        <div className="bg-black/30 rounded-lg p-3 mt-2 text-xs text-white/80 space-y-1">
+                            <div><strong>Telegram SDK:</strong> {hasTelegram ? '✅ Available' : '❌ Not found'}</div>
+                            <div><strong>WebApp API:</strong> {hasWebApp ? '✅ Available' : '❌ Not found'}</div>
+                            <div><strong>Init Data:</strong> {hasInitData ? '✅ Available' : '❌ Missing'}</div>
+                            <div><strong>Stake Parameter:</strong> {stake ? `✅ ${stake}` : '❌ Not provided'}</div>
+                            <div><strong>User Agent:</strong> {navigator.userAgent.includes('Telegram') ? '✅ Telegram' : '❌ Not Telegram'}</div>
+                            <div><strong>URL:</strong> {window.location.href}</div>
+                            <div className="mt-2 text-yellow-300">
+                                💡 If you see this screen, it means the Telegram WebApp SDK did not initialize properly.
+                                Try refreshing the page or reopening from the Telegram bot.
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
         );
