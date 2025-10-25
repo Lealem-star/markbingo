@@ -67,30 +67,49 @@ function AppContent() {
       return 'cartela-selection';
     }
 
+    // If we have a stake but WebSocket not connected yet, still go to cartela selection
+    if (selectedStake && !connected) {
+      console.log('→ Routing to cartela-selection (stake selected, WebSocket not connected yet)');
+      return 'cartela-selection';
+    }
+
     // Default: go to main game page (stake selection)
     console.log('→ Routing to game (default - stake selection)');
     return 'game';
   };
 
-  // Handle query parameter routing for admin panel
+  // Handle query parameter routing for admin panel and stake
   useEffect(() => {
-    const checkAdminParam = () => {
+    const checkUrlParams = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const isAdmin = urlParams.get('admin') === 'true';
-      console.log('Admin parameter check:', isAdmin); // Debug log
+      const stakeParam = urlParams.get('stake');
+
+      console.log('URL parameters check:', { isAdmin, stakeParam }); // Debug log
+
       if (isAdmin) {
         setCurrentPage('admin');
       } else {
         setCurrentPage('game');
+
+        // If stake parameter is provided, store it
+        if (stakeParam) {
+          const stakeValue = parseInt(stakeParam);
+          if (stakeValue && [10, 25, 50, 100].includes(stakeValue)) {
+            console.log('Setting stake from URL parameter:', stakeValue);
+            setSelectedStake(stakeValue);
+            localStorage.setItem('selectedStake', stakeValue.toString());
+          }
+        }
       }
     };
 
-    // Check initial admin parameter
-    checkAdminParam();
+    // Check initial URL parameters
+    checkUrlParams();
 
     // Listen for URL changes (including query parameter changes)
     const handleUrlChange = () => {
-      checkAdminParam();
+      checkUrlParams();
     };
 
     window.addEventListener('popstate', handleUrlChange);
