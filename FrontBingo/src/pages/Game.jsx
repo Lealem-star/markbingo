@@ -182,8 +182,24 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
 
 
 
-    // If no stake selected, show initial screen
-    return null;
+    // If stake is selected, this component shouldn't be rendered
+    // The parent should route to cartela-selection instead
+    console.log('Game component rendered with selectedStake:', selectedStake, '- this should not happen');
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 flex items-center justify-center">
+            <div className="text-center text-white">
+                <div className="text-6xl mb-4">⚠️</div>
+                <h1 className="text-2xl font-bold mb-4">Navigation Error</h1>
+                <p className="text-white/80 mb-6">You have a stake selected but are on the wrong page.</p>
+                <button 
+                    onClick={() => onNavigate?.('cartela-selection')} 
+                    className="px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-colors"
+                >
+                    Go to Cartella Selection
+                </button>
+            </div>
+        </div>
+    );
 
 
 }

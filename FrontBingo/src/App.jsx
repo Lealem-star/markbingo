@@ -230,9 +230,26 @@ function AppContent() {
     }
   };
 
+  // Fallback to ensure something always renders
+  const pageContent = renderPage();
+
   return (
     <div className="App">
-      {renderPage()}
+      {pageContent || (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 flex items-center justify-center">
+          <div className="text-center text-white">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold mb-4">Loading Error</h1>
+            <p className="text-white/80 mb-6">Something went wrong. Please refresh the page.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Debug Panel - Temporary for debugging */}
       {true && (
@@ -244,6 +261,7 @@ function AppContent() {
           <div>WS Connected: {connected ? 'yes' : 'no'}</div>
           <div>Game Phase: {gameState.phase}</div>
           <div>Game ID: {gameState.gameId || 'none'}</div>
+          <div>URL: {window.location.href}</div>
         </div>
       )}
 
