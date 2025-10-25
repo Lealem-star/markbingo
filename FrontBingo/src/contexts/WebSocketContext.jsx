@@ -7,6 +7,9 @@ export function WebSocketProvider({ children }) {
     const { sessionId } = useAuth();
     const wsRef = useRef(null);
     const [connected, setConnected] = useState(false);
+    
+    // Add fallback for when sessionId is not available
+    const safeSessionId = sessionId || 'fallback-session';
     const [gameState, setGameState] = useState({
         phase: 'waiting',
         gameId: null,
@@ -82,7 +85,7 @@ export function WebSocketProvider({ children }) {
 
     // Connect to WebSocket immediately when user is authenticated (for general connection)
     const connectGeneral = useCallback(() => {
-        if (!sessionId) {
+        if (!safeSessionId) {
             console.log('WebSocket general connection skipped - missing sessionId');
             return;
         }
@@ -125,7 +128,7 @@ export function WebSocketProvider({ children }) {
             const wsBase = import.meta.env.VITE_WS_URL ||
                 (window.location.hostname === 'localhost' ? 'ws://localhost:3001' :
                     'wss://fikirbingo.com');
-            const wsUrl = `${wsBase}/ws?token=${sessionId}`;
+            const wsUrl = `${wsBase}/ws?token=${safeSessionId}`;
             console.log('Connecting to general WebSocket:', wsUrl);
 
             const ws = new WebSocket(wsUrl);
@@ -395,12 +398,12 @@ export function WebSocketProvider({ children }) {
                 wsRef.current = null;
             }
         };
-    }, [sessionId]);
+    }, [safeSessionId]);
 
     // Connect to stake by joining the room on the existing unified socket
     const connectToStake = useCallback((stake) => {
-        if (!sessionId || !stake) {
-            console.log('WebSocket join skipped - missing sessionId or stake:', { sessionId, stake });
+        if (!safeSessionId || !stake) {
+            console.log('WebSocket join skipped - missing sessionId or stake:', { sessionId: safeSessionId, stake });
             return;
         }
 
@@ -441,7 +444,7 @@ export function WebSocketProvider({ children }) {
         } else {
             console.log('Socket not open; will auto-join on connect');
         }
-    }, [sessionId, currentStake]);
+    }, [safeSessionId, currentStake]);
 
     // Debug connection state
     useEffect(() => {
