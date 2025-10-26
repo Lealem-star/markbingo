@@ -16,6 +16,13 @@ async function verifyTelegram(initData) {
 
             'https://fikirbingo.com');
 
+    console.log('🔐 Verifying Telegram auth:', {
+        apiBase,
+        hasInitData: !!initData,
+        initDataLength: initData?.length,
+        initDataPreview: initData ? initData.substring(0, 100) : 'NO_DATA'
+    });
+
     const res = await fetch(`${apiBase}/auth/telegram/verify`, {
 
         method: 'POST',
@@ -26,9 +33,23 @@ async function verifyTelegram(initData) {
 
     });
 
-    if (!res.ok) throw new Error('verify_failed');
+    console.log('📡 Auth response status:', res.status, res.statusText);
 
-    return res.json();
+    if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ Auth verification failed:', { status: res.status, error: errorText });
+        throw new Error('verify_failed');
+    }
+
+    const result = await res.json();
+    console.log('✅ Auth verification result:', { 
+        hasSessionId: !!result.sessionId, 
+        hasUser: !!result.user,
+        userId: result.user?.id,
+        sessionIdPreview: result.sessionId ? result.sessionId.substring(0, 50) : 'NO_SESSION'
+    });
+
+    return result;
 
 }
 
@@ -96,14 +117,34 @@ export function AuthProvider({ children }) {
 
             // If Telegram initData is present, ALWAYS re-verify and refresh session to avoid stale local sessions
             try {
+                console.log('🔍 Checking for initData early...', {
+                    hasTelegram: !!window?.Telegram,
+                    hasWebApp: !!window?.Telegram?.WebApp,
+                    initDataFromWebApp: window?.Telegram?.WebApp?.initData ? 'PRESENT' : 'MISSING',
+                    hash: window.location.hash,
+                    search: window.location.search,
+                    url: window.location.href
+                });
+                
                 const hashParamsEarly = new URLSearchParams(window.location.hash.substring(1));
                 const searchParamsEarly = new URLSearchParams(window.location.search);
                 const initDataEarly = window?.Telegram?.WebApp?.initData ||
                     hashParamsEarly.get('tgWebAppData') ||
                     searchParamsEarly.get('tgWebAppData');
 
+                console.log('🔍 InitData sources checked:', {
+                    fromWebApp: !!window?.Telegram?.WebApp?.initData,
+                    fromHash: !!hashParamsEarly.get('tgWebAppData'),
+                    fromSearch: !!searchParamsEarly.get('tgWebAppData'),
+                    finalResult: !!initDataEarly
+                });
+
                 if (initDataEarly) {
-                    console.log('Fresh Telegram initData detected, refreshing session...');
+                    console.log('✅ Fresh Telegram initData detected, refreshing session...', {
+                        initDataLength: initDataEarly.length,
+                        source: window?.Telegram?.WebApp?.initData ? 'WebApp' : 
+                                hashParamsEarly.get('tgWebAppData') ? 'Hash' : 'Search'
+                    });
                     const out = await verifyTelegram(initDataEarly);
                     // If switching accounts, replace cached session/user entirely
                     const prevUser = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } })();

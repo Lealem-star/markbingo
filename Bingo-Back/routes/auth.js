@@ -94,6 +94,14 @@ router.post('/telegram-auth', async (req, res) => {
 // POST /auth/telegram/verify
 router.post('/telegram/verify', async (req, res) => {
     try {
+        console.log('🔐 /auth/telegram/verify called', {
+            hasBody: !!req.body,
+            hasInitData: !!req.body?.initData,
+            initDataLength: req.body?.initData?.length,
+            BOT_TOKEN_SET: !!BOT_TOKEN,
+            JWT_SECRET_SET: !!JWT_SECRET
+        });
+
         const { initData } = req.body;
         let user = null;
         let userId = null;
@@ -101,7 +109,13 @@ router.post('/telegram/verify', async (req, res) => {
         if (initData) {
             // Telegram verification
             const telegramUser = verifyTelegramInitData(initData);
+            console.log('🔐 Telegram verification result:', {
+                hasTelegramUser: !!telegramUser,
+                telegramId: telegramUser?.id
+            });
+            
             if (!telegramUser) {
+                console.error('❌ INVALID_TELEGRAM_DATA - verification failed');
                 return res.status(400).json({ error: 'INVALID_TELEGRAM_DATA' });
             }
             userId = String(telegramUser.id);
@@ -163,7 +177,7 @@ router.post('/telegram/verify', async (req, res) => {
             tokenPreview: token.substring(0, 50) + '...'
         });
 
-        res.json({
+        const response = {
             token,
             sessionId: token,
             user: {
@@ -175,7 +189,16 @@ router.post('/telegram/verify', async (req, res) => {
                 lastName: user.lastName,
                 isRegistered: user.isRegistered
             }
+        };
+
+        console.log('✅ Sending auth response:', {
+            hasToken: !!response.token,
+            hasSessionId: !!response.sessionId,
+            userId: response.user.id,
+            username: response.user.name
         });
+
+        res.json(response);
     } catch (error) {
         console.error('Auth error:', error);
         res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
