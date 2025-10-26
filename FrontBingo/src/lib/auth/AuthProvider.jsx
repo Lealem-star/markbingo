@@ -76,10 +76,38 @@ export function AuthProvider({ children }) {
                 try {
                     const urlParams = new URLSearchParams(window.location.search);
                     const stake = urlParams.get('stake');
-                    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+
+                    // Try multiple ways to get Telegram user data
+                    let tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+                    let initData = window.Telegram?.WebApp?.initData;
+
+                    console.log(`🔍 Auth attempt ${attempt + 1}/5:`, {
+                        hasTelegram: !!window.Telegram,
+                        hasWebApp: !!window.Telegram?.WebApp,
+                        hasInitData: !!initData,
+                        initDataLength: initData?.length || 0,
+                        hasInitDataUnsafe: !!window.Telegram?.WebApp?.initDataUnsafe,
+                        hasUser: !!tgUser,
+                        stake,
+                        timestamp: new Date().toISOString()
+                    });
+
+                    // If we have initData but no user, try to parse it
+                    if (initData && !tgUser) {
+                        try {
+                            const initDataParams = new URLSearchParams(initData);
+                            const userParam = initDataParams.get('user');
+                            if (userParam) {
+                                tgUser = JSON.parse(decodeURIComponent(userParam));
+                                console.log('✅ Parsed user from initData:', tgUser);
+                            }
+                        } catch (parseError) {
+                            console.warn('Failed to parse initData user:', parseError);
+                        }
+                    }
 
                     if (tgUser) {
-                        console.log('Telegram WebApp user detected:', { telegramId: tgUser.id, stake, tgUser, attempt });
+                        console.log('✅ Telegram WebApp user detected:', { telegramId: tgUser.id, stake, tgUser, attempt });
                         const authResult = await authenticateTelegramUser(tgUser, stake);
                         if (authResult.success) {
                             setSessionId(authResult.token);
@@ -105,7 +133,7 @@ export function AuthProvider({ children }) {
                         }
                     } else if (attempt < 4) {
                         // Wait a bit for Telegram WebApp to initialize
-                        console.log(`Telegram WebApp not ready, waiting... (attempt ${attempt + 1}/5)`);
+                        console.log(`⏳ Telegram WebApp not ready, waiting... (attempt ${attempt + 1}/5)`);
                         await new Promise(resolve => setTimeout(resolve, 500));
                     }
                 } catch (error) {
@@ -320,7 +348,9 @@ export function AuthProvider({ children }) {
         isLoading,
         urlParams: window.location.search,
         hasTelegram: !!window.Telegram,
-        hasInitData: !!window.Telegram?.WebApp?.initData
+        hasInitData: !!window.Telegram?.WebApp?.initData,
+        sessionIdLength: sessionId?.length || 0,
+        timestamp: new Date().toISOString()
     });
 
     // Show loading state while authenticating

@@ -85,8 +85,14 @@ export function WebSocketProvider({ children }) {
 
     // Connect to WebSocket immediately when user is authenticated (for general connection)
     const connectGeneral = useCallback(() => {
+        console.log('🔍 WebSocket connectGeneral called:', {
+            safeSessionId: safeSessionId ? 'PRESENT' : 'MISSING',
+            sessionIdLength: safeSessionId?.length || 0,
+            timestamp: new Date().toISOString()
+        });
+        
         if (!safeSessionId) {
-            console.log('WebSocket general connection skipped - missing sessionId');
+            console.log('❌ WebSocket general connection skipped - missing sessionId');
             return;
         }
 
@@ -414,8 +420,15 @@ export function WebSocketProvider({ children }) {
 
     // Connect to stake by joining the room on the existing unified socket
     const connectToStake = useCallback((stake) => {
+        console.log('🎯 WebSocket connectToStake called:', {
+            stake,
+            safeSessionId: safeSessionId ? 'PRESENT' : 'MISSING',
+            sessionIdLength: safeSessionId?.length || 0,
+            timestamp: new Date().toISOString()
+        });
+        
         if (!safeSessionId || !stake) {
-            console.log('WebSocket join skipped - missing sessionId or stake:', { sessionId: safeSessionId, stake });
+            console.log('❌ WebSocket join skipped - missing sessionId or stake:', { sessionId: safeSessionId, stake });
             return;
         }
 

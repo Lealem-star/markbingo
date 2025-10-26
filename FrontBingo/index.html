@@ -14,12 +14,43 @@
       console.log('window.Telegram:', !!window.Telegram);
       console.log('window.Telegram.WebApp:', !!window.Telegram?.WebApp);
       console.log('initData:', window.Telegram?.WebApp?.initData);
+      console.log('initDataUnsafe:', window.Telegram?.WebApp?.initDataUnsafe);
 
       // Initialize Telegram WebApp if available
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-        console.log('Telegram WebApp initialized and expanded');
+        try {
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.expand();
+          console.log('✅ Telegram WebApp initialized and expanded');
+          
+          // Log detailed initData info
+          const initData = window.Telegram.WebApp.initData;
+          const initDataUnsafe = window.Telegram.WebApp.initDataUnsafe;
+          
+          console.log('📊 Telegram WebApp Details:', {
+            initData: initData ? `Present (${initData.length} chars)` : 'Missing',
+            initDataUnsafe: initDataUnsafe ? 'Present' : 'Missing',
+            user: initDataUnsafe?.user ? 'Present' : 'Missing',
+            platform: window.Telegram.WebApp.platform,
+            version: window.Telegram.WebApp.version,
+            isExpanded: window.Telegram.WebApp.isExpanded
+          });
+          
+          // If we have initData, log it for debugging
+          if (initData) {
+            console.log('🔍 Raw initData:', initData);
+            try {
+              const params = new URLSearchParams(initData);
+              console.log('📋 Parsed initData params:', Object.fromEntries(params));
+            } catch (e) {
+              console.warn('Failed to parse initData:', e);
+            }
+          }
+        } catch (error) {
+          console.error('❌ Failed to initialize Telegram WebApp:', error);
+        }
+      } else {
+        console.warn('⚠️ Telegram WebApp not available');
       }
     });
   </script>
