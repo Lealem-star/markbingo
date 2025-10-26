@@ -16,10 +16,7 @@ import AdminLayout from './admin/AdminLayout.jsx';
 // Inner component that has access to WebSocket context
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('game');
-  const [selectedStake, setSelectedStake] = useState(() => {
-    const stored = localStorage.getItem('selectedStake');
-    return stored ? parseInt(stored) : null;
-  });
+  const [selectedStake, setSelectedStake] = useState(null);
   const [selectedCartela, setSelectedCartela] = useState(null);
   const [currentGameId, setCurrentGameId] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -28,6 +25,11 @@ function AppContent() {
   // Access WebSocket context for smart navigation
   const { gameState, connected } = useWebSocket();
   const { showSuccess } = useToast();
+
+  // Clear localStorage stake on mount to always start fresh
+  useEffect(() => {
+    localStorage.removeItem('selectedStake');
+  }, []);
 
   // Error monitoring and debugging
   useEffect(() => {

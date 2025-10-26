@@ -27,7 +27,7 @@ router.get('/debug', (req, res) => {
 });
 
 // GET /api/bingo/status
-router.get('/api/bingo/status', (req, res) => {
+router.get('/bingo/status', (req, res) => {
     res.json({
         gameStatus: 'ready',
         message: 'Bingo game is ready to start'
@@ -35,7 +35,7 @@ router.get('/api/bingo/status', (req, res) => {
 });
 
 // GET /api/game/status - Game countdown and status endpoint
-router.get('/api/game/status', async (req, res) => {
+router.get('/game/status', async (req, res) => {
     try {
         // For now, simulate countdown logic
         // In a real implementation, this would be managed by a game service
@@ -85,7 +85,7 @@ router.get('/api/game/status', async (req, res) => {
 });
 
 // POST /api/cartellas/select - Select a cartella
-router.post('/api/cartellas/select', async (req, res) => {
+router.post('/cartellas/select', async (req, res) => {
     try {
         const { cartellaNumber, playerId, playerName, stake, gameId } = req.body;
 
@@ -136,7 +136,7 @@ router.post('/api/cartellas/select', async (req, res) => {
 });
 
 // GET /api/cartellas/taken - Get all taken cartellas
-router.get('/api/cartellas/taken', async (req, res) => {
+router.get('/cartellas/taken', async (req, res) => {
     try {
         const activeSelections = await CartellaService.getActiveSelections();
         const recentSelections = await CartellaService.getRecentSelections(20);
@@ -162,7 +162,7 @@ router.get('/api/cartellas/taken', async (req, res) => {
 });
 
 // POST /api/cartellas/reset - Reset all selections (for testing/admin)
-router.post('/api/cartellas/reset', async (req, res) => {
+router.post('/cartellas/reset', async (req, res) => {
     try {
         const result = await CartellaService.resetAllSelections();
 
@@ -181,7 +181,8 @@ router.post('/api/cartellas/reset', async (req, res) => {
 });
 
 // GET /api/cartellas - Serve all bingo cards
-router.get('/api/cartellas', (req, res) => {
+router.get('/cartellas', (req, res) => {
+    console.log('📦 Fetching cartellas, total cards:', BingoCards.cards.length);
     try {
         res.json({
             success: true,
@@ -198,7 +199,7 @@ router.get('/api/cartellas', (req, res) => {
 });
 
 // GET /api/cartellas/:cardNumber - Serve specific card
-router.get('/api/cartellas/:cardNumber', (req, res) => {
+router.get('/cartellas/:cardNumber', (req, res) => {
     try {
         const cardNumber = parseInt(req.params.cardNumber);
 
@@ -227,7 +228,7 @@ router.get('/api/cartellas/:cardNumber', (req, res) => {
 });
 
 // POST /api/cartellas/confirm - Confirm a cartella selection (deduct stake)
-router.post('/api/cartellas/confirm', async (req, res) => {
+router.post('/cartellas/confirm', async (req, res) => {
     try {
         const { cartellaNumber, playerId } = req.body;
 
@@ -255,7 +256,7 @@ router.post('/api/cartellas/confirm', async (req, res) => {
 });
 
 // POST /api/cartellas/cancel - Cancel a cartella selection
-router.post('/api/cartellas/cancel', async (req, res) => {
+router.post('/cartellas/cancel', async (req, res) => {
     try {
         const { cartellaNumber, playerId } = req.body;
 
@@ -283,7 +284,7 @@ router.post('/api/cartellas/cancel', async (req, res) => {
 });
 
 // GET /api/cartellas/stats - Get cartella selection statistics
-router.get('/api/cartellas/stats', async (req, res) => {
+router.get('/cartellas/stats', async (req, res) => {
     try {
         const result = await CartellaService.getSelectionStats();
 
@@ -302,7 +303,7 @@ router.get('/api/cartellas/stats', async (req, res) => {
 });
 
 // GET /api/cartellas/player/:playerId - Get player's cartella selections
-router.get('/api/cartellas/player/:playerId', async (req, res) => {
+router.get('/cartellas/player/:playerId', async (req, res) => {
     try {
         const { playerId } = req.params;
 
@@ -330,7 +331,7 @@ router.get('/api/cartellas/player/:playerId', async (req, res) => {
 });
 
 // GET /api/leaderboard?period=alltime|monthly|weekly|daily|newyear
-router.get('/api/leaderboard', async (req, res) => {
+router.get('/leaderboard', async (req, res) => {
     try {
         const period = String(req.query.period || 'alltime');
 
