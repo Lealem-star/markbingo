@@ -25,12 +25,13 @@ router.post('/incoming', async (req, res) => {
         });
 
         // Try to match with existing user SMS
-        await attemptAutoMatching(smsRecord);
+        const verification = await attemptAutoMatching(smsRecord);
 
         res.json({
             success: true,
             message: 'SMS received and processed',
-            smsId: smsRecord._id
+            smsId: smsRecord._id,
+            verificationId: verification ? verification._id : null
         });
     } catch (error) {
         console.error('SMS forwarder error:', error);
@@ -62,12 +63,13 @@ router.post('/user-sms', async (req, res) => {
         });
 
         // Try to match with existing receiver SMS
-        await attemptAutoMatching(userSMS);
+        const verification = await attemptAutoMatching(userSMS);
 
         res.json({
             success: true,
             message: 'User SMS received and processed',
-            smsId: userSMS._id
+            smsId: userSMS._id,
+            verificationId: verification ? verification._id : null
         });
     } catch (error) {
         console.error('User SMS error:', error);
@@ -209,7 +211,7 @@ async function attemptAutoMatching(newSMS) {
                     const userSMS = newSMS.source === 'user' ? newSMS : potentialMatch;
                     const receiverSMS = newSMS.source === 'receiver' ? newSMS : potentialMatch;
 
-                    await SmsForwarderService.createDepositVerification(
+                    const verification = await SmsForwarderService.createDepositVerification(
                         userSMS.userId,
                         userSMS,
                         receiverSMS,
@@ -226,12 +228,14 @@ async function attemptAutoMatching(newSMS) {
                     await potentialMatch.save();
 
                     console.log(`Auto-matched SMS: ${newSMS._id} with ${potentialMatch._id}`);
-                    break;
+                    return verification;
                 }
             }
         }
+        return null;
     } catch (error) {
         console.error('Auto-matching error:', error);
+        return null;
     }
 }
 

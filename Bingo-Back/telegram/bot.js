@@ -588,6 +588,57 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             }
         });
 
+        // Admin deposit approval/denial handlers
+        bot.action(/^approve_dep_(.+)$/, async (ctx) => {
+            if (!(await ensureAdmin(ctx))) return;
+            const verificationId = ctx.match[1];
+            try {
+                const apiBase = process.env.API_URL || 'http://localhost:3001';
+                const response = await fetch(`${apiBase}/sms-forwarder/approve/${verificationId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminId: null })
+                });
+                if (response.ok) {
+                    await ctx.answerCbQuery('✅ Deposit approved');
+                    await ctx.reply('✅ Deposit has been approved and credited.');
+                } else {
+                    const err = await response.json().catch(() => ({}));
+                    await ctx.answerCbQuery('❌ Failed to approve');
+                    await ctx.reply(`❌ Failed to approve deposit.${err?.error ? ` ${err.error}` : ''}`);
+                }
+            } catch (error) {
+                console.error('Deposit approve error:', error);
+                await ctx.answerCbQuery('❌ Error occurred');
+                await ctx.reply('❌ Error processing deposit approval. Please try again.');
+            }
+        });
+
+        bot.action(/^deny_dep_(.+)$/, async (ctx) => {
+            if (!(await ensureAdmin(ctx))) return;
+            const verificationId = ctx.match[1];
+            try {
+                const apiBase = process.env.API_URL || 'http://localhost:3001';
+                const response = await fetch(`${apiBase}/sms-forwarder/reject/${verificationId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminId: null, reason: 'Denied via Telegram' })
+                });
+                if (response.ok) {
+                    await ctx.answerCbQuery('❌ Deposit denied');
+                    await ctx.reply('❌ Deposit has been denied.');
+                } else {
+                    const err = await response.json().catch(() => ({}));
+                    await ctx.answerCbQuery('❌ Failed to deny');
+                    await ctx.reply(`❌ Failed to deny deposit.${err?.error ? ` ${err.error}` : ''}`);
+                }
+            } catch (error) {
+                console.error('Deposit deny error:', error);
+                await ctx.answerCbQuery('❌ Error occurred');
+                await ctx.reply('❌ Error processing deposit denial. Please try again.');
+            }
+        });
+
         bot.action('invite', async (ctx) => {
             if (!(await requireRegistration(ctx))) return;
             ctx.answerCbQuery('🔗 Invite friends...');
@@ -601,14 +652,14 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 await ctx.replyWithPhoto(
                     { source: imagePath },
                     {
-                        caption: `🔗 Invite Friends to Love Bingo!\n\n👥 Share this link with your friends:\n\n${inviteLink}\n\n🎁 Earn 0.5 ETB for every friend you invite!\n\n💡 Rewards are automatically added to your play wallet:\n• 1 invite = 0.5 ETB\n• 2 invites = 1 ETB\n• 5 invites = 2.5 ETB\n• 10 invites = 5 ETB\n• And more!\n\n📊 Track your progress in your Profile page`,
+                        caption: `🔗 Invite Friends to Love Bingo!\n\n👥 Share this link with your friends:\n\n${inviteLink}`,
                         reply_markup: keyboard
                     }
                 );
             } catch (error) {
                 console.error('Error sending invite image:', error);
                 // Fallback to text message if image fails
-                ctx.reply(`🔗 Invite Friends to Love Bingo!\n\n👥 Share this link with your friends:\n\n${inviteLink}\n\n🎁 Earn 0.5 ETB for every friend you invite!\n\n💡 Rewards are automatically added to your play wallet:\n• 1 invite = 0.5 ETB\n• 2 invites = 1 ETB\n• 5 invites = 2.5 ETB\n• 10 invites = 5 ETB\n• And more!\n\n📊 Track your progress in your Profile page`, { reply_markup: keyboard });
+                ctx.reply(`🔗 Invite Friends to Love Bingo!\n\n👥 Share this link with your friends:\n\n${inviteLink}`, { reply_markup: keyboard });
             }
         });
 
@@ -854,12 +905,24 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                             const result = await response.json();
                             withdrawalStates.delete(userId);
 
-                            // Notify admin
+                            // Notify admin with user's wallet info
+                            let walletLine = '';
+                            try {
+                                const userWithWallet = await UserService.getUserWithWallet(userId);
+                                const w = userWithWallet && userWithWallet.wallet;
+                                if (w) {
+                                    walletLine = `\n👛 User Wallet:\n- Main: ETB ${Number(w.main || 0).toFixed(2)}\n- Play: ETB ${Number(w.play || 0).toFixed(2)}\n- Coins: ${Number(w.coins || 0).toFixed(0)}`;
+                                }
+                            } catch { }
+
+                            const displayPhone = user.phone || user.telegramId || ctx.from.id;
+
                             const adminUsers = await require('../models/User').find({ role: 'admin' }, { telegramId: 1 });
                             for (const admin of adminUsers) {
                                 try {
-                                    await bot.telegram.sendMessage(admin.telegramId,
-                                        `🆕 New Withdrawal Request\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${ctx.from.id}\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}\n📋 Transaction ID: ${result.transactionId}\n\n⏰ Process within 24-48 hours`,
+                                    await bot.telegram.sendMessage(
+                                        admin.telegramId,
+                                        `🆕 New Withdrawal Request\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${displayPhone}\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}\n📋 Transaction ID: ${result.transactionId}${walletLine}\n\n⏰ Process within 24-48 hours`,
                                         { reply_markup: { inline_keyboard: [[{ text: '✅ Approve', callback_data: `approve_wd_${result.transactionId}` }, { text: '❌ Deny', callback_data: `deny_wd_${result.transactionId}` }]] } }
                                     );
                                 } catch (e) { console.log('Failed to notify admin:', e?.message); }
@@ -916,6 +979,22 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                     const result = await response.json();
 
                     if (result.success) {
+                        // Notify admins if auto-verification created
+                        if (result.verificationId) {
+                            try {
+                                const adminUsers = await require('../models/User').find({ role: 'admin' }, { telegramId: 1 });
+                                for (const admin of adminUsers) {
+                                    try {
+                                        await bot.telegram.sendMessage(
+                                            admin.telegramId,
+                                            `🆕 New Deposit Verification\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${user.phone || user.telegramId || ctx.from.id}\n💰 Amount: ETB ${parsed.amount?.toFixed(2) || 'N/A'}\n🔎 Reference: ${parsed.reference || 'N/A'}\n📋 Verification ID: ${result.verificationId}\n\n⏰ Review and process`,
+                                            { reply_markup: { inline_keyboard: [[{ text: '✅ Approve', callback_data: `approve_dep_${result.verificationId}` }, { text: '❌ Deny', callback_data: `deny_dep_${result.verificationId}` }]] } }
+                                        );
+                                    } catch (e) { }
+                                }
+                            } catch { }
+                        }
+
                         return ctx.reply(`📱 SMS Received!\n\n✅ Your payment receipt has been received and is being verified.\n\n💰 Amount: ETB ${parsed.amount.toFixed(2)}\n🔄 Status: Pending verification\n\n⏳ Please wait for the agent to confirm your payment. You'll be notified once verified!`, {
                             reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] }
                         });
