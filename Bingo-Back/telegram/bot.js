@@ -728,11 +728,32 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 try {
                     let user = await UserService.getUserByTelegramId(userId);
                     if (!user) { user = await UserService.createOrUpdateUser(ctx.from); }
-                    await UserService.updateUserPhone(userId, contact.phone_number);
+                    const result = await UserService.updateUserPhone(userId, contact.phone_number);
+                    const isNewRegistration = result?.isNewRegistration;
+
+                    // Build registration message
+                    const fullName = (contact.first_name || '') + (contact.last_name ? ' ' + contact.last_name : '');
+                    let phoneDisplay = contact.phone_number;
+                    // Format phone with + if international format
+                    if (phoneDisplay && !phoneDisplay.startsWith('+')) {
+                        if (phoneDisplay.startsWith('251')) {
+                            phoneDisplay = '+' + phoneDisplay;
+                        }
+                    }
+
+                    let message = `✅ Registration completed!\n\n📱 Phone: ${phoneDisplay}\n👤 Name: ${fullName}`;
+
+                    if (isNewRegistration) {
+                        message += `\n\n🎁 Welcome Bonus: You've been awarded 10 birr in your play wallet!\n\n🎮 You can now start playing!`;
+                    } else {
+                        message += `\n\n🎮 You can now start playing!`;
+                    }
+
+                    ctx.reply(message, { reply_markup: { remove_keyboard: true } });
                 } catch (dbError) {
                     console.log('Database unavailable during contact update');
+                    ctx.reply('✅ Registration completed!\n\n📱 Phone: ' + contact.phone_number + '\n👤 Name: ' + (contact.first_name || '') + ' ' + (contact.last_name || '') + '\n\n🎮 You can now start playing!', { reply_markup: { remove_keyboard: true } });
                 }
-                ctx.reply('✅ Registration completed!\n\n📱 Phone: ' + contact.phone_number + '\n👤 Name: ' + (contact.first_name || '') + ' ' + (contact.last_name || '') + '\n\n🎮 You can now start playing!', { reply_markup: { remove_keyboard: true } });
             } catch (error) {
                 console.error('Contact registration error:', error);
                 ctx.reply('❌ Registration failed. Please try again.');
