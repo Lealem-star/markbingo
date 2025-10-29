@@ -206,19 +206,20 @@ async function attemptAutoMatching(newSMS) {
             if (potentialMatch.source !== newSMS.source) {
                 const matchResult = await SmsForwarderService.matchSMS(newSMS, potentialMatch);
 
+                // Determine which is user vs receiver SMS
+                const userSMS = newSMS.source === 'user' ? newSMS : potentialMatch;
+                const receiverSMS = newSMS.source === 'receiver' ? newSMS : potentialMatch;
+
+                // Always create a verification record; service will set status
+                const verification = await SmsForwarderService.createDepositVerification(
+                    userSMS.userId,
+                    userSMS,
+                    receiverSMS,
+                    matchResult
+                );
+
                 if (matchResult.isVerified) {
-                    // Create deposit verification
-                    const userSMS = newSMS.source === 'user' ? newSMS : potentialMatch;
-                    const receiverSMS = newSMS.source === 'receiver' ? newSMS : potentialMatch;
-
-                    const verification = await SmsForwarderService.createDepositVerification(
-                        userSMS.userId,
-                        userSMS,
-                        receiverSMS,
-                        matchResult
-                    );
-
-                    // Update SMS records status
+                    // Update SMS records status only for verified matches
                     newSMS.status = 'matched';
                     newSMS.matchedWith = potentialMatch._id;
                     await newSMS.save();
@@ -227,9 +228,13 @@ async function attemptAutoMatching(newSMS) {
                     potentialMatch.matchedWith = newSMS._id;
                     await potentialMatch.save();
 
-                    console.log(`Auto-matched SMS: ${newSMS._id} with ${potentialMatch._id}`);
-                    return verification;
+                    console.log(`Auto-verified SMS: ${newSMS._id} with ${potentialMatch._id}`);
+                } else {
+                    console.log(`Created pending_review verification for SMS ${newSMS._id} with ${potentialMatch._id} (confidence ${matchResult.confidence?.toFixed(1)}%)`);
                 }
+
+                // Return the first created verification (verified or pending)
+                return verification;
             }
         }
         return null;
