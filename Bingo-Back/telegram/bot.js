@@ -1020,7 +1020,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                             } catch { }
                         }
 
-                        return ctx.reply(`📱 SMS Received!\n\n✅ Your payment receipt has been received and is being verified.\n\n💰 Amount: ETB ${parsed.amount.toFixed(2)}\n🔄 Status: Pending verification\n\n⏳ Please wait for the agent to confirm your payment. You'll be notified once verified!`, {
+                        return ctx.reply(`📱 SMS Received!\n\n✅ Your payment receipt has been received and is being verified.\n\n💰 Amount: ETB ${parsed.amount.toFixed(2)}\n🔄 Status: verified\n\n⏳ now you can play the game by backing to menu!`, {
                             reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] }
                         });
                     } else {

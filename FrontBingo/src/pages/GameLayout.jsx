@@ -467,7 +467,10 @@ export default function GameLayout({
                                     {(() => {
                                         // Get all called numbers including current number
                                         const allNumbers = [...calledNumbers];
-                                        if (currentNumber && typeof currentNumber === 'number') {
+                                        if (
+                                            currentNumber && typeof currentNumber === 'number' &&
+                                            (calledNumbers.length === 0 || calledNumbers[calledNumbers.length - 1] !== currentNumber)
+                                        ) {
                                             allNumbers.push(currentNumber);
                                         }
 

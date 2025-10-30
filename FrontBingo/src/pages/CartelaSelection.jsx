@@ -441,21 +441,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 <header className="p-4">
                     <div className="flex items-center justify-between mb-4">
                         <button onClick={() => {
-                            console.log('Back button clicked (loading) - checking if user came from Telegram');
-                            // Check if user came from Telegram bot
-                            if (window.Telegram?.WebApp) {
-                                // User came from Telegram - close web app to return to bot
-                                console.log('User came from Telegram, closing web app');
-                                window.Telegram.WebApp.close();
-                            } else {
-                                // Regular navigation
-                                try {
-                                    onNavigate?.('game', true);
-                                } catch (error) {
-                                    console.error('Navigation failed, using reset function:', error);
-                                    onResetToGame?.();
-                                }
-                            }
+                            onNavigate?.('game', true);
                         }} className="header-button">
                             ← Back
                         </button>
@@ -538,21 +524,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 <header className="p-4">
                     <div className="flex items-center justify-between mb-4">
                         <button onClick={() => {
-                            console.log('Back button clicked (error) - checking if user came from Telegram');
-                            // Check if user came from Telegram bot
-                            if (window.Telegram?.WebApp) {
-                                // User came from Telegram - close web app to return to bot
-                                console.log('User came from Telegram, closing web app');
-                                window.Telegram.WebApp.close();
-                            } else {
-                                // Regular navigation
-                                try {
-                                    onNavigate?.('game', true);
-                                } catch (error) {
-                                    console.error('Navigation failed, using reset function:', error);
-                                    onResetToGame?.();
-                                }
-                            }
+                            onNavigate?.('game', true);
                         }} className="header-button">
                             ← Back
                         </button>
@@ -626,13 +598,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 {/* Top Row: Back and Refresh buttons */}
                 <div className="flex items-center justify-between mb-4">
                     <button onClick={() => {
-                        console.log('Back button clicked - navigating to stake selection');
-                        try {
-                            onNavigate?.('game', true);
-                        } catch (error) {
-                            console.error('Navigation failed, using reset function:', error);
-                            onResetToGame?.();
-                        }
+                        onNavigate?.('game', true);
                     }} className="header-button">
                         ← Back
                     </button>
@@ -643,17 +609,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                     >
                         {walletLoading || loading ? '⟳ Loading...' : '↻ Refresh'}
                     </button>
-                    {window.Telegram?.WebApp && (
-                        <button
-                            onClick={() => {
-                                console.log('Close button clicked - closing Telegram web app');
-                                window.Telegram.WebApp.close();
-                            }}
-                            className="header-button text-red-400"
-                        >
-                            ✕ Close
-                        </button>
-                    )}
                 </div>
 
                 {/* Second Row: Wallet info and Timer */}
