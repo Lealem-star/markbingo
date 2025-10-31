@@ -35,6 +35,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                     { command: 'start', description: 'Start' },
                     { command: 'play', description: 'Play' },
                     { command: 'deposit', description: 'Deposit' },
+                    { command: 'withdraw', description: 'Withdraw' },
                     { command: 'balance', description: 'Balance' },
                     { command: 'support', description: 'Contact Support' },
                     { command: 'instruction', description: 'How to Play' }
@@ -320,6 +321,21 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
 
         bot.command('deposit', async (ctx) => {
             ctx.reply('💰 Enter the amount you want to deposit, starting from 50 Birr.');
+        });
+
+        // Add /withdraw command to initiate withdrawal flow
+        bot.command('withdraw', async (ctx) => {
+            try {
+                // Start the same flow as pressing the Withdraw button
+                const userId = String(ctx.from.id);
+                // Initialize withdrawal state to await amount
+                if (typeof withdrawalStates !== 'undefined' && withdrawalStates instanceof Map) {
+                    withdrawalStates.set(userId, 'awaiting_amount');
+                }
+                ctx.reply('💰 Enter withdrawal amount (ETB 50 - 10,000):\n\n💡 Example: 100\n\n🏦 You will choose transfer method after amount confirmation.');
+            } catch (e) {
+                ctx.reply('❌ Could not start withdrawal. Please try again.');
+            }
         });
 
         bot.command('support', (ctx) => {

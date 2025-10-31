@@ -17,7 +17,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const [walletLoading, setWalletLoading] = useState(true);
 
     // WebSocket integration
-    const { connected, gameState, selectCartella, connectToStake, wsReadyState, isConnecting, lastEvent, messageCount } = useWebSocket();
+    const { connected, gameState, selectCartella, deselectCartella, connectToStake, wsReadyState, isConnecting, lastEvent, messageCount } = useWebSocket();
     const hasConnectedRef = useRef(false);
     const rejoinTriedRef = useRef(false);
 
@@ -281,6 +281,14 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         }
     }, [gameState.phase, gameState.gameId, gameState.yourCardNumber, gameState.yourCard, selectedCardNumber, onCartelaSelected, onGameIdUpdate]);
 
+    // Show message if game cancelled due to not enough players
+    useEffect(() => {
+        if (!lastEvent) return;
+        if (lastEvent.type === 'game_cancelled' && lastEvent.payload?.reason === 'NOT_ENOUGH_PLAYERS') {
+            showWarning('Not Enough Player');
+        }
+    }, [lastEvent, showWarning]);
+
 
     // Handle card selection - automatically confirm without separate confirmation step
     const handleCardSelect = async (cardNumber) => {
@@ -292,6 +300,33 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             connected: connected,
             wsReadyState: wsReadyState
         });
+
+        // Toggle off if clicking the same selected number during registration
+        const alreadySelectedByYou = selectedCardNumber === cardNumber || gameState.yourSelection === cardNumber;
+        if (alreadySelectedByYou) {
+            if (gameState.phase !== 'registration') {
+                showError(`Cannot unselect - current phase is ${gameState.phase}`);
+                return;
+            }
+            if (!connected || wsReadyState !== WebSocket.OPEN) {
+                showError('Not connected to game server. Please refresh and try again.');
+                return;
+            }
+            try {
+                console.log('Deselecting cartella:', cardNumber);
+                const success = deselectCartella(cardNumber);
+                if (success) {
+                    setSelectedCardNumber(null);
+                    showSuccess(`Cartella #${cardNumber} unselected.`);
+                } else {
+                    showError('Failed to unselect cartella. Please try again.');
+                }
+            } catch (err) {
+                console.error('Error deselecting cartella:', err);
+                showError('Failed to unselect cartella. Please try again.');
+            }
+            return;
+        }
 
         // Check if player has sufficient balance or credit
         const totalBalance = (wallet.main || 0) + (wallet.play || 0);
@@ -441,7 +476,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 <header className="p-4">
                     <div className="flex items-center justify-between mb-4">
                         <button onClick={() => {
-                            onNavigate?.('game', true);
+                            onResetToGame?.();
                         }} className="header-button">
                             ← Back
                         </button>
@@ -524,7 +559,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 <header className="p-4">
                     <div className="flex items-center justify-between mb-4">
                         <button onClick={() => {
-                            onNavigate?.('game', true);
+                            onResetToGame?.();
                         }} className="header-button">
                             ← Back
                         </button>
@@ -598,7 +633,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 {/* Top Row: Back and Refresh buttons */}
                 <div className="flex items-center justify-between mb-4">
                     <button onClick={() => {
-                        onNavigate?.('game', true);
+                        onResetToGame?.();
                     }} className="header-button">
                         ← Back
                     </button>

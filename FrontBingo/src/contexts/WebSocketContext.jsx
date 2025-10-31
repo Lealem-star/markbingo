@@ -7,7 +7,7 @@ export function WebSocketProvider({ children }) {
     const { sessionId } = useAuth();
     const wsRef = useRef(null);
     const [connected, setConnected] = useState(false);
-    
+
     // Require real sessionId - no fallback allowed
     const safeSessionId = sessionId;
     const [gameState, setGameState] = useState({
@@ -90,7 +90,7 @@ export function WebSocketProvider({ children }) {
             sessionIdLength: safeSessionId?.length || 0,
             timestamp: new Date().toISOString()
         });
-        
+
         if (!safeSessionId) {
             console.log('❌ WebSocket general connection skipped - missing sessionId');
             return;
@@ -131,7 +131,7 @@ export function WebSocketProvider({ children }) {
 
             connecting = true;
             setIsConnecting(true);
-            
+
             // No timeout - require real WebSocket connection
             const wsBase = import.meta.env.VITE_WS_URL ||
                 (window.location.hostname === 'localhost' ? 'ws://localhost:3001' :
@@ -309,6 +309,18 @@ export function WebSocketProvider({ children }) {
                             }));
                             break;
 
+                        case 'selection_cleared':
+                            setGameState(prev => ({
+                                ...prev,
+                                yourSelection: null,
+                                takenCards: Array.isArray(prev.takenCards)
+                                    ? prev.takenCards.filter(n => n !== event.payload.previousCard)
+                                    : prev.takenCards,
+                                playersCount: event.payload.playersCount ?? prev.playersCount,
+                                prizePool: event.payload.prizePool ?? prev.prizePool
+                            }));
+                            break;
+
                         case 'bingo_accepted':
                             setGameState(prev => ({
                                 ...prev,
@@ -390,10 +402,10 @@ export function WebSocketProvider({ children }) {
                 });
                 setIsConnecting(false);
                 connecting = false;
-                
+
                 // WebSocket failed - app will show connection error
                 console.log('⚠️ WebSocket connection failed - app requires real connection');
-                
+
                 // Set a timeout to retry connection if it fails
                 setTimeout(() => {
                     if (!stopped && !connected) {
@@ -426,7 +438,7 @@ export function WebSocketProvider({ children }) {
             sessionIdLength: safeSessionId?.length || 0,
             timestamp: new Date().toISOString()
         });
-        
+
         if (!safeSessionId || !stake) {
             console.log('❌ WebSocket join skipped - missing sessionId or stake:', { sessionId: safeSessionId, stake });
             return;
@@ -510,6 +522,10 @@ export function WebSocketProvider({ children }) {
         return send('select_card', { cardNumber });
     }, [send]);
 
+    const deselectCartella = useCallback((cardNumber) => {
+        return send('deselect_card', { cardNumber });
+    }, [send]);
+
     const claimBingo = useCallback(() => {
         return send('bingo_claim', {});
     }, [send]);
@@ -553,6 +569,7 @@ export function WebSocketProvider({ children }) {
         connectToStake,
         connectGeneral,
         selectCartella,
+        deselectCartella,
         claimBingo,
         send,
         // Debug info

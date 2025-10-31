@@ -221,6 +221,21 @@ function startGame(room) {
         return;
     }
 
+    if (room.selectedPlayers.size === 1) {
+        // Not enough players to start a game. Inform clients and restart registration.
+        console.log(`Not enough players (1) for game ${room.currentGameId}. Cancelling and restarting registration.`);
+        broadcast('game_cancelled', {
+            gameId: room.currentGameId,
+            reason: 'NOT_ENOUGH_PLAYERS',
+            minimumPlayers: 2,
+            playersCount: room.selectedPlayers.size
+        }, room);
+
+        // Small delay so clients can show the message, then reopen registration
+        setTimeout(() => startRegistration(room), 2000);
+        return;
+    }
+
     // Process stake sources per player and build pot from paying players only
     let payingUsers = [];
     let creditUsers = [];
@@ -816,6 +831,49 @@ wss.on('connection', async (ws, request) => {
                         takenCards: Array.from(room.takenCards),
                         prizePool: currentPrizePool
                     }, room);
+                }
+            } else if (data.type === 'deselect_card') {
+                const room = ws.room;
+                const cardNumber = Number(data.cardNumber || data.payload?.cardNumber);
+                console.log('deselect_card received:', { cardNumber, roomPhase: room?.phase, userId: ws.userId });
+
+                if (room && room.phase === 'registration') {
+                    const current = room.userCardSelections.get(ws.userId);
+                    if (current && (!cardNumber || Number(cardNumber) === Number(current))) {
+                        // Clear user's selection
+                        room.userCardSelections.delete(ws.userId);
+                        room.takenCards.delete(current);
+                        room.selectedPlayers.delete(ws.userId);
+
+                        // Recompute prize pool after removing player
+                        const currentPrizePool = Math.floor(room.selectedPlayers.size * room.stake * 0.8);
+
+                        // Notify the user
+                        ws.send(JSON.stringify({
+                            type: 'selection_cleared',
+                            payload: {
+                                previousCard: current,
+                                playersCount: room.selectedPlayers.size,
+                                prizePool: currentPrizePool
+                            }
+                        }));
+
+                        // Broadcast updates to all players
+                        broadcast('players_update', {
+                            playersCount: room.selectedPlayers.size,
+                            prizePool: currentPrizePool
+                        }, room);
+                        broadcast('registration_update', {
+                            takenCards: Array.from(room.takenCards),
+                            prizePool: currentPrizePool
+                        }, room);
+                    } else {
+                        // Nothing to clear; reply benignly
+                        ws.send(JSON.stringify({ type: 'selection_cleared', payload: { previousCard: null, playersCount: room.selectedPlayers.size, prizePool: Math.floor(room.selectedPlayers.size * room.stake * 0.8) } }));
+                    }
+                } else {
+                    // Not in registration; ignore
+                    ws.send(JSON.stringify({ type: 'selection_rejected', payload: { reason: 'NOT_IN_REGISTRATION' } }));
                 }
             } else if (data.type === 'bingo_claim' || data.type === 'claim_bingo') {
                 const room = ws.room;
