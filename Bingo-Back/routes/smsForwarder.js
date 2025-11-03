@@ -46,12 +46,18 @@ router.post('/incoming', async (req, res) => {
 router.post('/user-sms', async (req, res) => {
     try {
         const { userId, message, phoneNumber } = req.body;
+        const mongoose = require('mongoose');
 
         if (!userId || !message) {
             return res.status(400).json({
                 success: false,
                 error: 'Missing required fields: userId, message'
             });
+        }
+
+        // Validate userId format to avoid 500s from invalid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(String(userId))) {
+            return res.status(400).json({ success: false, error: 'Invalid userId format' });
         }
 
         // Store user SMS
