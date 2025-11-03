@@ -44,13 +44,23 @@ class InviteService {
                 throw new Error('User not found');
             }
 
+            // Prevent self-invites
+            if (String(inviterId) === String(inviteeId)) {
+                return { success: false, reason: 'self_invite', inviter, invitee };
+            }
+
             // Check if invitee was already invited by someone
             if (invitee.invitedBy) {
-                throw new Error('User already invited by someone else');
+                // If already invited by same inviter, treat as idempotent success
+                if (String(invitee.invitedBy) === String(inviterId)) {
+                    return { success: true, inviter, invitee, alreadyTracked: true };
+                }
+                // Otherwise, gracefully no-op
+                return { success: false, reason: 'already_invited', invitedBy: invitee.invitedBy, inviter, invitee };
             }
 
             // Update inviter's stats
-            inviter.totalInvites += 1;
+            inviter.totalInvites = (inviter.totalInvites || 0) + 1;
             inviter.inviteHistory.push({
                 invitedUserId: inviteeId,
                 invitedAt: new Date(),
