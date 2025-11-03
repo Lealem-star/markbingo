@@ -49,6 +49,12 @@ const transactionSchema = new mongoose.Schema({
         main: { type: Number, default: 0 },
         play: { type: Number, default: 0 },
         coins: { type: Number, default: 0 }
+    },
+    processedBy: {
+        adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+        adminTelegramId: { type: String, default: null },
+        adminName: { type: String, default: null },
+        processedAt: { type: Date, default: null }
     }
 }, {
     timestamps: true

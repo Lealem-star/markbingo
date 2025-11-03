@@ -4,6 +4,7 @@ import { apiFetch } from '../lib/api/client';
 export default function AdminStats() {
     const [today, setToday] = useState({ totalPlayers: 0, systemCut: 0 });
     const [dailyStats, setDailyStats] = useState([]);
+    const [todayFinance, setTodayFinance] = useState({ totalGames: 0, totalDeposit: 0, totalWithdraw: 0 });
     const [inviteStats, setInviteStats] = useState({
         global: {
             totalUsers: 0,
@@ -38,6 +39,33 @@ export default function AdminStats() {
                 setDailyStats(simulatedStats);
             } catch { }
             try {
+                // Today's totals: games played, deposits, withdrawals
+                const start = new Date(); start.setHours(0, 0, 0, 0);
+                const end = new Date(); end.setHours(23, 59, 59, 999);
+                const from = start.toISOString();
+                const to = end.toISOString();
+
+                const [overview, depositsRes, withdrawalsCompletedRes] = await Promise.all([
+                    apiFetch('/admin/stats/overview'),
+                    apiFetch(`/api/admin/balances/deposits?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
+                    apiFetch('/api/admin/balances/withdrawals?status=completed')
+                ]);
+
+                const totalGames = overview?.today?.totalGames || 0;
+
+                const deposits = depositsRes?.deposits || [];
+                const totalDeposit = deposits
+                    .filter(d => (d.status || 'completed') === 'completed' && d.createdAt && new Date(d.createdAt) >= start && new Date(d.createdAt) <= end)
+                    .reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+
+                const withdrawalsCompleted = withdrawalsCompletedRes?.withdrawals || [];
+                const totalWithdraw = withdrawalsCompleted
+                    .filter(w => w.processedAt && new Date(w.processedAt) >= start && new Date(w.processedAt) <= end)
+                    .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+                setTodayFinance({ totalGames, totalDeposit, totalWithdraw });
+            } catch { }
+            try {
                 const inviteData = await apiFetch('/admin/stats/invites');
                 setInviteStats(inviteData);
             } catch { }
@@ -58,6 +86,24 @@ export default function AdminStats() {
                     <div>
                         <div className="admin-stats-label">Total Players Today</div>
                         <div className="admin-stats-value admin-stats-value-green">{today.totalPlayers}</div>
+                    </div>
+                </div>
+                <div className="admin-stats-card">
+                    <div>
+                        <div className="admin-stats-label">Total Games Today</div>
+                        <div className="admin-stats-value admin-stats-value-blue">{todayFinance.totalGames}</div>
+                    </div>
+                </div>
+                <div className="admin-stats-card">
+                    <div>
+                        <div className="admin-stats-label">Total Deposits Today</div>
+                        <div className="admin-stats-value admin-stats-value-green">ETB {todayFinance.totalDeposit}</div>
+                    </div>
+                </div>
+                <div className="admin-stats-card">
+                    <div>
+                        <div className="admin-stats-label">Total Withdrawals Today</div>
+                        <div className="admin-stats-value admin-stats-value-red">ETB {todayFinance.totalWithdraw}</div>
                     </div>
                 </div>
             </div>

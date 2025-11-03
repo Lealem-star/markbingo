@@ -25,7 +25,8 @@ export function WebSocketProvider({ children }) {
         registrationEndTime: null,
         isWatchMode: false,
         winners: [],
-        walletUpdate: null
+        walletUpdate: null,
+        nextRegistrationStart: null
     });
     const [lastEvent, setLastEvent] = useState(null);
     const [currentStake, setCurrentStake] = useState(null);
@@ -339,7 +340,8 @@ export function WebSocketProvider({ children }) {
                                 currentNumber: null,
                                 yourCard: null,
                                 yourCardNumber: null,
-                                yourSelection: null
+                                yourSelection: null,
+                                nextRegistrationStart: event.payload?.nextStartAt || null // Store when next registration will start
                             }));
                             // Do not auto-rejoin immediately here. We'll rejoin when:
                             // 1) Backend opens registration (we receive snapshot/registration_open), or
@@ -463,7 +465,8 @@ export function WebSocketProvider({ children }) {
                 registrationEndTime: null,
                 isWatchMode: false,
                 winners: [],
-                walletUpdate: null
+                walletUpdate: null,
+                nextRegistrationStart: null
             });
             setCurrentStake(stake);
         }

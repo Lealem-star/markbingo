@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const UserService = require('../services/userService');
 const WalletService = require('../services/walletService');
 const Game = require('../models/Game');
+const Transaction = require('../models/Transaction');
+const User = require('../models/User');
 
 function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
     try {
@@ -320,6 +322,11 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         });
 
         bot.command('deposit', async (ctx) => {
+            const userId = String(ctx.from.id);
+            // Clear any withdrawal state to prevent conflicts
+            if (typeof withdrawalStates !== 'undefined' && withdrawalStates instanceof Map) {
+                withdrawalStates.delete(userId);
+            }
             ctx.reply('💰 Enter the amount you want to deposit, starting from 50 Birr.');
         });
 
@@ -563,15 +570,53 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             const withdrawalId = ctx.match[1];
 
             try {
+                // Get admin info
+                const adminTelegramId = String(ctx.from.id);
+                const adminName = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim() || ctx.from.username || 'Admin';
+
+                // Get admin user from database
+                let adminUser = null;
+                let adminUserId = null;
+                try {
+                    adminUser = await User.findOne({ telegramId: adminTelegramId });
+                    if (adminUser) {
+                        adminUserId = adminUser._id;
+                    }
+                } catch (e) {
+                    console.error('Error fetching admin user:', e);
+                }
+
+                // Get transaction details to show amount
+                let transactionAmount = null;
+                try {
+                    const Transaction = require('../models/Transaction');
+                    const transaction = await Transaction.findById(withdrawalId);
+                    if (transaction) {
+                        transactionAmount = transaction.amount;
+                    }
+                } catch (e) {
+                    console.error('Error fetching transaction:', e);
+                }
+
                 const apiBase = process.env.API_URL || 'http://localhost:3001';
                 const response = await fetch(`${apiBase}/admin/internal/withdrawals/${withdrawalId}/approve`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        adminId: adminUserId,
+                        adminTelegramId: adminTelegramId,
+                        adminName: adminName
+                    })
                 });
 
                 if (response.ok) {
+                    const result = await response.json();
+                    const amount = transactionAmount || result.transaction?.amount || null;
+                    const adminNameDisplay = result.transaction?.adminName || adminName;
+                    const amountDisplay = amount && typeof amount === 'number' ? amount.toLocaleString() : (amount || 'N/A');
+
                     await ctx.answerCbQuery('✅ Withdrawal approved');
-                    await ctx.reply('✅ Withdrawal has been approved and processed.');
+                    await ctx.reply(`✅ Withdrawal has been approved and processed.\n\n💰 Amount: ETB ${amountDisplay}\n👤 Approved by: ${adminNameDisplay}`);
                 } else {
                     await ctx.answerCbQuery('❌ Failed to approve');
                     await ctx.reply('❌ Failed to approve withdrawal. Please try again.');
@@ -1201,6 +1246,9 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
 
         startBot();
 
+        // Daily Admin Achievement Notification
+        setupDailyAdminNotifications(bot);
+
         // Add process error handlers
         process.on('uncaughtException', (err) => {
             console.error('Uncaught Exception:', err);
@@ -1222,6 +1270,231 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             bot.stop('SIGTERM');
         });
     } catch { }
+}
+
+// Daily Admin Achievement Notification System
+function setupDailyAdminNotifications(bot) {
+    // Function to get all admin telegram IDs
+    async function getAllAdminTelegramIds() {
+        try {
+            const admins = await User.find({
+                role: { $in: ['admin', 'super_admin'] }
+            }).select('telegramId').lean();
+
+            return admins
+                .map(admin => admin.telegramId)
+                .filter(id => id && id.trim() !== '');
+        } catch (error) {
+            console.error('Error fetching admin telegram IDs:', error);
+            return [];
+        }
+    }
+
+    // Function to get daily statistics
+    async function getDailyStats() {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            // Get today's games
+            const todayGames = await Game.find({
+                finishedAt: { $gte: today, $lt: tomorrow },
+                status: 'finished'
+            }).lean();
+
+            // Calculate total games
+            const totalGames = todayGames.length;
+
+            // Calculate total system revenue (systemCut)
+            const totalRevenue = todayGames.reduce((sum, game) => {
+                return sum + (game.systemCut || 0);
+            }, 0);
+
+            // Get today's deposits (completed transactions)
+            const todayDeposits = await Transaction.find({
+                type: 'deposit',
+                status: 'completed',
+                createdAt: { $gte: today, $lt: tomorrow }
+            }).lean();
+
+            // Calculate total deposits
+            const totalDeposits = todayDeposits.reduce((sum, transaction) => {
+                return sum + (transaction.amount || 0);
+            }, 0);
+
+            // Get today's withdrawal approvals by admin
+            const todayWithdrawals = await Transaction.find({
+                type: 'withdrawal',
+                status: 'completed',
+                'processedBy.processedAt': { $gte: today, $lt: tomorrow },
+                'processedBy.adminId': { $exists: true, $ne: null }
+            }).lean();
+
+            // Group withdrawals by admin
+            const withdrawalsByAdmin = {};
+            for (const withdrawal of todayWithdrawals) {
+                if (withdrawal.processedBy && withdrawal.processedBy.adminId) {
+                    const adminId = withdrawal.processedBy.adminId.toString();
+                    if (!withdrawalsByAdmin[adminId]) {
+                        withdrawalsByAdmin[adminId] = {
+                            adminId: adminId,
+                            adminName: withdrawal.processedBy.adminName || 'Admin',
+                            adminTelegramId: withdrawal.processedBy.adminTelegramId,
+                            totalAmount: 0
+                        };
+                    }
+                    withdrawalsByAdmin[adminId].totalAmount += (withdrawal.amount || 0);
+                }
+            }
+
+            // Convert to array and sort by amount (descending)
+            const adminWithdrawals = Object.values(withdrawalsByAdmin)
+                .sort((a, b) => b.totalAmount - a.totalAmount);
+
+            return {
+                totalGames,
+                totalRevenue,
+                totalDeposits,
+                adminWithdrawals,
+                date: today.toISOString().split('T')[0] // Format: YYYY-MM-DD
+            };
+        } catch (error) {
+            console.error('Error fetching daily stats:', error);
+            return {
+                totalGames: 0,
+                totalRevenue: 0,
+                totalDeposits: 0,
+                adminWithdrawals: [],
+                date: new Date().toISOString().split('T')[0]
+            };
+        }
+    }
+
+    // Function to format and send daily notification
+    async function sendDailyNotification() {
+        try {
+            console.log('📊 Preparing daily admin achievement notification...');
+
+            // Get all admin telegram IDs
+            const adminIds = await getAllAdminTelegramIds();
+            if (adminIds.length === 0) {
+                console.log('⚠️ No admin users found. Skipping daily notification.');
+                return;
+            }
+
+            // Get daily statistics
+            const stats = await getDailyStats();
+
+            // Format date for display
+            const dateObj = new Date(stats.date);
+            const formattedDate = dateObj.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Create appreciation messages (rotating)
+            const appreciationMessages = [
+                "🎉 Great work today! Your platform continues to grow! 🎉",
+                "🌟 Excellent performance! Keep up the amazing work! 🌟",
+                "💪 Outstanding results! You're building something incredible! 💪",
+                "🚀 Fantastic progress! The platform is thriving! 🚀",
+                "✨ Impressive achievements! Keep pushing forward! ✨",
+                "🏆 Congratulations on another successful day! 🏆"
+            ];
+            const randomAppreciation = appreciationMessages[Math.floor(Math.random() * appreciationMessages.length)];
+
+            // Build admin withdrawals section
+            let adminWithdrawalsSection = '';
+            if (stats.adminWithdrawals && stats.adminWithdrawals.length > 0) {
+                adminWithdrawalsSection = '\n━━━━━━━━━━━━━━━━━━━━\n💸 *Admin Withdrawal Approvals:*\n━━━━━━━━━━━━━━━━━━━━\n\n';
+                for (const admin of stats.adminWithdrawals) {
+                    adminWithdrawalsSection += `👤 *${admin.adminName}:*\n   💰 ETB ${admin.totalAmount.toLocaleString()}\n\n`;
+                }
+            } else {
+                adminWithdrawalsSection = '\n━━━━━━━━━━━━━━━━━━━━\n💸 *Admin Withdrawal Approvals:*\n━━━━━━━━━━━━━━━━━━━━\n\n   No withdrawals approved today.\n\n';
+            }
+
+            // Format the message
+            const message = `📊 *Daily Achievement Report*
+${formattedDate}
+
+━━━━━━━━━━━━━━━━━━━━
+📈 *Today's Statistics:*
+━━━━━━━━━━━━━━━━━━━━
+
+🎮 *Total Games:* ${stats.totalGames.toLocaleString()}
+💰 *System Revenue:* ${stats.totalRevenue.toLocaleString()} ETB
+💳 *Total Deposits:* ${stats.totalDeposits.toLocaleString()} ETB
+${adminWithdrawalsSection}━━━━━━━━━━━━━━━━━━━━
+${randomAppreciation}
+
+📊 *Breakdown:*
+• Games Played: ${stats.totalGames}
+• Revenue Generated: ${stats.totalRevenue.toLocaleString()} ETB
+• Deposits Received: ${stats.totalDeposits.toLocaleString()} ETB
+
+Thank you for your dedication! 🙏`;
+
+            // Send message to all admins
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const telegramId of adminIds) {
+                try {
+                    await bot.telegram.sendMessage(telegramId, message, {
+                        parse_mode: 'Markdown'
+                    });
+                    successCount++;
+                    console.log(`✅ Daily notification sent to admin: ${telegramId}`);
+                } catch (error) {
+                    failCount++;
+                    console.error(`❌ Failed to send notification to ${telegramId}:`, error.message);
+                    // If user blocked the bot or chat not found, continue
+                    if (error.code === 403 || error.code === 400) {
+                        console.log(`   Skipping admin ${telegramId} (bot not started or blocked)`);
+                    }
+                }
+            }
+
+            console.log(`📊 Daily notification summary: ${successCount} sent, ${failCount} failed`);
+        } catch (error) {
+            console.error('❌ Error sending daily notification:', error);
+        }
+    }
+
+    // Function to calculate milliseconds until next midnight
+    function getMsUntilMidnight() {
+        const now = new Date();
+        const midnight = new Date(now);
+        midnight.setHours(24, 0, 0, 0); // Next midnight
+        return midnight.getTime() - now.getTime();
+    }
+
+    // Schedule daily notification
+    function scheduleNextNotification() {
+        const msUntilMidnight = getMsUntilMidnight();
+        const oneDay = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        console.log(`⏰ Next daily notification scheduled in ${Math.round(msUntilMidnight / 1000 / 60)} minutes`);
+
+        // Schedule first notification at midnight
+        setTimeout(() => {
+            sendDailyNotification();
+
+            // Then schedule recurring daily notifications
+            setInterval(() => {
+                sendDailyNotification();
+            }, oneDay);
+        }, msUntilMidnight);
+    }
+
+    // Start scheduling
+    console.log('📅 Daily admin achievement notification system initialized');
+    scheduleNextNotification();
 }
 
 module.exports = { startTelegramBot };

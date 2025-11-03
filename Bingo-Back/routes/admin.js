@@ -106,14 +106,45 @@ router.post('/withdrawals/:id/approve', adminMiddleware, async (req, res) => {
             return res.status(400).json({ error: result.error });
         }
 
-        // Update transaction status
+        // Get admin info from request (set by adminMiddleware)
+        let adminId = null;
+        let adminTelegramId = null;
+        let adminName = 'Admin';
+        
+        if (req.userId) {
+            try {
+                const User = require('../models/User');
+                const adminUser = await User.findById(req.userId);
+                if (adminUser) {
+                    adminId = adminUser._id;
+                    adminTelegramId = adminUser.telegramId;
+                    adminName = `${adminUser.firstName || ''} ${adminUser.lastName || ''}`.trim() || adminUser.username || 'Admin';
+                }
+            } catch (e) {
+                console.error('Error fetching admin user:', e);
+            }
+        }
+
+        // Update transaction status and track admin info
         transaction.status = 'completed';
         transaction.processedAt = new Date();
+        if (adminId) {
+            transaction.processedBy = {
+                adminId: adminId,
+                adminTelegramId: adminTelegramId,
+                adminName: adminName,
+                processedAt: new Date()
+            };
+        }
         await transaction.save();
 
         res.json({
             success: true,
-            message: 'Withdrawal approved successfully'
+            message: 'Withdrawal approved successfully',
+            transaction: {
+                amount: transaction.amount,
+                adminName: adminName
+            }
         });
     } catch (error) {
         console.error('Withdrawal approval error:', error);
@@ -155,6 +186,7 @@ router.post('/withdrawals/:id/deny', adminMiddleware, async (req, res) => {
 router.post('/internal/withdrawals/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
+        const { adminId, adminTelegramId, adminName } = req.body;
         const transaction = await Transaction.findById(id);
 
         if (!transaction) {
@@ -173,14 +205,19 @@ router.post('/internal/withdrawals/:id/approve', async (req, res) => {
             return res.status(400).json({ error: result.error });
         }
 
-        // Update transaction status
+        // Update transaction status and track admin info
         transaction.status = 'completed';
         transaction.processedAt = new Date();
+        if (adminId) transaction.processedBy = { adminId, adminTelegramId, adminName, processedAt: new Date() };
         await transaction.save();
 
         res.json({
             success: true,
-            message: 'Withdrawal approved successfully'
+            message: 'Withdrawal approved successfully',
+            transaction: {
+                amount: transaction.amount,
+                adminName: adminName || 'Admin'
+            }
         });
     } catch (error) {
         console.error('Internal withdrawal approval error:', error);

@@ -280,7 +280,7 @@ function AppContent() {
       case 'profile':
         return <Profile onNavigate={handleNavigate} />;
       case 'winner':
-        return <Winner onNavigate={handleNavigate} />;
+        return <Winner onNavigate={handleNavigate} onResetToGame={handleResetToGame} />;
       default:
         console.log('Default case - rendering Game component');
         return <Game onNavigate={handleNavigate} onStakeSelected={handleStakeSelected} selectedStake={selectedStake} />;

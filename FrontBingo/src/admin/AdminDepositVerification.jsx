@@ -7,7 +7,6 @@ export default function AdminDepositVerification() {
     const [stats, setStats] = useState(null);
     const [selectedVerification, setSelectedVerification] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
-    const [statusFilter, setStatusFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -100,17 +99,18 @@ export default function AdminDepositVerification() {
         return 'text-red-500';
     };
 
-    const filteredVerifications = verifications.filter(v => {
-        const matchesStatus = statusFilter === 'all' ? true : v.status === statusFilter;
+    const baseFiltered = verifications.filter(v => {
         const q = searchQuery.trim().toLowerCase();
-        const matchesQuery = q.length === 0 ? true : (
+        if (q.length === 0) return true;
+        return (
             (v.userId?.firstName || '').toLowerCase().includes(q) ||
             (v.userId?.lastName || '').toLowerCase().includes(q) ||
             (v.userId?.phone || '').toLowerCase().includes(q) ||
             String(v.amount || '').includes(q)
         );
-        return matchesStatus && matchesQuery;
     });
+    const pendingVerifications = baseFiltered.filter(v => v.status === 'pending_review');
+    const completedVerifications = baseFiltered.filter(v => v.status === 'approved' || v.status === 'rejected');
 
     if (loading) {
         return (
@@ -142,16 +142,6 @@ export default function AdminDepositVerification() {
                             placeholder="Search name, phone, amount"
                             className="h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
-                        <select
-                            value={statusFilter}
-                            onChange={e => setStatusFilter(e.target.value)}
-                            className="h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        >
-                            <option value="all">All</option>
-                            <option value="pending_review">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
                     </div>
                 </div>
 
@@ -181,41 +171,42 @@ export default function AdminDepositVerification() {
                 )}
             </div>
 
-            {/* Verifications List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredVerifications.map((verification) => (
-                    <div key={verification._id} className="rounded-xl bg-white shadow hover:shadow-md transition-shadow p-5">
-                        <div className="flex items-start justify-between gap-3">
-                            <div>
-                                <div className="text-sm font-semibold text-gray-900">
-                                    {verification.userId?.firstName} {verification.userId?.lastName}
+            {/* Pending Verifications */}
+            <div className="mb-4">
+                <h2 className="text-lg font-bold text-gray-800 mb-2">Pending</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {pendingVerifications.map((verification) => (
+                        <div key={verification._id} className="rounded-xl bg-white shadow hover:shadow-md transition-shadow p-5">
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <div className="text-sm font-semibold text-gray-900">
+                                        {verification.userId?.firstName} {verification.userId?.lastName}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                        {verification.userId?.phone} • {verification.userId?.telegramId}
+                                    </div>
                                 </div>
-                                <div className="text-xs text-gray-500">
-                                    {verification.userId?.phone} • {verification.userId?.telegramId}
-                                </div>
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(verification.status)} bg-gray-100 capitalize`}>
+                                    {verification.status?.replace('_', ' ')}
+                                </span>
                             </div>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(verification.status)} bg-gray-100 capitalize`}>
-                                {verification.status?.replace('_', ' ')}
-                            </span>
-                        </div>
 
-                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="sm:col-span-2">
-                                <div className="grid grid-cols-5 gap-1 text-center">
-                                    <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.phoneMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Phone</div>
-                                    <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.amountMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Amount</div>
-                                    <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.referenceMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Reference</div>
-                                    <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.timeMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Time</div>
-                                    <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.paymentMethodMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Method</div>
+                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div className="sm:col-span-2">
+                                    <div className="grid grid-cols-5 gap-1 text-center">
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.phoneMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Phone</div>
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.amountMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Amount</div>
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.referenceMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Reference</div>
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.timeMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Time</div>
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.paymentMethodMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Method</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="sm:col-span-1 flex flex-col items-end gap-2">
-                                <div className="text-right">
-                                    <div className="text-xs text-gray-500">Amount</div>
-                                    <div className="text-xl font-extrabold text-green-600">ETB {verification.amount?.toFixed(2)}</div>
-                                    <div className={`text-xs font-semibold ${getConfidenceColor(verification.matchResult?.confidence)}`}>{verification.matchResult?.confidence?.toFixed(1)}% confidence</div>
-                                </div>
-                                {verification.status === 'pending_review' ? (
+                                <div className="sm:col-span-1 flex flex-col items-end gap-2">
+                                    <div className="text-right">
+                                        <div className="text-xs text-gray-500">Amount</div>
+                                        <div className="text-xl font-extrabold text-green-600">ETB {verification.amount?.toFixed(2)}</div>
+                                        <div className={`text-xs font-semibold ${getConfidenceColor(verification.matchResult?.confidence)}`}>{verification.matchResult?.confidence?.toFixed(1)}% confidence</div>
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => handleApprove(verification._id)}
@@ -241,11 +232,60 @@ export default function AdminDepositVerification() {
                                             Details
                                         </button>
                                     </div>
-                                ) : null}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                    {pendingVerifications.length === 0 && (
+                        <div className="col-span-full text-sm text-gray-500">No pending verifications</div>
+                    )}
+                </div>
+            </div>
+
+            {/* Completed Verifications */}
+            <div>
+                <h2 className="text-lg font-bold text-gray-800 mb-2">Completed</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {completedVerifications.map((verification) => (
+                        <div key={verification._id} className="rounded-xl bg-white shadow hover:shadow-md transition-shadow p-5">
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <div className="text-sm font-semibold text-gray-900">
+                                        {verification.userId?.firstName} {verification.userId?.lastName}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                        {verification.userId?.phone} • {verification.userId?.telegramId}
+                                    </div>
+                                </div>
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(verification.status)} bg-gray-100 capitalize`}>
+                                    {verification.status?.replace('_', ' ')}
+                                </span>
+                            </div>
+
+                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div className="sm:col-span-2">
+                                    <div className="grid grid-cols-5 gap-1 text-center">
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.phoneMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Phone</div>
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.amountMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Amount</div>
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.referenceMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Reference</div>
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.timeMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Time</div>
+                                        <div className={`rounded-lg py-2 text-xs font-medium ${verification.matchResult?.matches?.paymentMethodMatch ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>Method</div>
+                                    </div>
+                                </div>
+                                <div className="sm:col-span-1 flex flex-col items-end gap-2">
+                                    <div className="text-right">
+                                        <div className="text-xs text-gray-500">Amount</div>
+                                        <div className="text-xl font-extrabold text-green-600">ETB {verification.amount?.toFixed(2)}</div>
+                                        <div className={`text-xs font-semibold ${getConfidenceColor(verification.matchResult?.confidence)}`}>{verification.matchResult?.confidence?.toFixed(1)}% confidence</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    {completedVerifications.length === 0 && (
+                        <div className="col-span-full text-sm text-gray-500">No completed verifications</div>
+                    )}
+                </div>
             </div>
 
             {/* Verification Details Modal */}

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api/client';
 
 export default function AdminBalance() {
-    const [withdrawals, setWithdrawals] = useState([]);
+    const [withdrawalsPending, setWithdrawalsPending] = useState([]);
+    const [withdrawalsCompleted, setWithdrawalsCompleted] = useState([]);
     const [deposits, setDeposits] = useState([]);
     const [activeTab, setActiveTab] = useState('deposit');
     const [loading, setLoading] = useState(true);
@@ -11,11 +12,13 @@ export default function AdminBalance() {
         (async () => {
             try {
                 setLoading(true);
-                const [w, d] = await Promise.all([
+                const [wPending, wCompleted, d] = await Promise.all([
                     apiFetch('/api/admin/balances/withdrawals?status=pending'),
+                    apiFetch('/api/admin/balances/withdrawals?status=completed'),
                     apiFetch('/api/admin/balances/deposits')
                 ]);
-                setWithdrawals(w.withdrawals || []);
+                setWithdrawalsPending(wPending.withdrawals || []);
+                setWithdrawalsCompleted(wCompleted.withdrawals || []);
                 setDeposits(d.deposits || []);
             } finally {
                 setLoading(false);
@@ -24,11 +27,13 @@ export default function AdminBalance() {
     }, []);
 
     const refresh = async () => {
-        const [w, d] = await Promise.all([
+        const [wPending, wCompleted, d] = await Promise.all([
             apiFetch('/api/admin/balances/withdrawals?status=pending'),
+            apiFetch('/api/admin/balances/withdrawals?status=completed'),
             apiFetch('/api/admin/balances/deposits')
         ]);
-        setWithdrawals(w.withdrawals || []);
+        setWithdrawalsPending(wPending.withdrawals || []);
+        setWithdrawalsCompleted(wCompleted.withdrawals || []);
         setDeposits(d.deposits || []);
     };
 
@@ -131,34 +136,68 @@ export default function AdminBalance() {
                                 </div>
                             )
                         ) : (
-                            withdrawals.length > 0 ? (
-                                withdrawals.map(w => (
-                                    <div key={w._id} className="admin-table-row">
-                                        <div className="admin-table-cell admin-table-cell-blue">
-                                            <span>👤</span>
-                                            {w.userId?.firstName || `User ${String(w.userId?._id || w.userId || '').slice(-6) || 'Unknown'}`}
-                                        </div>
-                                        <div className="admin-table-cell admin-table-cell-bold admin-table-cell-orange">
-                                            <span>💸</span>
-                                            ETB {w.amount}
-                                        </div>
-                                        <div className="admin-table-cell flex items-center gap-2">
-                                            <span className={`admin-status-badge-small ${getStatusColor(w.status)}`}>
-                                                {w.status === 'pending' && '⏳'}
-                                                {w.status === 'completed' && '✅'}
-                                                {w.status === 'cancelled' && '❌'}
-                                                {w.status === 'failed' && '⚠️'}
-                                                {w.status || 'pending'}
-                                            </span>
-                                            {w.status === 'pending' && (
-                                                <>
-                                                    <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/withdrawals/${w._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
-                                                    <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/withdrawals/${w._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))
+                            (withdrawalsPending.length > 0 || withdrawalsCompleted.length > 0) ? (
+                                <>
+                                    {withdrawalsPending.length > 0 && (
+                                        <>
+                                            <div className="admin-section-title">Pending</div>
+                                            {withdrawalsPending.map(w => (
+                                                <div key={w._id} className="admin-table-row">
+                                                    <div className="admin-table-cell admin-table-cell-blue">
+                                                        <span>👤</span>
+                                                        {w.userId?.firstName || `User ${String(w.userId?._id || w.userId || '').slice(-6) || 'Unknown'}`}
+                                                    </div>
+                                                    <div className="admin-table-cell admin-table-cell-bold admin-table-cell-orange">
+                                                        <span>💸</span>
+                                                        ETB {w.amount}
+                                                    </div>
+                                                    <div className="admin-table-cell flex items-center gap-2">
+                                                        <span className={`admin-status-badge-small ${getStatusColor(w.status)}`}>
+                                                            {w.status === 'pending' && '⏳'}
+                                                            {w.status === 'completed' && '✅'}
+                                                            {w.status === 'cancelled' && '❌'}
+                                                            {w.status === 'failed' && '⚠️'}
+                                                            {w.status || 'pending'}
+                                                        </span>
+                                                        {w.status === 'pending' && (
+                                                            <>
+                                                                <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/withdrawals/${w._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
+                                                                <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/withdrawals/${w._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
+
+                                    {withdrawalsCompleted.length > 0 && (
+                                        <>
+                                            <div className="admin-section-title">Completed</div>
+                                            {withdrawalsCompleted.map(w => (
+                                                <div key={w._id} className="admin-table-row">
+                                                    <div className="admin-table-cell admin-table-cell-blue">
+                                                        <span>👤</span>
+                                                        {w.userId?.firstName || `User ${String(w.userId?._id || w.userId || '').slice(-6) || 'Unknown'}`}
+                                                    </div>
+                                                    <div className="admin-table-cell admin-table-cell-bold admin-table-cell-orange">
+                                                        <span>💸</span>
+                                                        ETB {w.amount}
+                                                    </div>
+                                                    <div className="admin-table-cell flex items-center gap-2">
+                                                        <span className={`admin-status-badge-small ${getStatusColor(w.status)}`}>
+                                                            {w.status === 'pending' && '⏳'}
+                                                            {w.status === 'completed' && '✅'}
+                                                            {w.status === 'cancelled' && '❌'}
+                                                            {w.status === 'failed' && '⚠️'}
+                                                            {w.status || 'completed'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
+                                </>
                             ) : (
                                 <div className="admin-empty-state">
                                     <div className="admin-empty-icon">💸</div>
