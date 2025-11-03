@@ -932,10 +932,14 @@ server.listen(PORT, () => {
     });
 });
 
-// Start Telegram bot
-if (BOT_TOKEN) {
-    const { startTelegramBot } = require('./telegram/bot');
-    startTelegramBot({ BOT_TOKEN, WEBAPP_URL });
+// Start Telegram bot (guarded by RUN_TELEGRAM_BOT)
+if (process.env.RUN_TELEGRAM_BOT === 'true') {
+    if (BOT_TOKEN) {
+        const { startTelegramBot } = require('./telegram/bot');
+        startTelegramBot({ BOT_TOKEN, WEBAPP_URL });
+    } else {
+        console.log('⚠️  BOT_TOKEN not set. Telegram bot is disabled.');
+    }
 } else {
-    console.log('⚠️  BOT_TOKEN not set. Telegram bot is disabled.');
+    console.log('🤖 Telegram bot startup skipped (RUN_TELEGRAM_BOT != "true").');
 }
