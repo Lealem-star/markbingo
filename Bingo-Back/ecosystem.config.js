@@ -15,7 +15,7 @@ module.exports = {
                 RUN_TELEGRAM_BOT: 'false',
                 ADMIN_BOOT_CODE: 'SuperSecret2018',
                 WEBAPP_URL: 'https://fikirbingo.com',
-                API_BASE_URL: 'https://localhost:3001',
+                API_BASE_URL: 'http://localhost:3001',
                 JWT_SECRET: 'your_super_secret_jwt_key_here_change_this',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1',
                 AGENT_PHONE_NUMBERS: '127',
@@ -46,6 +46,7 @@ module.exports = {
                 RUN_TELEGRAM_BOT: 'true',
                 WEBAPP_URL: 'https://fikirbingo.com',
                 API_BASE_URL: 'http://localhost:3001',
+                API_URL: 'http://localhost:3001',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
             },
             error_file: './logs/bot-err.log',

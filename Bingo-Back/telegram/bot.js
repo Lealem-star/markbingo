@@ -611,7 +611,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                     console.error('Error fetching transaction:', e);
                 }
 
-                const apiBase = process.env.API_URL || 'http://localhost:3001';
+                const apiBase = process.env.API_BASE_URL || 'http://localhost:3001';
                 const response = await fetch(`${apiBase}/admin/internal/withdrawals/${withdrawalId}/approve`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -646,7 +646,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             const withdrawalId = ctx.match[1];
 
             try {
-                const apiBase = process.env.API_URL || 'http://localhost:3001';
+                const apiBase = process.env.API_BASE_URL || 'http://localhost:3001';
                 const response = await fetch(`${apiBase}/admin/internal/withdrawals/${withdrawalId}/deny`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
@@ -671,7 +671,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             if (!(await ensureAdmin(ctx))) return;
             const verificationId = ctx.match[1];
             try {
-                const apiBase = process.env.API_URL || 'http://localhost:3001';
+                const apiBase = process.env.API_BASE_URL || 'http://localhost:3001';
                 const response = await fetch(`${apiBase}/sms-forwarder/approve/${verificationId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -696,7 +696,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             if (!(await ensureAdmin(ctx))) return;
             const verificationId = ctx.match[1];
             try {
-                const apiBase = process.env.API_URL || 'http://localhost:3001';
+                const apiBase = process.env.API_BASE_URL || 'http://localhost:3001';
                 const response = await fetch(`${apiBase}/sms-forwarder/reject/${verificationId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -987,7 +987,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                         const token = generateUserToken(user._id);
 
                         // Create withdrawal request via API
-                        const apiBase = process.env.API_URL || 'http://localhost:3001';
+                        const apiBase = process.env.API_BASE_URL || 'http://localhost:3001';
                         const response = await fetch(`${apiBase}/wallet/withdraw`, {
                             method: 'POST',
                             headers: {

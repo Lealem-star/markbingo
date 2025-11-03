@@ -122,9 +122,20 @@ export default function AdminBalance() {
                                             <span>💰</span>
                                             ETB {d.amount}
                                         </div>
-                                        <div className="admin-table-cell admin-table-cell-bold admin-table-cell-amber">
-                                            <span>🎁</span>
-                                            +{Math.floor(d.amount * 0.1)} coins
+                                        <div className="admin-table-cell flex items-center gap-2">
+                                            <span className={`admin-status-badge-small ${getStatusColor(d.status || 'completed')}`}>
+                                                {d.status === 'pending' && '⏳'}
+                                                {d.status === 'completed' && '✅'}
+                                                {d.status === 'cancelled' && '❌'}
+                                                {d.status === 'failed' && '⚠️'}
+                                                {d.status || 'completed'}
+                                            </span>
+                                            {d.status === 'pending' && (
+                                                <>
+                                                    <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/balances/deposits/${d._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
+                                                    <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/balances/deposits/${d._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 ))

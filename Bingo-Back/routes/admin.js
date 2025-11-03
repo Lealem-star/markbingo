@@ -143,11 +143,6 @@ router.post('/withdrawals/:id/approve', adminMiddleware, async (req, res) => {
             await NotificationService.notifyWithdrawalApproved(transaction.userId, transaction.amount);
         } catch (_) { }
 
-        try {
-            const NotificationService = require('../services/notificationService');
-            await NotificationService.notifyWithdrawalApproved(transaction.userId, transaction.amount);
-        } catch (_) { }
-
         res.json({
             success: true,
             message: 'Withdrawal approved successfully',
