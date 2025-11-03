@@ -45,7 +45,7 @@ module.exports = {
                 BOT_TOKEN: '7879034950:AAFNKagUiLIBVRgmAPj9czto328dYh72TB8',
                 RUN_TELEGRAM_BOT: 'true',
                 WEBAPP_URL: 'https://fikirbingo.com',
-                API_BASE_URL: 'https://fikirbingo.com',
+                API_BASE_URL: 'http://localhost:3001',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
             },
             error_file: './logs/bot-err.log',

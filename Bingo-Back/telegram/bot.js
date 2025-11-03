@@ -1065,7 +1065,10 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
 
                 // Send user SMS to dual verification system
                 try {
-                    const response = await fetch(`${process.env.API_BASE_URL || 'http://localhost:3001'}/sms-forwarder/user-sms`, {
+                    const apiUrl = `${process.env.API_BASE_URL || 'http://localhost:3001'}/sms-forwarder/user-sms`;
+                    console.log('📤 Sending SMS to API:', { apiUrl, userId: user._id, hasPhone: !!user.phone });
+
+                    const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -1075,7 +1078,14 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                         })
                     });
 
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('❌ API error response:', { status: response.status, statusText: response.statusText, body: errorText });
+                        throw new Error(`API returned ${response.status}: ${errorText}`);
+                    }
+
                     const result = await response.json();
+                    console.log('📥 API response:', { success: result.success, verificationId: result.verificationId, isVerified: result.isVerified });
 
                     if (result.success) {
                         // Notify admins if auto-verification created
@@ -1105,7 +1115,13 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                         throw new Error('Failed to process SMS');
                     }
                 } catch (error) {
-                    console.error('Dual SMS verification error:', error);
+                    console.error('❌ Dual SMS verification error:', {
+                        message: error.message,
+                        stack: error.stack,
+                        name: error.name,
+                        userId: user?._id,
+                        hasPhone: !!user?.phone
+                    });
                     return ctx.reply('❌ Failed to process your SMS. Please try again or contact support.');
                 }
             } catch (error) {
