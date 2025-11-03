@@ -1078,10 +1078,16 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                         })
                     });
 
-                    if (!response.ok) {
+                    const contentType = response.headers.get('content-type') || '';
+                    if (!response.ok || !contentType.includes('application/json')) {
                         const errorText = await response.text();
-                        console.error('❌ API error response:', { status: response.status, statusText: response.statusText, body: errorText });
-                        throw new Error(`API returned ${response.status}: ${errorText}`);
+                        console.error('❌ API non-JSON or error response:', {
+                            status: response.status,
+                            statusText: response.statusText,
+                            contentType,
+                            bodyPreview: errorText?.slice(0, 500)
+                        });
+                        throw new Error(`Bad API response (${response.status})`);
                     }
 
                     const result = await response.json();
