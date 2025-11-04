@@ -13,12 +13,33 @@ class SmsForwarderService {
                 throw new Error('Message cannot be empty or invalid');
             }
 
+            // Parse content first to try to derive an accurate event timestamp from the SMS body
+            const parsedData = this.parseSMSContent(smsData.message);
+
+            // Helper to convert parsed datetime like "04/11/2025 13:18:47" into a Date
+            function parseParsedDatetimeToDate(dtString) {
+                if (!dtString || typeof dtString !== 'string') return null;
+                // Try DD/MM/YYYY HH:MM:SS
+                const m = dtString.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?/);
+                if (m) {
+                    const [_, dd, mm, yyyy, HH, MM, SS] = m;
+                    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(HH), Number(MM), Number(SS || 0));
+                    if (!isNaN(date.getTime())) return date;
+                }
+                // Fallback: try native Date
+                const d = new Date(dtString);
+                return isNaN(d.getTime()) ? null : d;
+            }
+
+            const parsedTimestamp = parseParsedDatetimeToDate(parsedData?.datetime);
+            const effectiveTimestamp = smsData.timestamp ? new Date(smsData.timestamp) : (parsedTimestamp || new Date());
+
             const smsRecord = new SMSRecord({
                 phoneNumber: smsData.phoneNumber,
                 message: smsData.message.trim(), // Ensure trimmed message
-                timestamp: smsData.timestamp || new Date(),
+                timestamp: effectiveTimestamp,
                 source: smsData.source || 'forwarder',
-                parsedData: this.parseSMSContent(smsData.message),
+                parsedData,
                 status: 'pending',
                 userId: smsData.userId || null
             });
