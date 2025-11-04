@@ -629,7 +629,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
     return (
         <div className="app-container">
-            <header className="p-4">
+            <header className="p-4 mb-6">
                 {/* Top Row: Back and Refresh buttons */}
                 <div className="flex items-center justify-between mb-4">
                     <button onClick={() => {
@@ -691,7 +691,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 </div>
             </header>
 
-            <main className="p-4">
+            <main className="p-4 mt-2">
                 {/* Status Message */}
                 {gameState.phase === 'waiting' && (
                     <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-500 rounded-lg">
@@ -716,7 +716,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
                 {/* Number Selection Grid - Inside Scrollable Box */}
                 <div className="my-4 mx-4">
-                    <div className="bg-gray-800 rounded-lg p-4 max-h-[200px] overflow-y-auto">
+                    <div className="bg-gray-800 rounded-lg p-4 max-h-[250px] overflow-y-auto">
                         <div className="cartela-numbers-grid">
                             {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
                                 const isTaken = gameState.takenCards.includes(cartelaNumber);
