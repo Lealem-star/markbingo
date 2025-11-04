@@ -714,32 +714,36 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                     </div>
                 )}
 
-                {/* Number Selection Grid */}
-                <div className="cartela-numbers-grid">
-                    {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
-                        const isTaken = gameState.takenCards.includes(cartelaNumber);
-                        const isSelected = selectedCardNumber === cartelaNumber;
-                        const takenByMe = gameState.yourSelection === cartelaNumber;
+                {/* Number Selection Grid - Inside Scrollable Box */}
+                <div className="mb-4">
+                    <div className="bg-gray-800 rounded-lg p-4 max-h-[400px] overflow-y-auto">
+                        <div className="cartela-numbers-grid">
+                            {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
+                                const isTaken = gameState.takenCards.includes(cartelaNumber);
+                                const isSelected = selectedCardNumber === cartelaNumber;
+                                const takenByMe = gameState.yourSelection === cartelaNumber;
 
-                        return (
-                            <button
-                                key={cartelaNumber}
-                                onClick={() => !isTaken && handleCardSelect(cartelaNumber)}
-                                disabled={isTaken || gameState.phase === 'running'}
-                                className={`cartela-number-btn ${isTaken
-                                    ? (takenByMe
-                                        ? 'bg-green-600 text-white cursor-default'
-                                        : 'bg-red-600 text-white cursor-not-allowed opacity-60')
-                                    : (isSelected
-                                        ? 'bg-blue-600 text-white'
-                                        : 'hover:bg-blue-500')
-                                    }`}
-                                title={`Cartella #${cartelaNumber}`}
-                            >
-                                {cartelaNumber}
-                            </button>
-                        );
-                    })}
+                                return (
+                                    <button
+                                        key={cartelaNumber}
+                                        onClick={() => !isTaken && handleCardSelect(cartelaNumber)}
+                                        disabled={isTaken || gameState.phase === 'running'}
+                                        className={`cartela-number-btn ${isTaken
+                                            ? (takenByMe
+                                                ? 'bg-green-600 text-white cursor-default'
+                                                : 'bg-red-600 text-white cursor-not-allowed opacity-60')
+                                            : (isSelected
+                                                ? 'bg-blue-600 text-white'
+                                                : 'hover:bg-blue-500')
+                                            }`}
+                                        title={`Cartella #${cartelaNumber}`}
+                                    >
+                                        {cartelaNumber}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
 
 
