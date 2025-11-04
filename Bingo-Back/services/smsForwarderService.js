@@ -19,10 +19,18 @@ class SmsForwarderService {
             // Helper to convert parsed datetime like "04/11/2025 13:18:47" into a Date
             function parseParsedDatetimeToDate(dtString) {
                 if (!dtString || typeof dtString !== 'string') return null;
-                // Try DD/MM/YYYY HH:MM:SS
-                const m = dtString.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?/);
+                // Try DD/MM/YYYY HH:MM(:SS)?
+                let m = dtString.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?/);
                 if (m) {
                     const [_, dd, mm, yyyy, HH, MM, SS] = m;
+                    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(HH), Number(MM), Number(SS || 0));
+                    if (!isNaN(date.getTime())) return date;
+                }
+                // Try DD/MM/YY HH:MM (assume 20YY)
+                m = dtString.match(/(\d{2})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?/);
+                if (m) {
+                    const [_, dd, mm, yy, HH, MM, SS] = m;
+                    const yyyy = 2000 + Number(yy);
                     const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(HH), Number(MM), Number(SS || 0));
                     if (!isNaN(date.getTime())) return date;
                 }
@@ -403,6 +411,46 @@ class SmsForwarderService {
         } catch (error) {
             console.error('Error creating deposit verification:', error);
             throw error;
+        }
+    }
+
+    // Create a pending verification from user SMS alone by generating a placeholder receiver SMS
+    static async createPendingVerificationFromUserSMS(userSMS) {
+        try {
+            // Create a placeholder receiver SMSRecord to satisfy schema requirements
+            const placeholder = new SMSRecord({
+                phoneNumber: 'unknown',
+                message: 'PENDING RECEIVER MATCH',
+                timestamp: userSMS.timestamp || new Date(),
+                source: 'receiver',
+                parsedData: {
+                    amount: userSMS.parsedData?.amount || null,
+                    reference: userSMS.parsedData?.reference || null,
+                    datetime: userSMS.parsedData?.datetime || null,
+                    paymentMethod: userSMS.parsedData?.paymentMethod || null,
+                    rawMessage: 'PENDING RECEIVER MATCH'
+                },
+                status: 'pending',
+                userId: null
+            });
+            await placeholder.save();
+
+            const matchResult = {
+                matches: { amountMatch: !!userSMS.parsedData?.amount, referenceMatch: false, timeMatch: false, paymentMethodMatch: false, phoneMatch: false },
+                criticalScore: 1,
+                optionalScore: 0,
+                matchScore: 1,
+                totalCriteria: 2,
+                confidence: 0,
+                isVerified: false,
+                reason: 'Awaiting receiver SMS'
+            };
+
+            const verification = await this.createDepositVerification(userSMS.userId, userSMS, placeholder, matchResult);
+            return verification;
+        } catch (e) {
+            console.error('Error creating pending verification from user SMS:', e);
+            throw e;
         }
     }
 

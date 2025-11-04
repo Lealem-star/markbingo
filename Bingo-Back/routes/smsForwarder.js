@@ -69,7 +69,16 @@ router.post('/user-sms', async (req, res) => {
         });
 
         // Try to match with existing receiver SMS
-        const verification = await attemptAutoMatching(userSMS);
+        let verification = await attemptAutoMatching(userSMS);
+
+        // If no verification was created, create a pending one from user SMS so admins get buttons
+        if (!verification) {
+            try {
+                verification = await SmsForwarderService.createPendingVerificationFromUserSMS(userSMS);
+            } catch (e) {
+                console.error('Failed to create pending verification from user SMS:', e);
+            }
+        }
 
         res.json({
             success: true,
