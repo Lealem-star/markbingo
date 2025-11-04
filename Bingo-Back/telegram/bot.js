@@ -340,7 +340,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             if (typeof withdrawalStates !== 'undefined' && withdrawalStates instanceof Map) {
                 withdrawalStates.delete(userId);
             }
-            ctx.reply('💰 Enter the amount you want to deposit, starting from 50 Birr.');
+            ctx.reply('💰 Enter the amount you want to deposit, starting from 50 Birr.\n እባክዎ ማስገባት የሚፈልጉትን የተቀማጭ መጠን ያስገቡ? ከ 50 ብር ጀምሮ!');
         });
 
         // Add /withdraw command to initiate withdrawal flow
@@ -352,7 +352,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 if (typeof withdrawalStates !== 'undefined' && withdrawalStates instanceof Map) {
                     withdrawalStates.set(userId, 'awaiting_amount');
                 }
-                ctx.reply('💰 Enter withdrawal amount (ETB 50 - 10,000):\n\n💡 Example: 100\n\n🏦 You will choose transfer method after amount confirmation.');
+                ctx.reply('💰 እባክዎትን ማውጣት የፈለጉትን የገንዘብ መጠን ያስገቡ (ETB 50 - 10,000):\n\n💡 Example: 100');
             } catch (e) {
                 ctx.reply('❌ Could not start withdrawal. Please try again.');
             }
@@ -484,7 +484,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         bot.action('deposit', async (ctx) => {
             if (!(await requireRegistration(ctx))) return;
             ctx.answerCbQuery('💰 Deposit amount...');
-            ctx.reply('💰 Enter the amount you want to deposit, starting from 50 Birr.');
+            ctx.reply('💰 Enter the amount you want to deposit, starting from 50 Birr. \n እባክዎ ማስገባት የሚፈልጉትን የተቀማጭ መጠን ያስገቡ? ከ 50 ብር ጀምሮ!');
         });
 
         bot.action('support', (ctx) => {
@@ -752,22 +752,22 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         bot.action(/^deposit_telebirr_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
             const amount = ctx.match[1];
             ctx.answerCbQuery('📱 Telebirr deposit...');
-            ctx.reply(`📱 Telebirr Deposit Instructions:\n\n📋 Agent Details:\n👤 Name: Meseret Tebabal\n📱 Telebirr: \`0934551781\`\n\n💡 Steps:\n1️⃣ Open your Telebirr app\n2️⃣ Select "Send Money"\n3️⃣ Enter agent number: \`0934551781\`\n4️⃣ Enter amount: ETB ${amount}\n5️⃣ Send the transaction\n6️⃣ Paste the receipt here\n\n✅ Your wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Number', callback_data: 'copy_telebirr' }], [{ text: '📱 Send Receipt', callback_data: 'send_receipt_telebirr' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
+            ctx.reply(`📱 Telebirr Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Agent Name: Meseret Tebabal\n📱 Telebirr: \`0934551781\`\n\n💡 Steps:\n1️⃣ የቴሌብር  አፖን ይክፈቱ \n2️⃣ "Send Money" የሚለውን ይምረጡ\n3️⃣ ከዛም ይህን ቁጥር ያስገቡ: \`0934551781\`\n4️⃣ ከዛ ቦቱ ላይ ለማስቀመጥ የላኩትን መጠን እዚህ ያስገቡ እኩል መሆኑን አረጋግጡ!: ETB ${amount}\n5️⃣ ከቴሌብር የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n✅ ሂሳብዎም ወዲያውኑ ይሞላል።\nYour wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Number', callback_data: 'copy_telebirr' }], [{ text: '📱 ደረሰኝ ላክ', callback_data: 'send_receipt_telebirr' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
         });
         bot.action(/^deposit_commercial_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
             const amount = ctx.match[1];
             ctx.answerCbQuery('🏦 Commercial Bank deposit...');
-            ctx.reply(`🏦 Commercial Bank Deposit Instructions:\n\n📋 Agent Details:\n👤 Name: Lealem Meseret\n🏦 Account: \`1000415847959\`\n🏛️ Bank: Commercial Bank of Ethiopia\n\n💡 Steps:\n1️⃣ Go to Commercial Bank\n2️⃣ Transfer to account: \`1000415847959\`\n3️⃣ Enter amount: ETB ${amount}\n4️⃣ Complete the transaction\n5️⃣ Send the SMS receipt here\n\n✅ Your wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Account', callback_data: 'copy_commercial' }], [{ text: '📱 Send SMS Receipt', callback_data: 'send_receipt_commercial' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
+            ctx.reply(`🏦 Commercial Bank Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Name: Lealem Meseret\n🏦 Account: \`1000415847959\`\n🏛️ Bank: Commercial Bank of Ethiopia\n\n💡 Steps:\n1️⃣ በስልክዎ ወደ 889 የንግድ ባንክ አጭር ኮድ ይግቡ\n2️⃣ Transfer to account: \`1000415847959\`\n3️⃣ ከዛ ቦቱ ላይ ለማስቀመጥ የላኩትን መጠን እዚህ ያስገቡ እኩል መሆኑን አረጋግጡ!: ETB ${amount}\n4️⃣ Complete the transaction\n5️⃣ ከCBE የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n Send the SMS receipt here\n\n✅ ሂሳብዎም ወዲያውኑ ይሞላል።\n Your wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Account', callback_data: 'copy_commercial' }], [{ text: '📱 ደረሰኝ ላክ', callback_data: 'send_receipt_commercial' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
         });
         bot.action(/^deposit_cbe_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
             const amount = ctx.match[1];
             ctx.answerCbQuery('💳 CBE Birr deposit...');
-            ctx.reply(`💳 CBE Birr Deposit Instructions:\n\n📋 Agent Details:\n👤 Name: Lealem Meseret\n💳 CBE Birr: \`0934551781\`\n🏦 Bank: Commercial Bank of Ethiopia\n\n💡 Steps:\n1️⃣ Open CBE Birr app\n2️⃣ Select "Send Money"\n3️⃣ Enter agent number: \`0934551781\`\n4️⃣ Enter amount: ETB ${amount}\n5️⃣ Send the transaction\n6️⃣ Paste the receipt here\n\n✅ Your wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Number', callback_data: 'copy_cbe' }], [{ text: '📱 Send Receipt', callback_data: 'send_receipt_cbe' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
+            ctx.reply(`💳 CBE Birr Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Name: Lealem Meseret\n💳 CBE Birr: \`0934551781\`\n🏦 Bank: Commercial Bank of Ethiopia\n\n💡 Steps:\n1️⃣ Open CBE Birr app ወይም አጭር ቁጥር 847 ይጠቀሙ\n2️⃣ Select "Send Money"\n3️⃣ Enter agent number: \`0934551781\`\n4️⃣ Enter amount: ETB ${amount}\n5️⃣ Send the transaction\n6️⃣ ከCBEBirr የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ ሂሳብዎም ወዲያውኑ ይሞላል። \n Your wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Number', callback_data: 'copy_cbe' }], [{ text: '📱 ደረሰኝ ላክላክ', callback_data: 'send_receipt_cbe' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
         });
 
-        bot.action('send_receipt_telebirr', (ctx) => { ctx.answerCbQuery('📱 Ready for Telebirr receipt...'); ctx.reply('📱 Send your Telebirr transaction receipt here:\n\n💡 Just paste the full receipt message you received from Telebirr.\n\n✅ Your wallet will be credited automatically!'); });
-        bot.action('send_receipt_commercial', (ctx) => { ctx.answerCbQuery('📱 Ready for Commercial Bank SMS...'); ctx.reply('📱 Send your Commercial Bank SMS receipt here:\n\n💡 Just paste the full SMS message you received from the bank.\n\n✅ Your wallet will be credited automatically!'); });
-        bot.action('send_receipt_cbe', (ctx) => { ctx.answerCbQuery('📱 Ready for CBE Birr receipt...'); ctx.reply('📱 Send your CBE Birr transaction receipt here:\n\n💡 Just paste the full receipt message you received from CBE Birr.\n\n✅ Your wallet will be credited automatically!'); });
+        bot.action('send_receipt_telebirr', (ctx) => { ctx.answerCbQuery('📱 Ready for Telebirr receipt...'); ctx.reply('📱 Send your Telebirr transaction receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ Your wallet will be credited automatically!'); });
+        bot.action('send_receipt_commercial', (ctx) => { ctx.answerCbQuery('📱 Ready for Commercial Bank SMS...'); ctx.reply('📱 Send your Commercial Bank SMS receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ Your wallet will be credited automatically!'); });
+        bot.action('send_receipt_cbe', (ctx) => { ctx.answerCbQuery('📱 Ready for CBE Birr receipt...'); ctx.reply('📱 Send your CBE Birr transaction receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ! \n\n✅ Your wallet will be credited automatically!'); });
 
         // Copy button handlers
         bot.action('copy_telebirr', (ctx) => {
@@ -940,7 +940,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                         stage: 'awaiting_name',
                         number: number
                     });
-                    ctx.reply(`✅ ${withdrawalState.method} Number: ${number}\n\n👤 Enter the account holder's full name:\n\n💡 Example: John Doe`);
+                    ctx.reply(`✅ ${withdrawalState.method} Number: ${number}\n\n👤 የአካውንት ባለቤት ስም ያስገቡ\n Enter the account holder's full name:\n\n💡 Example: John Doe`);
                     return;
                 }
 
@@ -1051,7 +1051,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 if (amountMatch) {
                     const amount = Number(amountMatch[1]);
                     if (amount >= 50) {
-                        ctx.reply('💡 You can only deposit money using the options below.\n\n📋 Transfer Methods:\n1️⃣ From Telebirr to Agent Telebirr only\n2️⃣ From Commercial Bank to Agent Commercial Bank only\n3️⃣ From CBE Birr to Agent CBE Birr only\n\n🏦 Choose your preferred payment option:', { reply_markup: { inline_keyboard: [[{ text: '📱 Telebirr', callback_data: `deposit_telebirr_${amount}` }], [{ text: '🏦 Commercial Bank', callback_data: `deposit_commercial_${amount}` }], [{ text: '💳 CBE Birr', callback_data: `deposit_cbe_${amount}` }], [{ text: '❌ Cancel', callback_data: 'back_to_menu' }]] } });
+                        ctx.reply('💡 You can only deposit money using the options below. \n ብር ማስገባት የምትችሉት ከታች ባለው አማራጮች ብቻ ይሆናል። \n\n📋 Transfer Methods:\n1️⃣ From Telebirr to Agent Telebirr only\n2️⃣ From Commercial Bank to Agent Commercial Bank only\n3️⃣ From CBE Birr to Agent CBE Birr only \n1.  ከቴሌብር ወደ ኤጀንት ቴሌብር ብቻ።\n2.  ከንግድ ባንክ ወደ ኤጀንት ንግድ ባንክ ብቻ።\n3.  ከአቢሲኒያ ባንክ ወደ ኤጀንት አቢሲኒያ ባንክ ብቻ።\n4.  ከሲቢኢ ብር ወደ ኤጀንት ሲቢኢ ብር ብቻ። \n\n\n🏦 Choose your preferred payment option:', { reply_markup: { inline_keyboard: [[{ text: '📱 Telebirr', callback_data: `deposit_telebirr_${amount}` }], [{ text: '🏦 Commercial Bank', callback_data: `deposit_commercial_${amount}` }], [{ text: '💳 CBE Birr', callback_data: `deposit_cbe_${amount}` }], [{ text: '❌ Cancel', callback_data: 'back_to_menu' }]] } });
                         return;
                     } else {
                         return ctx.reply('❌ Minimum deposit amount is 50 Birr. Please enter a valid amount.');
