@@ -569,10 +569,11 @@ async function toAnnounce(room) {
                 await WalletService.processGameWin(winner.userId, prizePerWinner);
 
                 // Send wallet update to the winner
-                const ws = room.players.get(winner.userId);
-                if (ws && ws.readyState === WebSocket.OPEN) {
+                const playerObj = room.players.get(winner.userId);
+                const socket = playerObj && playerObj.ws;
+                if (socket && socket.readyState === socket.OPEN) {
                     const wallet = await WalletService.getWallet(winner.userId);
-                    ws.send(JSON.stringify({
+                    socket.send(JSON.stringify({
                         type: 'wallet_update',
                         payload: {
                             main: wallet.main,
@@ -593,10 +594,11 @@ async function toAnnounce(room) {
                 await WalletService.processGameCompletion(userId, room.currentGameId);
 
                 // Send wallet update to the player
-                const ws = room.players.get(userId);
-                if (ws && ws.readyState === WebSocket.OPEN) {
+                const playerObj = room.players.get(userId);
+                const socket = playerObj && playerObj.ws;
+                if (socket && socket.readyState === socket.OPEN) {
                     const wallet = await WalletService.getWallet(userId);
-                    ws.send(JSON.stringify({
+                    socket.send(JSON.stringify({
                         type: 'wallet_update',
                         payload: {
                             main: wallet.main,

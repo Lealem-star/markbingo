@@ -40,7 +40,8 @@ class SmsForwarderService {
             }
 
             const parsedTimestamp = parseParsedDatetimeToDate(parsedData?.datetime);
-            const effectiveTimestamp = smsData.timestamp ? new Date(smsData.timestamp) : (parsedTimestamp || new Date());
+            // Prefer timestamp parsed from the SMS body over incoming timestamp from forwarder
+            const effectiveTimestamp = parsedTimestamp || (smsData.timestamp ? new Date(smsData.timestamp) : new Date());
 
             const smsRecord = new SMSRecord({
                 phoneNumber: smsData.phoneNumber,
@@ -53,7 +54,7 @@ class SmsForwarderService {
             });
 
             await smsRecord.save();
-            
+
             // Log parsed data for debugging
             console.log(`💾 SMS Stored:`, {
                 id: smsRecord._id?.toString()?.substring(0, 8),
@@ -65,7 +66,7 @@ class SmsForwarderService {
                 timestamp: smsRecord.timestamp,
                 userId: smsRecord.userId?.toString()?.substring(0, 8) || null
             });
-            
+
             return smsRecord;
         } catch (error) {
             console.error('Error storing SMS:', error);
@@ -317,10 +318,10 @@ class SmsForwarderService {
                     }
                     return null;
                 }
-                
+
                 const userTime = parseDatetimeString(userParsed.datetime);
                 const receiverTime = parseDatetimeString(receiverParsed.datetime);
-                
+
                 if (userTime && receiverTime) {
                     const timeDiff = Math.abs(userTime.getTime() - receiverTime.getTime());
                     matches.timeMatch = timeDiff <= 15 * 60 * 1000; // 15 minutes window (aligned with search window)

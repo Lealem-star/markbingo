@@ -90,7 +90,7 @@ async function attemptAutoMatching(newSMS) {
     try {
         await session.withTransaction(async () => {
             // Find potential matches based on amount and time window
-            const timeWindow = 10 * 60 * 1000; // 10 minutes
+            const timeWindow = 15 * 60 * 1000; // 15 minutes
             const startTime = new Date(newSMS.timestamp.getTime() - timeWindow);
             const endTime = new Date(newSMS.timestamp.getTime() + timeWindow);
 
