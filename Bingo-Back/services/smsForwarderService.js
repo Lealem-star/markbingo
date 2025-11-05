@@ -515,6 +515,11 @@ class SmsForwarderService {
     // Create deposit verification record
     static async createDepositVerification(userId, userSMS, receiverSMS, matchResult) {
         try {
+            // Validate userId is provided
+            if (!userId) {
+                throw new Error(`Cannot create deposit verification: userId is required but was ${userId}. UserSMS phone: ${userSMS?.phoneNumber || 'unknown'}`);
+            }
+
             const verification = new DepositVerification({
                 userId,
                 userSMS: userSMS._id,
@@ -552,6 +557,23 @@ class SmsForwarderService {
     // Create a pending verification from user SMS alone by generating a placeholder receiver SMS
     static async createPendingVerificationFromUserSMS(userSMS) {
         try {
+            // Resolve userId if not present
+            let resolvedUserId = userSMS.userId;
+            if (!resolvedUserId && userSMS.phoneNumber) {
+                const User = require('../models/User');
+                const resolvedUser = await User.findOne({ phone: userSMS.phoneNumber });
+                if (resolvedUser) {
+                    resolvedUserId = resolvedUser._id;
+                    // Persist back to SMS record
+                    await SMSRecord.findByIdAndUpdate(userSMS._id, { userId: resolvedUserId });
+                }
+            }
+
+            // Cannot create verification without userId
+            if (!resolvedUserId) {
+                throw new Error(`Cannot create verification: no user found for phone ${userSMS.phoneNumber}`);
+            }
+
             // Create a placeholder receiver SMSRecord to satisfy schema requirements
             const placeholder = new SMSRecord({
                 phoneNumber: 'unknown',
@@ -581,7 +603,7 @@ class SmsForwarderService {
                 reason: 'Awaiting receiver SMS'
             };
 
-            const verification = await this.createDepositVerification(userSMS.userId, userSMS, placeholder, matchResult);
+            const verification = await this.createDepositVerification(resolvedUserId, userSMS, placeholder, matchResult);
             return verification;
         } catch (e) {
             console.error('Error creating pending verification from user SMS:', e);

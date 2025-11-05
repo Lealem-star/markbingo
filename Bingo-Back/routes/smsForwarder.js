@@ -247,9 +247,27 @@ async function attemptAutoMatching(newSMS) {
                 const userSMS = newSMS.source === 'user' ? newSMS : potentialMatch;
                 const receiverSMS = newSMS.source === 'receiver' ? newSMS : potentialMatch;
 
+                // Resolve userId if not present
+                let resolvedUserId = userSMS.userId;
+                if (!resolvedUserId && userSMS.phoneNumber) {
+                    const User = require('../models/User');
+                    const resolvedUser = await User.findOne({ phone: userSMS.phoneNumber });
+                    if (resolvedUser) {
+                        resolvedUserId = resolvedUser._id;
+                        // Persist back to SMS record
+                        await SMSRecord.findByIdAndUpdate(userSMS._id, { userId: resolvedUserId });
+                    }
+                }
+
+                // Skip if we still don't have a userId
+                if (!resolvedUserId) {
+                    console.log(`Skipping verification: no user found for phone ${userSMS.phoneNumber}`);
+                    continue;
+                }
+
                 // Always create a verification record; service will set status
                 const verification = await SmsForwarderService.createDepositVerification(
-                    userSMS.userId,
+                    resolvedUserId,
                     userSMS,
                     receiverSMS,
                     matchResult
