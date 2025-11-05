@@ -7,15 +7,7 @@ const SmsForwarderService = require('../services/smsForwarderService');
 router.post('/webhook', async (req, res) => {
     try {
         const raw = req.body || {};
-
-        // Optional webhook secret enforcement
-        const configuredSecret = process.env.SMS_WEBHOOK_SECRET;
-        if (configuredSecret) {
-            const providedSecret = req.headers['x-webhook-secret'];
-            if (!providedSecret || providedSecret !== configuredSecret) {
-                return res.status(401).json({ success: false, error: 'Unauthorized: invalid webhook secret' });
-            }
-        }
+        // Secret check removed: accept requests without custom headers
         // Normalize various possible payload keys from different forwarder apps
         const from = raw.from || raw.sender || raw.number || raw.phone || raw['in-number'] || raw.msisdn || 'unknown';
         const to = raw.to || raw.receiver || raw['in-sim'] || raw.sim || null;
