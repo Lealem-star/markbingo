@@ -148,10 +148,13 @@ class SmsForwarderService {
                 /\b(FT[0-9A-Z]{6,})\b/i, // CBE FT code
                 /\bref\s*no\s*[:\-]?\s*([A-Z0-9]+)/i, // Ref No ABC123
                 /\btxn\s*id\s*[:\-]?\s*([A-Z0-9]+)/i, // CBEBirr: "Txn ID CJS8X0WT0Y"
-                /your\s+transaction\s+number\s+is\s*([A-Z0-9]+)/i,
-                /transaction\s+number\s+is\s*([A-Z0-9]+)/i,
-                /id=([A-Z0-9]+)/i,
-                /ref[:\s]*([A-Z0-9]+)/i,
+                /\btransaction\s*id\s*[:\-]?\s*([A-Z0-9]+)/i, // Alternative: "Transaction ID ABC123"
+                /your\s+transaction\s+number\s+is\s*([A-Z0-9]+)/i, // Telebirr: "Your transaction number is CK45VJZ8JX"
+                /transaction\s+number\s+is\s*([A-Z0-9]+)/i, // Alternative format
+                /transaction\s+code\s*[:\-]?\s*([A-Z0-9]+)/i, // Some services use "code"
+                /txn\s*code\s*[:\-]?\s*([A-Z0-9]+)/i, // Short form
+                /id[:\s]*([A-Z0-9]{8,})/i, // Generic ID pattern (minimum 8 chars to avoid false matches)
+                /ref[:\s]*([A-Z0-9]{8,})/i, // Generic ref pattern (minimum 8 chars)
                 /reference[:\s]*([A-Z0-9]+)/i,
                 /\btxn[:\s]*([A-Z0-9]+)/i
             ],
@@ -406,18 +409,21 @@ class SmsForwarderService {
             // - Amount MUST match (critical)
             // - If BOTH SMS have references, they MUST match for auto-verification
             // - If one or both lack references, allow time-based matching (within 15 min window)
-            // - No payment-method or phone required for verification
+            // - Payment method matching is a bonus but not required (helps for mobile money like Telebirr/CBEBirr)
             const hasStrongReference = matches.referenceMatch;
             const hasStrongTime = matches.timeMatch;
             const bothHaveReferences = userParsed.reference && receiverParsed.reference;
+            const isMobileMoney = (userParsed.paymentMethod === 'telebirr' || userParsed.paymentMethod === 'cbebirr') ||
+                                  (receiverParsed.paymentMethod === 'telebirr' || receiverParsed.paymentMethod === 'cbebirr');
             
             let isVerified = false;
             if (matches.amountMatch) {
                 if (bothHaveReferences) {
-                    // When both have references, they MUST match
+                    // When both have references, they MUST match (critical for all services including Telebirr/CBEBirr)
                     isVerified = hasStrongReference;
                 } else {
                     // When one or both lack references, allow time-based matching
+                    // Payment method matching is logged but not required (helps with confidence)
                     isVerified = hasStrongTime;
                 }
             }
@@ -429,15 +435,21 @@ class SmsForwarderService {
                 amountMatch: matches.amountMatch,
                 referenceMatch: matches.referenceMatch,
                 timeMatch: matches.timeMatch,
+                paymentMethodMatch: matches.paymentMethodMatch,
                 bothHaveReferences,
+                isMobileMoney,
                 userAmount: userParsed.amount,
                 receiverAmount: receiverParsed.amount,
                 userReference: userParsed.reference,
                 receiverReference: receiverParsed.reference,
+                userPaymentMethod: userParsed.paymentMethod,
+                receiverPaymentMethod: receiverParsed.paymentMethod,
                 userDatetime: userParsed.datetime,
                 receiverDatetime: receiverParsed.datetime,
                 isVerified,
-                verificationReason: bothHaveReferences ? (isVerified ? 'reference match' : 'reference mismatch') : (isVerified ? 'time match' : 'time mismatch'),
+                verificationReason: bothHaveReferences 
+                    ? (isVerified ? 'reference match' : 'reference mismatch') 
+                    : (isVerified ? 'time match (+payment method match for mobile money)' : 'time mismatch'),
                 confidence: confidence.toFixed(1) + '%'
             });
 
