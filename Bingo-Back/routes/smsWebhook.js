@@ -129,13 +129,20 @@ async function attemptAutoMatching(newSMS) {
             console.log(`Found ${potentialMatches.length} potential matches for SMS ${newSMS._id}`);
 
             for (const potentialMatch of potentialMatches) {
+                // Safety check: reload potential match to ensure it's still pending (not matched by another transaction)
+                const freshMatch = await SMSRecord.findById(potentialMatch._id).session(session);
+                if (!freshMatch || freshMatch.status !== 'pending') {
+                    console.log(`Skipping potential match ${freshMatch?._id?.toString()?.substring(0, 8)}: status is ${freshMatch?.status || 'not found'}`);
+                    continue;
+                }
+                
                 // Enhanced matching with better verification
-                const matchResult = await SmsForwarderService.matchSMS(newSMS, potentialMatch);
+                const matchResult = await SmsForwarderService.matchSMS(newSMS, freshMatch);
 
                 if (matchResult.isVerified) {
                     // Determine which is user SMS and which is receiver SMS
-                    const userSMS = newSMS.source === 'user' ? newSMS : potentialMatch;
-                    const receiverSMS = newSMS.source === 'receiver' ? newSMS : potentialMatch;
+                    const userSMS = newSMS.source === 'user' ? newSMS : freshMatch;
+                    const receiverSMS = newSMS.source === 'receiver' ? newSMS : freshMatch;
 
                     // Attach user by userId if present; otherwise attempt lookup by phone number
                     let resolvedUserId = userSMS.userId;
@@ -180,13 +187,13 @@ async function attemptAutoMatching(newSMS) {
                         newSMS._id,
                         {
                             status: 'matched',
-                            matchedWith: potentialMatch._id
+                            matchedWith: freshMatch._id
                         },
                         { session }
                     );
 
                     await SMSRecord.findByIdAndUpdate(
-                        potentialMatch._id,
+                        freshMatch._id,
                         {
                             status: 'matched',
                             matchedWith: newSMS._id
@@ -194,10 +201,10 @@ async function attemptAutoMatching(newSMS) {
                         { session }
                     );
 
-                    console.log(`✅ Auto-matched SMS: ${newSMS._id} with ${potentialMatch._id} (confidence: ${matchResult.confidence.toFixed(1)}%)`);
+                    console.log(`✅ Auto-matched SMS: ${newSMS._id} with ${freshMatch._id} (confidence: ${matchResult.confidence.toFixed(1)}%)`);
                     break; // Only break after successful match
                 } else {
-                    console.log(`❌ Match failed for SMS ${newSMS._id} with ${potentialMatch._id}: ${matchResult.reason}`);
+                    console.log(`❌ Match failed for SMS ${newSMS._id} with ${freshMatch._id}: ${matchResult.reason}`);
                 }
             }
         });

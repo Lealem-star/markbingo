@@ -233,6 +233,12 @@ async function attemptAutoMatching(newSMS) {
         });
 
         for (const potentialMatch of potentialMatches) {
+            // Safety check: ensure potential match is still pending
+            if (potentialMatch.status !== 'pending') {
+                console.log(`Skipping potential match ${potentialMatch._id?.toString()?.substring(0, 8)}: status is ${potentialMatch.status}`);
+                continue;
+            }
+            
             // Check if they are from different sources
             if (potentialMatch.source !== newSMS.source) {
                 const matchResult = await SmsForwarderService.matchSMS(newSMS, potentialMatch);

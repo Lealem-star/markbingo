@@ -402,12 +402,25 @@ class SmsForwarderService {
             const actualScore = (criticalScore * 2) + optionalScore;
             const confidence = totalPossibleScore > 0 ? (actualScore / totalPossibleScore) * 100 : 0;
 
-            // Relaxed verification logic:
-            // Verify if amount matches AND (reference matches OR time matches within window).
-            // No payment-method or phone required for verification.
+            // Stricter verification logic:
+            // - Amount MUST match (critical)
+            // - If BOTH SMS have references, they MUST match for auto-verification
+            // - If one or both lack references, allow time-based matching (within 15 min window)
+            // - No payment-method or phone required for verification
             const hasStrongReference = matches.referenceMatch;
             const hasStrongTime = matches.timeMatch;
-            const isVerified = matches.amountMatch && (hasStrongReference || hasStrongTime);
+            const bothHaveReferences = userParsed.reference && receiverParsed.reference;
+            
+            let isVerified = false;
+            if (matches.amountMatch) {
+                if (bothHaveReferences) {
+                    // When both have references, they MUST match
+                    isVerified = hasStrongReference;
+                } else {
+                    // When one or both lack references, allow time-based matching
+                    isVerified = hasStrongTime;
+                }
+            }
 
             // Enhanced logging for debugging
             console.log(`🔍 SMS Matching Debug:`, {
@@ -416,6 +429,7 @@ class SmsForwarderService {
                 amountMatch: matches.amountMatch,
                 referenceMatch: matches.referenceMatch,
                 timeMatch: matches.timeMatch,
+                bothHaveReferences,
                 userAmount: userParsed.amount,
                 receiverAmount: receiverParsed.amount,
                 userReference: userParsed.reference,
@@ -423,6 +437,7 @@ class SmsForwarderService {
                 userDatetime: userParsed.datetime,
                 receiverDatetime: receiverParsed.datetime,
                 isVerified,
+                verificationReason: bothHaveReferences ? (isVerified ? 'reference match' : 'reference mismatch') : (isVerified ? 'time match' : 'time mismatch'),
                 confidence: confidence.toFixed(1) + '%'
             });
 
