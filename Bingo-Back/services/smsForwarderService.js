@@ -74,6 +74,53 @@ class SmsForwarderService {
         }
     }
 
+    // Repair existing records that have wrong timestamps (e.g., year 2001) using parsedData.datetime
+    static async repairBadTimestamps(limit = 1000) {
+        try {
+            const SMSRecord = require('../models/SMSRecord');
+
+            // Helper to convert parsed datetime like "04/11/2025 13:18:47" into a Date
+            function parseParsedDatetimeToDate(dtString) {
+                if (!dtString || typeof dtString !== 'string') return null;
+                let m = dtString.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?/);
+                if (m) {
+                    const [_, dd, mm, yyyy, HH, MM, SS] = m;
+                    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(HH), Number(MM), Number(SS || 0));
+                    if (!isNaN(date.getTime())) return date;
+                }
+                m = dtString.match(/(\d{2})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?/);
+                if (m) {
+                    const [_, dd, mm, yy, HH, MM, SS] = m;
+                    const yyyy = 2000 + Number(yy);
+                    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(HH), Number(MM), Number(SS || 0));
+                    if (!isNaN(date.getTime())) return date;
+                }
+                return null;
+            }
+
+            const candidates = await SMSRecord.find({
+                status: 'pending',
+                timestamp: { $lt: new Date('2010-01-01T00:00:00Z') },
+                'parsedData.datetime': { $ne: null }
+            }).limit(limit);
+
+            let fixed = 0;
+            for (const rec of candidates) {
+                const repaired = parseParsedDatetimeToDate(rec.parsedData?.datetime);
+                if (repaired) {
+                    await SMSRecord.findByIdAndUpdate(rec._id, { timestamp: repaired });
+                    fixed += 1;
+                }
+            }
+
+            console.log(`🛠️ Repaired timestamps for ${fixed} SMS records`);
+            return { fixed, scanned: candidates.length };
+        } catch (e) {
+            console.error('Error repairing SMS timestamps:', e);
+            throw e;
+        }
+    }
+
     // Parse SMS content to extract transaction details
     static parseSMSContent(message) {
         if (typeof message !== 'string' || !message.trim()) {
@@ -666,6 +713,17 @@ class SmsForwarderService {
             verification.rejectedAt = new Date();
             verification.rejectionReason = reason;
             await verification.save();
+
+            // Notify user about deposit denial via Telegram
+            try {
+                const NotificationService = require('./notificationService');
+                await NotificationService.notifyDepositDenied(
+                    verification.userId,
+                    verification.amount,
+                    verification._id,
+                    reason
+                );
+            } catch (_) { }
 
             return verification;
         } catch (error) {

@@ -110,7 +110,7 @@ router.post('/withdrawals/:id/approve', adminMiddleware, async (req, res) => {
         let adminId = null;
         let adminTelegramId = null;
         let adminName = 'Admin';
-        
+
         if (req.userId) {
             try {
                 const User = require('../models/User');
@@ -140,7 +140,7 @@ router.post('/withdrawals/:id/approve', adminMiddleware, async (req, res) => {
 
         try {
             const NotificationService = require('../services/notificationService');
-            await NotificationService.notifyWithdrawalApproved(transaction.userId, transaction.amount);
+            await NotificationService.notifyWithdrawalDenied(transaction.userId, transaction.amount, req.body?.reason);
         } catch (_) { }
 
         res.json({
@@ -447,6 +447,11 @@ router.post('/balances/deposits/:id/deny', adminMiddleware, async (req, res) => 
         transaction.status = 'cancelled';
         transaction.processedAt = new Date();
         await transaction.save();
+
+        try {
+            const NotificationService = require('../services/notificationService');
+            await NotificationService.notifyDepositDenied(transaction.userId, transaction.amount, transaction._id, req.body?.reason);
+        } catch (_) { }
 
         res.json({
             success: true,

@@ -137,24 +137,39 @@ async function attemptAutoMatching(newSMS) {
                     const userSMS = newSMS.source === 'user' ? newSMS : potentialMatch;
                     const receiverSMS = newSMS.source === 'receiver' ? newSMS : potentialMatch;
 
-                    // Additional verification: ensure user exists and phone matches
-                    if (userSMS.userId) {
-                        const user = await User.findById(userSMS.userId).session(session);
-                        if (!user) {
-                            console.log(`User ${userSMS.userId} not found, skipping match`);
+                    // Attach user by userId if present; otherwise attempt lookup by phone number
+                    let resolvedUserId = userSMS.userId;
+                    let resolvedUser = null;
+                    if (resolvedUserId) {
+                        resolvedUser = await User.findById(resolvedUserId).session(session);
+                        if (!resolvedUser) {
+                            console.log(`User ${resolvedUserId} not found, skipping match`);
                             continue;
                         }
+                    } else if (userSMS.phoneNumber) {
+                        resolvedUser = await User.findOne({ phone: userSMS.phoneNumber }).session(session);
+                        if (resolvedUser) {
+                            resolvedUserId = resolvedUser._id;
+                            // Persist back to SMS so it’s linked for future
+                            await SMSRecord.findByIdAndUpdate(userSMS._id, { userId: resolvedUserId }).session(session);
+                        }
+                    }
 
-                        // Verify phone number matches
-                        if (user.phone !== userSMS.phoneNumber) {
-                            console.log(`Phone mismatch: user.phone=${user.phone}, sms.phone=${userSMS.phoneNumber}`);
-                            continue;
-                        }
+                    // If we still have no user, skip creating verification (cannot credit without user)
+                    if (!resolvedUserId) {
+                        console.log(`Skipping verification: no user found for phone ${userSMS.phoneNumber}`);
+                        continue;
+                    }
+
+                    // Verify phone number matches if we have a user
+                    if (resolvedUser && resolvedUser.phone && userSMS.phoneNumber && resolvedUser.phone !== userSMS.phoneNumber) {
+                        console.log(`Phone mismatch: user.phone=${resolvedUser.phone}, sms.phone=${userSMS.phoneNumber}`);
+                        continue;
                     }
 
                     // Create deposit verification within transaction
                     await SmsForwarderService.createDepositVerification(
-                        userSMS.userId,
+                        resolvedUserId,
                         userSMS,
                         receiverSMS,
                         matchResult
@@ -194,3 +209,15 @@ async function attemptAutoMatching(newSMS) {
 }
 
 module.exports = router;
+
+// TEMP ADMIN ROUTE: Repair bad timestamps (e.g., 2001) from parsed datetime
+// Call once: POST /sms-webhook/repair-timestamps
+router.post('/repair-timestamps', async (req, res) => {
+    try {
+        const result = await SmsForwarderService.repairBadTimestamps(2000);
+        res.json({ success: true, ...result });
+    } catch (e) {
+        console.error('repair-timestamps error:', e);
+        res.status(500).json({ success: false, error: 'repair_failed' });
+    }
+});
