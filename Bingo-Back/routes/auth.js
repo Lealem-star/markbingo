@@ -22,10 +22,27 @@ router.use((req, res, next) => {
 
 // Telegram initData verification
 function verifyTelegramInitData(initData) {
-    if (!initData || !BOT_TOKEN) return null;
+    if (!initData || !BOT_TOKEN) {
+        console.error('❌ verifyTelegramInitData: Missing initData or BOT_TOKEN', {
+            hasInitData: !!initData,
+            initDataLength: initData?.length,
+            hasBotToken: !!BOT_TOKEN
+        });
+        return null;
+    }
     try {
         const params = new URLSearchParams(initData);
         const hash = params.get('hash');
+        const userJson = params.get('user');
+
+        console.log('🔍 Verifying initData:', {
+            hasHash: !!hash,
+            hashLength: hash?.length,
+            hasUser: !!userJson,
+            userPreview: userJson ? userJson.substring(0, 100) : 'MISSING',
+            allParams: Array.from(params.keys())
+        });
+
         params.delete('hash');
         const data = Array.from(params.entries())
             .sort(([a], [b]) => a.localeCompare(b))
@@ -33,10 +50,24 @@ function verifyTelegramInitData(initData) {
             .join('\n');
         const secret = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
         const myHash = crypto.createHmac('sha256', secret).update(data).digest('hex');
-        if (myHash !== hash) return null;
-        const userJson = params.get('user');
-        return userJson ? JSON.parse(userJson) : null;
+
+        if (myHash !== hash) {
+            console.error('❌ Hash verification failed:', {
+                receivedHash: hash?.substring(0, 20) + '...',
+                computedHash: myHash.substring(0, 20) + '...',
+                hashMatch: false
+            });
+            return null;
+        }
+
+        console.log('✅ Hash verification passed');
+        const user = userJson ? JSON.parse(userJson) : null;
+        if (!user) {
+            console.error('❌ No user data in initData');
+        }
+        return user;
     } catch (e) {
+        console.error('❌ verifyTelegramInitData error:', e.message, e.stack);
         return null;
     }
 }
@@ -103,36 +134,60 @@ router.post('/telegram-auth', async (req, res) => {
 
 // POST /auth/telegram/verify
 router.post('/telegram/verify', async (req, res) => {
+    const requestId = Date.now().toString(36) + Math.random().toString(36).substring(2);
     try {
-        console.log('🔐 /auth/telegram/verify called', {
+        console.log(`🔐 [${requestId}] /auth/telegram/verify called`, {
+            timestamp: new Date().toISOString(),
             hasBody: !!req.body,
             hasInitData: !!req.body?.initData,
             initDataLength: req.body?.initData?.length,
+            initDataPreview: req.body?.initData ? req.body.initData.substring(0, 100) + '...' : 'MISSING',
             BOT_TOKEN_SET: !!BOT_TOKEN,
-            JWT_SECRET_SET: !!JWT_SECRET
+            BOT_TOKEN_LENGTH: BOT_TOKEN?.length || 0,
+            JWT_SECRET_SET: !!JWT_SECRET,
+            userAgent: req.headers['user-agent'],
+            origin: req.headers.origin,
+            referer: req.headers.referer
         });
 
         const { initData } = req.body;
         let user = null;
         let userId = null;
 
+        if (!initData || initData.trim() === '') {
+            console.error(`❌ [${requestId}] MISSING initData in request body`);
+            return res.status(400).json({
+                error: 'MISSING_TELEGRAM_DATA',
+                requestId,
+                message: 'No initData provided in request'
+            });
+        }
+
         if (initData) {
             // Telegram verification
+            console.log(`🔍 [${requestId}] Starting Telegram verification...`);
             const telegramUser = verifyTelegramInitData(initData);
-            console.log('🔐 Telegram verification result:', {
+            console.log(`🔐 [${requestId}] Telegram verification result:`, {
                 hasTelegramUser: !!telegramUser,
-                telegramId: telegramUser?.id
+                telegramId: telegramUser?.id,
+                username: telegramUser?.username,
+                firstName: telegramUser?.first_name,
+                lastName: telegramUser?.last_name
             });
 
             if (!telegramUser) {
-                console.error('❌ INVALID_TELEGRAM_DATA - verification failed');
-                return res.status(400).json({ error: 'INVALID_TELEGRAM_DATA' });
+                console.error(`❌ [${requestId}] INVALID_TELEGRAM_DATA - verification failed`, {
+                    initDataLength: initData.length,
+                    initDataFirstChars: initData.substring(0, 50)
+                });
+                return res.status(400).json({
+                    error: 'INVALID_TELEGRAM_DATA',
+                    requestId,
+                    message: 'Telegram initData verification failed. Check BOT_TOKEN and initData format.'
+                });
             }
             userId = String(telegramUser.id);
-            console.log('Telegram User Verification:', {
-                telegramId: userId,
-                telegramUser: telegramUser
-            });
+            console.log(`👤 [${requestId}] Telegram User ID:`, userId);
 
             user = await UserService.getUserByTelegramId(userId);
             console.log('Existing User Lookup:', {
@@ -201,18 +256,39 @@ router.post('/telegram/verify', async (req, res) => {
             }
         };
 
-        console.log('✅ Sending auth response:', {
+        console.log(`✅ [${requestId}] Sending auth response:`, {
             hasToken: !!response.token,
             hasSessionId: !!response.sessionId,
             userId: response.user.id,
-            username: response.user.name
+            username: response.user.name,
+            telegramId: response.user.telegramId
         });
 
         res.json(response);
     } catch (error) {
-        console.error('Auth error:', error);
-        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+        console.error(`❌ [${requestId}] Auth error:`, error.message, error.stack);
+        res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            requestId,
+            message: error.message
+        });
     }
+});
+
+// GET /auth/debug - Debug endpoint to check auth status
+router.get('/debug', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        botTokenSet: !!BOT_TOKEN,
+        botTokenLength: BOT_TOKEN?.length || 0,
+        jwtSecretSet: !!JWT_SECRET,
+        endpoints: {
+            telegramVerify: '/api/auth/telegram/verify (POST)',
+            telegramAuth: '/api/auth/telegram-auth (POST)'
+        },
+        instructions: 'Check PM2 logs for detailed auth request logging'
+    });
 });
 
 module.exports = { router, authMiddleware };
