@@ -13,9 +13,9 @@ export default function AdminBalance() {
             try {
                 setLoading(true);
                 const [wPending, wCompleted, d] = await Promise.all([
-                    apiFetch('/api/admin/balances/withdrawals?status=pending'),
-                    apiFetch('/api/admin/balances/withdrawals?status=completed'),
-                    apiFetch('/api/admin/balances/deposits')
+                    apiFetch('/admin/balances/withdrawals?status=pending'),
+                    apiFetch('/admin/balances/withdrawals?status=completed'),
+                    apiFetch('/admin/balances/deposits')
                 ]);
                 setWithdrawalsPending(wPending.withdrawals || []);
                 setWithdrawalsCompleted(wCompleted.withdrawals || []);
@@ -28,9 +28,9 @@ export default function AdminBalance() {
 
     const refresh = async () => {
         const [wPending, wCompleted, d] = await Promise.all([
-            apiFetch('/api/admin/balances/withdrawals?status=pending'),
-            apiFetch('/api/admin/balances/withdrawals?status=completed'),
-            apiFetch('/api/admin/balances/deposits')
+            apiFetch('/admin/balances/withdrawals?status=pending'),
+            apiFetch('/admin/balances/withdrawals?status=completed'),
+            apiFetch('/admin/balances/deposits')
         ]);
         setWithdrawalsPending(wPending.withdrawals || []);
         setWithdrawalsCompleted(wCompleted.withdrawals || []);
@@ -132,8 +132,8 @@ export default function AdminBalance() {
                                             </span>
                                             {d.status === 'pending' && (
                                                 <>
-                                                    <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/balances/deposits/${d._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
-                                                    <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/balances/deposits/${d._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
+                                                    <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/balances/deposits/${d._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
+                                                    <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/balances/deposits/${d._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
                                                 </>
                                             )}
                                         </div>
@@ -172,8 +172,8 @@ export default function AdminBalance() {
                                                         </span>
                                                         {w.status === 'pending' && (
                                                             <>
-                                                                <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/withdrawals/${w._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
-                                                                <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/api/admin/withdrawals/${w._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
+                                                                <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/withdrawals/${w._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
+                                                                <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/withdrawals/${w._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
                                                             </>
                                                         )}
                                                     </div>

@@ -41,7 +41,8 @@ export default function AdminHome() {
             await apiFetch('/admin/posts', {
                 method: 'POST',
                 body: formData,
-                headers: {} // Let the browser set Content-Type for FormData
+                headers: {}, // Let the browser set Content-Type for FormData
+                timeoutMs: 60000 // 60 seconds timeout for file uploads
             });
 
             setForm({ kind: 'image', file: null, caption: '', active: true });

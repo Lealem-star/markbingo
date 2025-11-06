@@ -78,8 +78,8 @@ export default function AdminStats() {
 
                 const [overview, depositsRes, withdrawalsCompletedRes] = await Promise.all([
                     apiFetch('/admin/stats/overview'),
-                    apiFetch(`/api/admin/balances/deposits?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
-                    apiFetch('/api/admin/balances/withdrawals?status=completed')
+                    apiFetch(`/admin/balances/deposits?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
+                    apiFetch('/admin/balances/withdrawals?status=completed')
                 ]);
 
                 const totalGames = overview?.today?.totalGames || 0;

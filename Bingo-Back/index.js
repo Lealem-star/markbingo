@@ -72,7 +72,8 @@ app.get('/health', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/wallet', walletRoutes);
 app.use('/user', userRoutes);
-app.use('/admin', adminRoutes);
+app.use('/api/admin', adminRoutes); // Mount under /api/admin to match frontend apiFetch behavior
+app.use('/admin', adminRoutes); // Also mount at /admin for backward compatibility
 app.use('/sms-forwarder', smsForwarderRoutes);
 app.use('/sms-webhook', smsWebhookRoutes);
 app.use('/', generalRoutes);
