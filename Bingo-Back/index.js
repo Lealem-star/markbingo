@@ -1,19 +1,31 @@
+// Wrap startup in try-catch to catch any errors
+try {
+console.log('🚀 Starting application...');
+
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+console.log('✅ Environment loaded');
+
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const path = require('path');
 const fs = require('fs');
+console.log('✅ Core modules loaded');
+
 const connectDB = require('./config/database');
+console.log('✅ Database module loaded');
+
 const UserService = require('./services/userService');
 const WalletService = require('./services/walletService');
 const User = require('./models/User');
 const Game = require('./models/Game');
 const jwt = require('jsonwebtoken');
 const BingoCards = require('./data/cartellas');
+console.log('✅ Services and models loaded');
 
 // Import routes
+console.log('📦 Loading routes...');
 const { router: authRoutes, authMiddleware } = require('./routes/auth');
 const walletRoutes = require('./routes/wallet');
 const userRoutes = require('./routes/user');
@@ -21,6 +33,7 @@ const adminRoutes = require('./routes/admin');
 const generalRoutes = require('./routes/general');
 const smsForwarderRoutes = require('./routes/smsForwarder');
 const smsWebhookRoutes = require('./routes/smsWebhook');
+console.log('✅ Routes loaded');
 
 const app = express();
 const server = http.createServer(app);
@@ -957,4 +970,10 @@ if (process.env.RUN_TELEGRAM_BOT === 'true') {
     }
 } else {
     console.log('🤖 Telegram bot startup skipped (RUN_TELEGRAM_BOT != "true").');
+}
+
+} catch (error) {
+    console.error('❌ Fatal error during startup:', error);
+    console.error('Stack trace:', error.stack);
+    process.exit(1);
 }
