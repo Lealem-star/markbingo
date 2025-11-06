@@ -413,7 +413,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         });
 
         bot.command('support', (ctx) => {
-            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@haset_life\n@Ipsychic\n\n💬 For general support:\n@haset_life\n@Ipsychic\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@haset_life\n@itsjustpark\n\n💬 For general support:\n@haset_life\n@itsjustpark\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
         });
 
         bot.command('instruction', (ctx) => {
@@ -543,7 +543,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
 
         bot.action('support', (ctx) => {
             ctx.answerCbQuery('☎️ Support info...');
-            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@haset_life\n@Ipsychic\n\n💬 For general support:\n@haset_life\n@Ipsychic\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@haset_life\n@itsjustpark\n\n💬 For general support:\n@haset_life\n@itsjustpark\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
         });
 
         bot.action('instruction', (ctx) => {
