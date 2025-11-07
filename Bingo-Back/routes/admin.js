@@ -127,7 +127,7 @@ router.post('/withdrawals/:id/approve', adminMiddleware, async (req, res) => {
 
         // Update transaction status and track admin info
         transaction.status = 'completed';
-        transaction.processedAt = new Date();
+        // Set processedBy with processedAt (this is where the approval date is stored)
         if (adminId) {
             transaction.processedBy = {
                 adminId: adminId,
@@ -140,7 +140,7 @@ router.post('/withdrawals/:id/approve', adminMiddleware, async (req, res) => {
 
         try {
             const NotificationService = require('../services/notificationService');
-            await NotificationService.notifyWithdrawalDenied(transaction.userId, transaction.amount, req.body?.reason);
+            await NotificationService.notifyWithdrawalApproved(transaction.userId, transaction.amount);
         } catch (_) { }
 
         res.json({
@@ -217,8 +217,15 @@ router.post('/internal/withdrawals/:id/approve', async (req, res) => {
 
         // Update transaction status and track admin info
         transaction.status = 'completed';
-        transaction.processedAt = new Date();
-        if (adminId) transaction.processedBy = { adminId, adminTelegramId, adminName, processedAt: new Date() };
+        // Set processedBy with processedAt (this is where the approval date is stored)
+        if (adminId) {
+            transaction.processedBy = { 
+                adminId, 
+                adminTelegramId, 
+                adminName, 
+                processedAt: new Date() 
+            };
+        }
         await transaction.save();
 
         res.json({

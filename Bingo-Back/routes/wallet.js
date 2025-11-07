@@ -14,13 +14,16 @@ router.get('/', authMiddleware, async (req, res) => {
         const wallet = await WalletService.getWallet(user._id);
         if (!wallet) return res.status(404).json({ error: 'WALLET_NOT_FOUND' });
 
-        // Unified wallet response with main/play structure
+        // Unified wallet response with main/play structure and credit fields
         res.json({
             balance: wallet.balance ?? 0,
             main: wallet.main ?? wallet.balance ?? 0,
             play: wallet.play ?? wallet.balance ?? 0,
             coins: wallet.coins ?? 0,
-            gamesWon: wallet.gamesWon ?? 0
+            gamesWon: wallet.gamesWon ?? 0,
+            creditAvailable: wallet.creditAvailable ?? 0,
+            creditUsed: wallet.creditUsed ?? 0,
+            creditOutstanding: wallet.creditOutstanding ?? 0
         });
     } catch (error) {
         console.error('Wallet fetch error:', error);
@@ -45,6 +48,12 @@ router.post('/convert', authMiddleware, async (req, res) => {
         console.error('Convert error:', error);
         if (error.message === 'MIN_CONVERSION_NOT_MET') {
             return res.status(400).json({ error: 'MIN_CONVERSION_NOT_MET' });
+        }
+        if (error.message === 'Insufficient coins') {
+            return res.status(400).json({ error: 'INSUFFICIENT_COINS' });
+        }
+        if (error.message === 'Wallet not found') {
+            return res.status(404).json({ error: 'WALLET_NOT_FOUND' });
         }
         res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
     }

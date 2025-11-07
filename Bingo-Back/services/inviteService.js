@@ -73,8 +73,8 @@ class InviteService {
 
             await Promise.all([inviter.save(), invitee.save()]);
 
-            // Process rewards for inviter
-            await this.processInviteRewards(inviterId);
+            // Note: Rewards are now deposit-based (10% of invited user's deposit)
+            // Tier-based rewards are disabled - rewards are awarded when invited users deposit
 
             return { success: true, inviter, invitee };
         } catch (error) {
@@ -168,29 +168,38 @@ class InviteService {
                 throw new Error('User not found');
             }
 
-            const rewardTiers = WalletService.getInviteRewardTiers();
-            const claimedRewards = user.claimedRewards || [];
             const totalInvites = user.totalInvites || 0;
+            const totalRewards = user.inviteRewards || 0;
 
-            // Find next reward tier
-            let nextReward = null;
-            for (const [threshold, reward] of Object.entries(rewardTiers)) {
-                const thresholdNum = parseInt(threshold);
-                if (totalInvites < thresholdNum && !claimedRewards.includes(thresholdNum)) {
-                    nextReward = {
-                        threshold: thresholdNum,
-                        reward: reward,
-                        invitesNeeded: thresholdNum - totalInvites
-                    };
-                    break;
-                }
+            // Calculate total deposits from invited users (for display purposes)
+            const Transaction = require('../models/Transaction');
+            const invitedUserIds = (user.inviteHistory || []).map(invite => invite.invitedUserId);
+            
+            let totalDepositsFromInvited = 0;
+            if (invitedUserIds.length > 0) {
+                const deposits = await Transaction.aggregate([
+                    {
+                        $match: {
+                            userId: { $in: invitedUserIds },
+                            type: 'deposit',
+                            status: 'completed'
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            total: { $sum: '$amount' }
+                        }
+                    }
+                ]);
+                totalDepositsFromInvited = deposits[0]?.total || 0;
             }
 
             return {
                 totalInvites,
-                totalRewards: user.inviteRewards || 0,
-                claimedRewards,
-                nextReward,
+                totalRewards, // Total rewards earned from deposits (10% of invited users' deposits)
+                totalDepositsFromInvited, // Total deposits made by invited users
+                rewardRate: '10% of invited user deposits', // Reward rate description
                 inviteCode: user.inviteCode,
                 inviteHistory: user.inviteHistory || []
             };

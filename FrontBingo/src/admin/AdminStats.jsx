@@ -91,7 +91,11 @@ export default function AdminStats() {
 
                 const withdrawalsCompleted = withdrawalsCompletedRes?.withdrawals || [];
                 const totalWithdraw = withdrawalsCompleted
-                    .filter(w => w.processedAt && new Date(w.processedAt) >= start && new Date(w.processedAt) <= end)
+                    .filter(w => {
+                        // Check processedBy.processedAt (where bot stores the approval date)
+                        const processedDate = w.processedBy?.processedAt || w.processedAt;
+                        return processedDate && new Date(processedDate) >= start && new Date(processedDate) <= end;
+                    })
                     .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
 
                 setTodayFinance({ totalGames, totalDeposit, totalWithdraw });

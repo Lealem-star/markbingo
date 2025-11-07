@@ -24,7 +24,7 @@ export default function Profile({ onNavigate }) {
     const [inviteStats, setInviteStats] = useState({
         totalInvites: 0,
         totalRewards: 0,
-        nextReward: null,
+        totalDepositsFromInvited: 0,
         inviteCode: null
     });
     const [loading, setLoading] = useState(true);
@@ -182,23 +182,23 @@ export default function Profile({ onNavigate }) {
                                     <span className="profile-card-icon">🎁</span>
                                     <span className="profile-card-label">Invite Rewards</span>
                                 </div>
-                                <div className="profile-card-value profile-card-value-green">{inviteStats.totalRewards || 0}</div>
-                                <div className="profile-card-subtitle">ETB earned (play wallet)</div>
+                                <div className="profile-card-value profile-card-value-green">{inviteStats.totalRewards?.toLocaleString() || 0}</div>
+                                <div className="profile-card-subtitle">
+                                    ETB earned (play wallet)
+                                    <br />
+                                    <span className="text-xs text-gray-400">10% of invited users' deposits</span>
+                                </div>
                             </div>
 
-                            {/* Next Reward */}
-                            {inviteStats.nextReward && (
+                            {/* Total Deposits from Invited Users */}
+                            {inviteStats.totalDepositsFromInvited !== undefined && inviteStats.totalDepositsFromInvited > 0 && (
                                 <div className="profile-card">
                                     <div className="profile-card-title">
-                                        <span className="profile-card-icon">🎯</span>
-                                        <span className="profile-card-label">Next Reward</span>
+                                        <span className="profile-card-icon">💰</span>
+                                        <span className="profile-card-label">Invited Users Deposits</span>
                                     </div>
-                                    <div className="profile-card-value profile-card-value-blue">{inviteStats.nextReward.reward} ETB</div>
-                                    <div className="profile-card-subtitle">
-                                        {inviteStats.nextReward.invitesNeeded} more invites needed
-                                        <br />
-                                        <span className="text-xs text-gray-400">(1 ETB per 10 invites)</span>
-                                    </div>
+                                    <div className="profile-card-value profile-card-value-blue">{inviteStats.totalDepositsFromInvited?.toLocaleString() || 0}</div>
+                                    <div className="profile-card-subtitle">Total deposits from invited users</div>
                                 </div>
                             )}
 

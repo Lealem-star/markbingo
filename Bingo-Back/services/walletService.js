@@ -10,6 +10,10 @@ class WalletService {
             if (!wallet) {
                 wallet = await this.createWallet(userId);
             }
+            // Ensure credit availability is set based on deposits (only for users who have deposited)
+            await this.ensureCreditAvailability(userId);
+            // Refresh wallet to get updated credit fields
+            wallet = await Wallet.findOne({ userId });
             return wallet;
         } catch (error) {
             console.error('Error getting wallet:', error);
@@ -119,6 +123,9 @@ class WalletService {
                 wallet.creditUsed = Math.max(0, wallet.creditUsed - repay);
                 await wallet.save();
             }
+
+            // Award invite reward: 10% of deposit to inviter (if user was invited)
+            await this.processInviteDepositReward(userId, amount);
 
             return { wallet: result.wallet, transaction };
         } catch (error) {
@@ -260,32 +267,55 @@ class WalletService {
     }
 
     // Compute credit tier based on all-time deposits
+    // Credit is ONLY given to users who have deposited
     static getCreditTierAmount(totalDeposited) {
+        if (totalDeposited === 0 || !totalDeposited) return 0; // No credit for users without deposits
         if (totalDeposited > 500) return 50;
         if (totalDeposited >= 200) return 20;
         return 10;
     }
 
     // Ensure credit availability fields are set based on tier
+    // Credit is ONLY given to users who have deposited
     static async ensureCreditAvailability(userId) {
         const wallet = await Wallet.findOne({ userId });
         if (!wallet) throw new Error('Wallet not found');
         const tier = this.getCreditTierAmount(wallet.totalDeposited || 0);
-        // Set available to tier if lower than tier
-        if ((wallet.creditAvailable || 0) < tier) {
-            wallet.creditAvailable = tier;
-            await wallet.save();
+        
+        // Only set credit if user has deposits (tier > 0)
+        // If user has no deposits, ensure creditAvailable is 0
+        if (tier === 0) {
+            if (wallet.creditAvailable > 0) {
+                wallet.creditAvailable = 0;
+                await wallet.save();
+            }
+        } else {
+            // Set available to tier if lower than tier (only for users with deposits)
+            if ((wallet.creditAvailable || 0) < tier) {
+                wallet.creditAvailable = tier;
+                await wallet.save();
+            }
         }
         return wallet;
     }
 
     // Use credit for a game stake (once per game handled by caller)
+    // Credit is ONLY available to users who have deposited
     static async useCredit(userId, amount) {
         const wallet = await this.ensureCreditAvailability(userId);
+        
+        // Check if user has deposits (required for credit)
+        if (!wallet.totalDeposited || wallet.totalDeposited === 0) {
+            throw new Error('NO_DEPOSIT_HISTORY');
+        }
+        
         if ((wallet.main > 0) || (wallet.play > 0)) {
             throw new Error('NOT_ELIGIBLE_FOR_CREDIT');
         }
         const tier = wallet.creditAvailable || 0;
+        if (tier === 0) {
+            throw new Error('NO_CREDIT_AVAILABLE');
+        }
         if (amount > tier) {
             throw new Error('CREDIT_LIMIT_EXCEEDED');
         }
@@ -427,6 +457,9 @@ class WalletService {
                 await this.updateBalance(userId, { coins: giftCoins });
             }
 
+            // Award invite reward: 10% of deposit to inviter (if user was invited)
+            await this.processInviteDepositReward(userId, amount);
+
             return { success: true, wallet: result.wallet };
         } catch (error) {
             console.error('Error processing deposit approval:', error);
@@ -492,6 +525,60 @@ class WalletService {
         } catch (error) {
             console.error('Error transferring funds:', error);
             throw error;
+        }
+    }
+
+    // Process invite deposit reward - award 10% of invited user's deposit to inviter
+    static async processInviteDepositReward(depositingUserId, depositAmount) {
+        try {
+            const User = require('../models/User');
+            const depositingUser = await User.findById(depositingUserId);
+            
+            // Check if user was invited
+            if (!depositingUser || !depositingUser.invitedBy) {
+                return null; // User was not invited, no reward
+            }
+
+            const inviterId = depositingUser.invitedBy;
+            const rewardAmount = Math.floor(depositAmount * 0.1); // 10% of deposit
+
+            if (rewardAmount <= 0) {
+                return null; // No reward for very small deposits
+            }
+
+            // Award reward to inviter's play wallet
+            const result = await this.updateBalance(inviterId, { play: rewardAmount });
+
+            // Create transaction record for inviter
+            const transaction = new Transaction({
+                userId: inviterId,
+                type: 'invite_reward',
+                amount: rewardAmount,
+                description: `Invite reward: 10% of ${depositingUser.firstName}'s deposit (ETB ${depositAmount}) = ETB ${rewardAmount} (added to play wallet)`,
+                metadata: { 
+                    inviteeId: depositingUserId,
+                    depositAmount: depositAmount,
+                    rewardType: 'deposit_based'
+                },
+                balanceBefore: result.balanceBefore,
+                balanceAfter: result.balanceAfter
+            });
+            await transaction.save();
+
+            // Update inviter's invite rewards total
+            const inviter = await User.findById(inviterId);
+            if (inviter) {
+                inviter.inviteRewards = (inviter.inviteRewards || 0) + rewardAmount;
+                await inviter.save();
+            }
+
+            console.log(`Invite deposit reward: User ${inviterId} earned ETB ${rewardAmount} from ${depositingUser.firstName}'s deposit of ETB ${depositAmount}`);
+
+            return { wallet: result.wallet, transaction, inviterId, rewardAmount };
+        } catch (error) {
+            console.error('Error processing invite deposit reward:', error);
+            // Don't throw - we don't want deposit to fail if invite reward fails
+            return null;
         }
     }
 

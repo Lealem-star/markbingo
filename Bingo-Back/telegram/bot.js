@@ -1654,11 +1654,35 @@ function setupDailyAdminNotifications(bot) {
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
 
-            // Get today's games
-            const todayGames = await Game.find({
+            console.log('📊 Fetching daily stats for:', {
+                today: today.toISOString(),
+                tomorrow: tomorrow.toISOString()
+            });
+
+            // Get today's games - check finishedAt first, fallback to createdAt
+            // Games should have finishedAt set when they finish, but check both for reliability
+            const todayGamesByFinished = await Game.find({
                 finishedAt: { $gte: today, $lt: tomorrow },
                 status: 'finished'
             }).lean();
+
+            // Also check games that finished today but might use createdAt
+            const todayGamesByCreated = await Game.find({
+                finishedAt: { $exists: false },
+                createdAt: { $gte: today, $lt: tomorrow },
+                status: 'finished'
+            }).lean();
+
+            // Combine and deduplicate by gameId
+            const gameMap = new Map();
+            [...todayGamesByFinished, ...todayGamesByCreated].forEach(game => {
+                if (!gameMap.has(game.gameId)) {
+                    gameMap.set(game.gameId, game);
+                }
+            });
+            const todayGames = Array.from(gameMap.values());
+
+            console.log('📊 Found games:', todayGames.length);
 
             // Calculate total games
             const totalGames = todayGames.length;
@@ -1668,17 +1692,24 @@ function setupDailyAdminNotifications(bot) {
                 return sum + (game.systemCut || 0);
             }, 0);
 
-            // Get today's deposits (completed transactions)
+            console.log('📊 Total revenue:', totalRevenue);
+
+            // Get today's deposits - use createdAt as the primary date field
+            // Status defaults to 'completed' but we'll include all deposits created today
             const todayDeposits = await Transaction.find({
                 type: 'deposit',
-                status: 'completed',
-                createdAt: { $gte: today, $lt: tomorrow }
+                createdAt: { $gte: today, $lt: tomorrow },
+                status: { $ne: 'failed' } // Exclude failed deposits
             }).lean();
+
+            console.log('📊 Found deposits:', todayDeposits.length);
 
             // Calculate total deposits
             const totalDeposits = todayDeposits.reduce((sum, transaction) => {
                 return sum + (transaction.amount || 0);
             }, 0);
+
+            console.log('📊 Total deposits:', totalDeposits);
 
             // Get today's withdrawal approvals by admin
             const todayWithdrawals = await Transaction.find({

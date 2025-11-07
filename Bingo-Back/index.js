@@ -240,7 +240,7 @@ async function startRegistration(room) {
         playersCount: 0, // Start with 0, will update as players join
         duration: 30000, // 30 seconds
         endsAt: room.registrationEndTime,
-        availableCards: Array.from({ length: 100 }, (_, i) => i + 1), // Generate 1-100 available cards
+        availableCards: Array.from({ length: BingoCards.cards.length }, (_, i) => i + 1), // Generate available cards based on actual card count
         takenCards: [],
         isWatchMode: false
     }, room);
@@ -814,7 +814,7 @@ wss.on('connection', async (ws, request) => {
                 const cardNumber = Number(data.cardNumber || data.payload?.cardNumber);
                 console.log('select_card received:', { cardNumber, roomPhase: room?.phase, userId: ws.userId });
 
-                if (room && Number.isInteger(cardNumber) && cardNumber >= 1 && cardNumber <= 100) {
+                if (room && Number.isInteger(cardNumber) && cardNumber >= 1 && cardNumber <= BingoCards.cards.length) {
                     // Ensure player is in room.players (in case they selected card before joining)
                     if (!room.players.has(ws.userId)) {
                         console.log('Player not in room.players, adding them:', ws.userId);

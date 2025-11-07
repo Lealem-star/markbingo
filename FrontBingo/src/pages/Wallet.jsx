@@ -141,6 +141,12 @@ export default function Wallet({ onNavigate }) {
             console.error('Coin conversion failed:', error);
             if (error?.error === 'MIN_CONVERSION_NOT_MET' || error?.message === 'MIN_CONVERSION_NOT_MET') {
                 alert('Minimum conversion is 100 coins.');
+            } else if (error?.error === 'INSUFFICIENT_COINS' || error?.message === 'INSUFFICIENT_COINS') {
+                alert('You don\'t have enough coins. Please check your coin balance.');
+            } else if (error?.error === 'WALLET_NOT_FOUND' || error?.message === 'WALLET_NOT_FOUND') {
+                alert('Wallet not found. Please try again later.');
+            } else if (error?.error === 'INVALID_AMOUNT' || error?.message === 'INVALID_AMOUNT') {
+                alert('Invalid amount. Please enter a valid number of coins.');
             } else {
                 alert('Coin conversion failed. Please try again.');
             }

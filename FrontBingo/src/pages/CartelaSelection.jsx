@@ -173,8 +173,8 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                         main: walletResponse.main || 0,
                         play: walletResponse.play || 0,
                         coins: walletResponse.coins || 0,
-                        creditAvailable: 0, // /wallet endpoint doesn't include credit fields
-                        creditUsed: 0
+                        creditAvailable: walletResponse.creditAvailable || 0,
+                        creditUsed: walletResponse.creditUsed || 0
                     });
                 } catch (walletErr) {
                     console.error('Error fetching wallet fallback:', walletErr);
@@ -292,17 +292,20 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
     // Handle card selection - automatically confirm without separate confirmation step
     const handleCardSelect = async (cardNumber) => {
+        // Ensure type consistency - convert to number
+        const cardNum = Number(cardNumber);
+
         console.log('Card selection attempt:', {
-            cardNumber,
+            cardNumber: cardNum,
             phase: gameState.phase,
             takenCards: gameState.takenCards,
-            isTaken: gameState.takenCards.includes(cardNumber),
+            isTaken: gameState.takenCards.some(taken => Number(taken) === cardNum),
             connected: connected,
             wsReadyState: wsReadyState
         });
 
         // Toggle off if clicking the same selected number during registration
-        const alreadySelectedByYou = selectedCardNumber === cardNumber || gameState.yourSelection === cardNumber;
+        const alreadySelectedByYou = selectedCardNumber === cardNum || Number(gameState.yourSelection) === cardNum;
         if (alreadySelectedByYou) {
             if (gameState.phase !== 'registration') {
                 showError(`Cannot unselect - current phase is ${gameState.phase}`);
@@ -313,11 +316,11 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 return;
             }
             try {
-                console.log('Deselecting cartella:', cardNumber);
-                const success = deselectCartella(cardNumber);
+                console.log('Deselecting cartella:', cardNum);
+                const success = deselectCartella(cardNum);
                 if (success) {
                     setSelectedCardNumber(null);
-                    showSuccess(`Cartella #${cardNumber} unselected.`);
+                    showSuccess(`Cartella #${cardNum} unselected.`);
                 } else {
                     showError('Failed to unselect cartella. Please try again.');
                 }
@@ -344,7 +347,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         }
 
         // Check if card is already taken
-        if (gameState.takenCards.includes(cardNumber)) {
+        if (gameState.takenCards.some(taken => Number(taken) === cardNum)) {
             showError('This cartella is already taken by another player!');
             return;
         }
@@ -362,16 +365,16 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         }
 
         try {
-            console.log('Selecting cartella:', cardNumber);
+            console.log('Selecting cartella:', cardNum);
 
             // Set local state immediately for UI feedback
-            setSelectedCardNumber(cardNumber);
+            setSelectedCardNumber(cardNum);
 
             // Send selection via WebSocket
-            const success = selectCartella(cardNumber);
+            const success = selectCartella(cardNum);
 
             if (success) {
-                showSuccess(`Cartella #${cardNumber} selected! Waiting for game to start...`);
+                showSuccess(`Cartella #${cardNum} selected! Waiting for game to start...`);
                 console.log('Cartella selection sent successfully');
             } else {
                 showError('Failed to select cartella. Please try again.');
@@ -410,8 +413,8 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                     main: walletResponse.main || 0,
                     play: walletResponse.play || 0,
                     coins: walletResponse.coins || 0,
-                    creditAvailable: 0, // /wallet endpoint doesn't include credit fields
-                    creditUsed: 0
+                    creditAvailable: walletResponse.creditAvailable || 0,
+                    creditUsed: walletResponse.creditUsed || 0
                 });
             } catch (walletErr) {
                 console.error('Error refreshing wallet fallback:', walletErr);
@@ -706,10 +709,46 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 )}
 
                 {gameState.phase === 'registration' && gameState.countdown <= 0 && (
-                    <div className="mb-4 p-3 bg-red-900/30 border border-red-500 rounded-lg">
-                        <div className="text-red-300 text-sm">
-                            <div className="font-semibold mb-1">⏰ Registration Expired</div>
-                            <div>Registration time has ended. Please wait for the next game to start.</div>
+                    <div className="mb-4 relative overflow-hidden rounded-xl bg-gradient-to-br from-red-900/40 via-red-800/30 to-orange-900/20 border-2 border-red-500/50 shadow-lg shadow-red-500/20">
+                        {/* Animated background pattern */}
+                        <div className="absolute inset-0 opacity-10">
+                            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent animate-pulse"></div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="relative p-5">
+                            <div className="flex items-start gap-4">
+                                {/* Animated icon */}
+                                <div className="flex-shrink-0 mt-1">
+                                    <div className="relative">
+                                        <div className="text-4xl animate-pulse">⏰</div>
+                                        <div className="absolute inset-0 text-4xl animate-ping opacity-20">⏰</div>
+                                    </div>
+                                </div>
+
+                                {/* Text content */}
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <h3 className="text-lg font-bold text-red-200 drop-shadow-lg">
+                                            Registration Expired
+                                        </h3>
+                                        <div className="flex gap-1">
+                                            <div className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                            <div className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                            <div className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                        </div>
+                                    </div>
+                                    <p className="text-red-100 text-sm leading-relaxed">
+                                        Registration time has ended due to low number of players.
+                                        <span className="block mt-1 text-red-200 font-medium">
+                                            Please wait for the next game to start.
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Decorative bottom border */}
+                            <div className="mt-4 h-1 bg-gradient-to-r from-transparent via-red-400/50 to-transparent rounded-full"></div>
                         </div>
                     </div>
                 )}
@@ -719,14 +758,16 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                     <div className="bg-gray-800 rounded-lg p-4 max-h-[250px] overflow-y-auto">
                         <div className="cartela-numbers-grid">
                             {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
-                                const isTaken = gameState.takenCards.includes(cartelaNumber);
-                                const isSelected = selectedCardNumber === cartelaNumber;
-                                const takenByMe = gameState.yourSelection === cartelaNumber;
+                                // Ensure type consistency for comparison (convert to number)
+                                const cartelaNum = Number(cartelaNumber);
+                                const isTaken = gameState.takenCards.some(taken => Number(taken) === cartelaNum);
+                                const isSelected = selectedCardNumber === cartelaNum;
+                                const takenByMe = Number(gameState.yourSelection) === cartelaNum;
 
                                 return (
                                     <button
                                         key={cartelaNumber}
-                                        onClick={() => !isTaken && handleCardSelect(cartelaNumber)}
+                                        onClick={() => !isTaken && handleCardSelect(cartelaNum)}
                                         disabled={isTaken || gameState.phase === 'running'}
                                         className={`cartela-number-btn ${isTaken
                                             ? (takenByMe
