@@ -49,6 +49,7 @@ export default function AdminBalance() {
 
     return (
         <div className="admin-balance-container admin-balance-page">
+            (...)
             {/* Toggle Buttons */}
             <div className="admin-balance-toggle">
                 <button
@@ -72,152 +73,154 @@ export default function AdminBalance() {
             </div>
 
             {/* Main Content Area */}
-            <div className="admin-card" style={{ '--table-cols': 3 }}>
+            <div className="admin-table-scroll">
+                <div className="admin-card" style={{ '--table-cols': 3 }}>
 
-                {/* Table Header */}
-                <div className="admin-table-header">
-                    <div className="admin-table-header-item">
-                        <span>👤</span>
-                        Player Name
-                    </div>
-                    {activeTab === 'deposit' ? (
-                        <>
-                            <div className="admin-table-header-item">
-                                <span>💰</span>
-                                Deposit Amount
-                            </div>
-                            <div className="admin-table-header-item">
-                                <span>🎁</span>
-                                Gift
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div className="admin-table-header-item">
-                                <span>💸</span>
-                                Withdraw Amount
-                            </div>
-                            <div className="admin-table-header-item">
-                                <span>🏦</span>
-                                Account Number
-                            </div>
-                        </>
-                    )}
-                </div>
-
-                {/* Table Content */}
-                <div className="admin-table-content">
-                    {loading ? (
-                        <div className="admin-empty-state"><div className="admin-empty-title">Loading...</div></div>
-                    ) : (
-                        activeTab === 'deposit' ? (
-                            deposits.length > 0 ? (
-                                deposits.map(d => (
-                                    <div key={d._id} className="admin-table-row">
-                                        <div className="admin-table-cell admin-table-cell-blue">
-                                            <span>👤</span>
-                                            {d.userId?.firstName || `User ${String(d.userId?._id || d.userId || '').slice(-6) || 'Unknown'}`}
-                                        </div>
-                                        <div className="admin-table-cell admin-table-cell-bold admin-table-cell-green">
-                                            <span>💰</span>
-                                            ETB {d.amount}
-                                        </div>
-                                        <div className="admin-table-cell flex items-center gap-2">
-                                            <span className={`admin-status-badge-small ${getStatusColor(d.status || 'completed')}`}>
-                                                {d.status === 'pending' && '⏳'}
-                                                {d.status === 'completed' && '✅'}
-                                                {d.status === 'cancelled' && '❌'}
-                                                {d.status === 'failed' && '⚠️'}
-                                                {d.status || 'completed'}
-                                            </span>
-                                            {d.status === 'pending' && (
-                                                <>
-                                                    <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/balances/deposits/${d._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
-                                                    <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/balances/deposits/${d._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="admin-empty-state">
-                                    <div className="admin-empty-icon">💰</div>
-                                    <div className="admin-empty-title">No deposits found</div>
-                                    <div className="admin-empty-subtitle">Deposit transactions will appear here</div>
+                    {/* Table Header */}
+                    <div className="admin-table-header">
+                        <div className="admin-table-header-item">
+                            <span>👤</span>
+                            Player Name
+                        </div>
+                        {activeTab === 'deposit' ? (
+                            <>
+                                <div className="admin-table-header-item">
+                                    <span>💰</span>
+                                    Deposit Amount
                                 </div>
-                            )
+                                <div className="admin-table-header-item">
+                                    <span>🎁</span>
+                                    Gift
+                                </div>
+                            </>
                         ) : (
-                            (withdrawalsPending.length > 0 || withdrawalsCompleted.length > 0) ? (
-                                <>
-                                    {withdrawalsPending.length > 0 && (
-                                        <>
-                                            <div className="admin-section-title">Pending</div>
-                                            {withdrawalsPending.map(w => (
-                                                <div key={w._id} className="admin-table-row">
-                                                    <div className="admin-table-cell admin-table-cell-blue">
-                                                        <span>👤</span>
-                                                        {w.userId?.firstName || `User ${String(w.userId?._id || w.userId || '').slice(-6) || 'Unknown'}`}
-                                                    </div>
-                                                    <div className="admin-table-cell admin-table-cell-bold admin-table-cell-orange">
-                                                        <span>💸</span>
-                                                        ETB {w.amount}
-                                                    </div>
-                                                    <div className="admin-table-cell flex items-center gap-2">
-                                                        <span className={`admin-status-badge-small ${getStatusColor(w.status)}`}>
-                                                            {w.status === 'pending' && '⏳'}
-                                                            {w.status === 'completed' && '✅'}
-                                                            {w.status === 'cancelled' && '❌'}
-                                                            {w.status === 'failed' && '⚠️'}
-                                                            {w.status || 'pending'}
-                                                        </span>
-                                                        {w.status === 'pending' && (
-                                                            <>
-                                                                <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/withdrawals/${w._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
-                                                                <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/withdrawals/${w._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </>
-                                    )}
-
-                                    {withdrawalsCompleted.length > 0 && (
-                                        <>
-                                            <div className="admin-section-title">Completed</div>
-                                            {withdrawalsCompleted.map(w => (
-                                                <div key={w._id} className="admin-table-row">
-                                                    <div className="admin-table-cell admin-table-cell-blue">
-                                                        <span>👤</span>
-                                                        {w.userId?.firstName || `User ${String(w.userId?._id || w.userId || '').slice(-6) || 'Unknown'}`}
-                                                    </div>
-                                                    <div className="admin-table-cell admin-table-cell-bold admin-table-cell-orange">
-                                                        <span>💸</span>
-                                                        ETB {w.amount}
-                                                    </div>
-                                                    <div className="admin-table-cell flex items-center gap-2">
-                                                        <span className={`admin-status-badge-small ${getStatusColor(w.status)}`}>
-                                                            {w.status === 'pending' && '⏳'}
-                                                            {w.status === 'completed' && '✅'}
-                                                            {w.status === 'cancelled' && '❌'}
-                                                            {w.status === 'failed' && '⚠️'}
-                                                            {w.status || 'completed'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </>
-                                    )}
-                                </>
-                            ) : (
-                                <div className="admin-empty-state">
-                                    <div className="admin-empty-icon">💸</div>
-                                    <div className="admin-empty-title">No withdrawal requests</div>
-                                    <div className="admin-empty-subtitle">Withdrawal requests will appear here</div>
+                            <>
+                                <div className="admin-table-header-item">
+                                    <span>💸</span>
+                                    Withdraw Amount
                                 </div>
+                                <div className="admin-table-header-item">
+                                    <span>🏦</span>
+                                    Account Number
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Table Content */}
+                    <div className="admin-table-content">
+                        {loading ? (
+                            <div className="admin-empty-state"><div className="admin-empty-title">Loading...</div></div>
+                        ) : (
+                            activeTab === 'deposit' ? (
+                                deposits.length > 0 ? (
+                                    deposits.map(d => (
+                                        <div key={d._id} className="admin-table-row">
+                                            <div className="admin-table-cell admin-table-cell-blue">
+                                                <span>👤</span>
+                                                {d.userId?.firstName || `User ${String(d.userId?._id || d.userId || '').slice(-6) || 'Unknown'}`}
+                                            </div>
+                                            <div className="admin-table-cell admin-table-cell-bold admin-table-cell-green">
+                                                <span>💰</span>
+                                                ETB {d.amount}
+                                            </div>
+                                            <div className="admin-table-cell flex items-center gap-2">
+                                                <span className={`admin-status-badge-small ${getStatusColor(d.status || 'completed')}`}>
+                                                    {d.status === 'pending' && '⏳'}
+                                                    {d.status === 'completed' && '✅'}
+                                                    {d.status === 'cancelled' && '❌'}
+                                                    {d.status === 'failed' && '⚠️'}
+                                                    {d.status || 'completed'}
+                                                </span>
+                                                {d.status === 'pending' && (
+                                                    <>
+                                                        <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/balances/deposits/${d._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
+                                                        <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/balances/deposits/${d._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="admin-empty-state">
+                                        <div className="admin-empty-icon">💰</div>
+                                        <div className="admin-empty-title">No deposits found</div>
+                                        <div className="admin-empty-subtitle">Deposit transactions will appear here</div>
+                                    </div>
+                                )
+                            ) : (
+                                (withdrawalsPending.length > 0 || withdrawalsCompleted.length > 0) ? (
+                                    <>
+                                        {withdrawalsPending.length > 0 && (
+                                            <>
+                                                <div className="admin-section-title">Pending</div>
+                                                {withdrawalsPending.map(w => (
+                                                    <div key={w._id} className="admin-table-row">
+                                                        <div className="admin-table-cell admin-table-cell-blue">
+                                                            <span>👤</span>
+                                                            {w.userId?.firstName || `User ${String(w.userId?._id || w.userId || '').slice(-6) || 'Unknown'}`}
+                                                        </div>
+                                                        <div className="admin-table-cell admin-table-cell-bold admin-table-cell-orange">
+                                                            <span>💸</span>
+                                                            ETB {w.amount}
+                                                        </div>
+                                                        <div className="admin-table-cell flex items-center gap-2">
+                                                            <span className={`admin-status-badge-small ${getStatusColor(w.status)}`}>
+                                                                {w.status === 'pending' && '⏳'}
+                                                                {w.status === 'completed' && '✅'}
+                                                                {w.status === 'cancelled' && '❌'}
+                                                                {w.status === 'failed' && '⚠️'}
+                                                                {w.status || 'pending'}
+                                                            </span>
+                                                            {w.status === 'pending' && (
+                                                                <>
+                                                                    <button className="px-2 py-1 text-xs bg-green-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/withdrawals/${w._id}/approve`, { method: 'POST' }); refresh(); }}>Approve</button>
+                                                                    <button className="px-2 py-1 text-xs bg-red-600 text-white rounded" onClick={async () => { await apiFetch(`/admin/withdrawals/${w._id}/deny`, { method: 'POST' }); refresh(); }}>Deny</button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </>
+                                        )}
+
+                                        {withdrawalsCompleted.length > 0 && (
+                                            <>
+                                                <div className="admin-section-title">Completed</div>
+                                                {withdrawalsCompleted.map(w => (
+                                                    <div key={w._id} className="admin-table-row">
+                                                        <div className="admin-table-cell admin-table-cell-blue">
+                                                            <span>👤</span>
+                                                            {w.userId?.firstName || `User ${String(w.userId?._id || w.userId || '').slice(-6) || 'Unknown'}`}
+                                                        </div>
+                                                        <div className="admin-table-cell admin-table-cell-bold admin-table-cell-orange">
+                                                            <span>💸</span>
+                                                            ETB {w.amount}
+                                                        </div>
+                                                        <div className="admin-table-cell flex items-center gap-2">
+                                                            <span className={`admin-status-badge-small ${getStatusColor(w.status)}`}>
+                                                                {w.status === 'pending' && '⏳'}
+                                                                {w.status === 'completed' && '✅'}
+                                                                {w.status === 'cancelled' && '❌'}
+                                                                {w.status === 'failed' && '⚠️'}
+                                                                {w.status || 'completed'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="admin-empty-state">
+                                        <div className="admin-empty-icon">💸</div>
+                                        <div className="admin-empty-title">No withdrawal requests</div>
+                                        <div className="admin-empty-subtitle">Withdrawal requests will appear here</div>
+                                    </div>
+                                )
                             )
-                        )
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

@@ -5,6 +5,9 @@ const fs = require('fs');
 const Transaction = require('../models/Transaction');
 const Game = require('../models/Game');
 const Post = require('../models/Post');
+const User = require('../models/User');
+const Wallet = require('../models/Wallet');
+const WalletService = require('../services/walletService');
 const InviteService = require('../services/inviteService');
 const { authMiddleware } = require('./auth');
 
@@ -84,6 +87,212 @@ function adminMiddleware(req, res, next) {
     });
 }
 
+function sanitizeWallet(walletDoc) {
+    if (!walletDoc) {
+        return {
+            main: 0,
+            play: 0,
+            coins: 0,
+            balance: 0,
+            creditAvailable: 0,
+            creditUsed: 0,
+            creditOutstanding: 0,
+            totalDeposited: 0,
+            lastDepositDate: null
+        };
+    }
+
+    const balanceValue = walletDoc.balance != null
+        ? walletDoc.balance
+        : (walletDoc.main || 0) + (walletDoc.play || 0);
+
+    return {
+        main: walletDoc.main || 0,
+        play: walletDoc.play || 0,
+        coins: walletDoc.coins || 0,
+        balance: balanceValue,
+        creditAvailable: walletDoc.creditAvailable || 0,
+        creditUsed: walletDoc.creditUsed || 0,
+        creditOutstanding: walletDoc.creditOutstanding || 0,
+        totalDeposited: walletDoc.totalDeposited || 0,
+        lastDepositDate: walletDoc.lastDepositDate || null
+    };
+}
+
+function escapeRegExp(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function getAdminDetails(req) {
+    let adminId = null;
+    let adminTelegramId = null;
+    let adminName = 'Admin';
+
+    if (!req.userId) {
+        return {
+            adminId,
+            adminTelegramId,
+            adminName,
+            processedAt: new Date()
+        };
+    }
+
+    try {
+        const adminUser = await User.findById(req.userId);
+        if (adminUser) {
+            adminId = adminUser._id;
+            adminTelegramId = adminUser.telegramId || null;
+            adminName = `${adminUser.firstName || ''} ${adminUser.lastName || ''}`.trim() || adminUser.username || 'Admin';
+        }
+    } catch (error) {
+        console.error('Error fetching admin user:', error);
+    }
+
+    return {
+        adminId,
+        adminTelegramId,
+        adminName,
+        processedAt: new Date()
+    };
+}
+
+// GET /admin/users/search
+router.get('/users/search', adminMiddleware, async (req, res) => {
+    try {
+        const rawQuery = (req.query.query || '').trim();
+
+        if (!rawQuery) {
+            return res.status(400).json({ error: 'QUERY_REQUIRED' });
+        }
+
+        const escapedQuery = escapeRegExp(rawQuery);
+        const regex = new RegExp(escapedQuery, 'i');
+        const conditions = [
+            { firstName: regex },
+            { lastName: regex },
+            { username: regex },
+            { phone: regex }
+        ];
+
+        if (/^\d+$/.test(rawQuery)) {
+            conditions.push({ telegramId: regex });
+        }
+
+        const users = await User.find({ $or: conditions })
+            .sort({ lastActive: -1 })
+            .limit(20)
+            .lean();
+
+        if (users.length === 0) {
+            return res.json({ users: [] });
+        }
+
+        const userIds = users.map((user) => user._id);
+        const wallets = await Wallet.find({ userId: { $in: userIds } }).lean();
+        const walletMap = new Map(wallets.map((wallet) => [String(wallet.userId), sanitizeWallet(wallet)]));
+
+        const results = users.map((user) => ({
+            id: String(user._id),
+            telegramId: user.telegramId,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            phone: user.phone,
+            isRegistered: user.isRegistered,
+            role: user.role || 'user',
+            lastActive: user.lastActive,
+            totalInvites: user.totalInvites || 0,
+            inviteRewards: user.inviteRewards || 0,
+            wallet: walletMap.get(String(user._id)) || sanitizeWallet(null)
+        }));
+
+        res.json({ users: results });
+    } catch (error) {
+        console.error('Admin user search error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
+// POST /admin/users/:id/wallet-adjust
+router.post('/users/:id/wallet-adjust', adminMiddleware, async (req, res) => {
+    const { id } = req.params;
+    if (!id) {
+        return res.status(400).json({ error: 'USER_ID_REQUIRED' });
+    }
+
+    const parseDelta = (value, { allowFloat = true } = {}) => {
+        if (value === undefined || value === null || value === '') {
+            return 0;
+        }
+        const num = Number(value);
+        if (!Number.isFinite(num)) {
+            return null;
+        }
+        if (!allowFloat) {
+            return Math.trunc(num);
+        }
+        return num;
+    };
+
+    try {
+        const mainDelta = parseDelta(req.body?.mainDelta);
+        const playDelta = parseDelta(req.body?.playDelta);
+        const coinsDelta = parseDelta(req.body?.coinsDelta, { allowFloat: false });
+        const reason = (req.body?.reason || '').trim();
+
+        if (mainDelta === null || playDelta === null || coinsDelta === null) {
+            return res.status(400).json({ error: 'INVALID_AMOUNT' });
+        }
+
+        if (mainDelta === 0 && playDelta === 0 && coinsDelta === 0) {
+            return res.status(400).json({ error: 'NO_CHANGES' });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ error: 'USER_NOT_FOUND' });
+        }
+
+        const updates = {};
+        if (mainDelta !== 0) updates.main = mainDelta;
+        if (playDelta !== 0) updates.play = playDelta;
+        if (coinsDelta !== 0) updates.coins = coinsDelta;
+
+        const result = await WalletService.updateBalance(user._id, updates);
+        await WalletService.ensureCreditAvailability(user._id);
+        const walletAfter = await Wallet.findOne({ userId: user._id }).lean();
+
+        const adminDetails = await getAdminDetails(req);
+
+        const deltasSummary = [];
+        if (mainDelta !== 0) deltasSummary.push(`main ${mainDelta > 0 ? '+' : ''}${mainDelta}`);
+        if (playDelta !== 0) deltasSummary.push(`play ${playDelta > 0 ? '+' : ''}${playDelta}`);
+        if (coinsDelta !== 0) deltasSummary.push(`coins ${coinsDelta > 0 ? '+' : ''}${coinsDelta}`);
+        const summaryText = deltasSummary.join(', ') || 'No changes';
+
+        const transaction = new Transaction({
+            userId: user._id,
+            type: 'admin_adjustment',
+            amount: (mainDelta || 0) + (playDelta || 0),
+            description: `Admin adjustment (${summaryText})${reason ? ` - ${reason}` : ''}`,
+            status: 'completed',
+            balanceBefore: result.balanceBefore,
+            balanceAfter: result.balanceAfter,
+            processedBy: adminDetails
+        });
+        await transaction.save();
+
+        res.json({
+            success: true,
+            wallet: sanitizeWallet(walletAfter),
+            transactionId: String(transaction._id)
+        });
+    } catch (error) {
+        console.error('Admin wallet adjustment error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
 // POST /admin/withdrawals/:id/approve
 router.post('/withdrawals/:id/approve', adminMiddleware, async (req, res) => {
     try {
@@ -99,7 +308,6 @@ router.post('/withdrawals/:id/approve', adminMiddleware, async (req, res) => {
         }
 
         // Deduct from user's main wallet
-        const WalletService = require('../services/walletService');
         const result = await WalletService.processWithdrawalApproval(transaction.userId, transaction.amount);
 
         if (!result.success) {
@@ -208,7 +416,6 @@ router.post('/internal/withdrawals/:id/approve', async (req, res) => {
         }
 
         // Deduct from user's main wallet
-        const WalletService = require('../services/walletService');
         const result = await WalletService.processWithdrawalApproval(transaction.userId, transaction.amount);
 
         if (!result.success) {
@@ -415,7 +622,6 @@ router.post('/balances/deposits/:id/approve', adminMiddleware, async (req, res) 
         }
 
         // Add to user's main wallet
-        const WalletService = require('../services/walletService');
         const result = await WalletService.processDepositApproval(transaction.userId, transaction.amount);
 
         if (!result.success) {
