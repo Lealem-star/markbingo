@@ -239,6 +239,20 @@ async function attemptAutoMatching(newSMS) {
                 continue;
             }
             
+            // CRITICAL: Prevent matching SMS with same reference and same source
+            // This is a safety check in case duplicate detection didn't catch it
+            if (newSMS.parsedData?.reference && potentialMatch.parsedData?.reference) {
+                if (newSMS.parsedData.reference === potentialMatch.parsedData.reference && 
+                    newSMS.source === potentialMatch.source) {
+                    console.log(`⚠️ Skipping match: Same reference (${newSMS.parsedData.reference}) and same source (${newSMS.source}) - cannot match SMS with itself`, {
+                        newSMSId: newSMS._id?.toString()?.substring(0, 8),
+                        potentialMatchId: potentialMatch._id?.toString()?.substring(0, 8),
+                        reference: newSMS.parsedData.reference
+                    });
+                    continue;
+                }
+            }
+            
             // Check if they are from different sources
             if (potentialMatch.source !== newSMS.source) {
                 const matchResult = await SmsForwarderService.matchSMS(newSMS, potentialMatch);

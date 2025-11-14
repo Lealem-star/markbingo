@@ -71,20 +71,82 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         })();
 
         function parseReceipt(text) {
-            if (typeof text !== 'string') return null;
-            const patterns = [/ETB\s*([0-9]+(?:\.[0-9]{1,2})?)/i, /(\d+(?:\.\d{1,2})?)\s*ETB/i, /(\d+(?:\.\d{1,2})?)\s*ብር/i, /(\d+(?:\.\d{1,2})?)/i];
+            if (typeof text !== 'string' || !text.trim()) return null;
+
+            // Enhanced amount patterns matching backend service
+            const amountPatterns = [
+                /ETB\s*([0-9]+(?:\.[0-9]{1,2})?)/i,
+                /(\d+(?:\.\d{1,2})?)\s*ETB/i,
+                /(\d+(?:\.\d{1,2})?)\s*ብር/i,
+                /(\d+(?:\.\d{1,2})?)\s*Br\.?/i,
+                /(\d+(?:\.\d{1,2})?)\s*Birr/i,
+                // CBE bank specific patterns - look for amounts in context
+                /transferred\s+ETB\s+([0-9]+(?:\.[0-9]{1,2})?)/i,
+                /credited\s+ETB\s+([0-9]+(?:\.[0-9]{1,2})?)/i,
+                /debited\s+ETB\s+([0-9]+(?:\.[0-9]{1,2})?)/i,
+                /amount[:\s]*ETB\s*([0-9]+(?:\.[0-9]{1,2})?)/i,
+                /amount[:\s]*([0-9]+(?:\.[0-9]{1,2})?)\s*ETB/i,
+                // Mobile money patterns (Telebirr, CBE Birr) - received/sent
+                /received\s+ETB\s+([0-9]+(?:\.[0-9]{1,2})?)/i,
+                /sent\s+ETB\s+([0-9]+(?:\.[0-9]{1,2})?)/i,
+                /you\s+have\s+received\s+ETB\s+([0-9]+(?:\.[0-9]{1,2})?)/i,
+                /you\s+have\s+transferred\s+ETB\s+([0-9]+(?:\.[0-9]{1,2})?)/i,
+                /you\s+have\s+sent\s+ETB\s+([0-9]+(?:\.[0-9]{1,2})?)/i,
+                // Last resort: standalone numbers that look like amounts (avoid dates, phone numbers)
+                // Match numbers that are not part of dates (DD/MM/YYYY) or phone numbers
+                /\b(\d{2,}(?:\.\d{1,2})?)\b/i  // At least 2 digits, word boundaries to avoid partial matches
+            ];
+
             let amount = null;
-            for (const pattern of patterns) {
+            for (const pattern of amountPatterns) {
                 const match = text.match(pattern);
                 if (match) {
-                    amount = Number(match[1]);
-                    if (amount >= 50) break;
+                    const candidateAmount = Number(match[1]);
+                    // Only accept amounts >= 50 (minimum deposit)
+                    if (candidateAmount >= 50 && candidateAmount <= 1000000) { // Reasonable upper limit
+                        amount = candidateAmount;
+                        break;
+                    }
                 }
             }
+
             if (!amount || amount < 50) return null;
-            const whenMatch = text.match(/on\s+([0-9]{2}\/[0-9]{2}\/[0-9]{4})\s+at\s+([0-9]{2}:[0-9]{2}:[0-9]{2})/i);
-            const refMatch = text.match(/id=([A-Z0-9]+)/i) || text.match(/ref[:\s]*([A-Z0-9]+)/i);
-            return { amount, when: whenMatch ? `${whenMatch[1]} ${whenMatch[2]}` : null, ref: refMatch ? refMatch[1] : null, type: text.toLowerCase().includes('telebirr') ? 'telebirr' : text.toLowerCase().includes('commercial') ? 'commercial' : text.toLowerCase().includes('cbe') ? 'cbe' : 'unknown' };
+
+            // Enhanced datetime patterns (including CBE Birr DD/MM/YY format)
+            const whenMatch = text.match(/on\s+([0-9]{2}\/[0-9]{2}\/[0-9]{4})\s+at\s+([0-9]{2}:[0-9]{2}:[0-9]{2})/i) ||
+                text.match(/on\s+([0-9]{2}\/[0-9]{2}\/[0-9]{4})\s+([0-9]{2}:[0-9]{2}:[0-9]{2})/i) ||
+                text.match(/([0-9]{2}\/[0-9]{2}\/[0-9]{4})\s+([0-9]{2}:[0-9]{2}:[0-9]{2})/i) ||
+                text.match(/([0-9]{2}\/[0-9]{2}\/[0-9]{4})\s+([0-9]{2}:[0-9]{2})/i) ||
+                text.match(/\b([0-9]{2}\/[0-9]{2}\/[0-9]{2})\s+([0-9]{2}:[0-9]{2})\b/i);  // CBE Birr: "28/10/25 13:21"
+
+            // Enhanced reference patterns matching backend service
+            const refMatch = text.match(/id=([A-Z0-9]+)/i) ||
+                text.match(/\b(FT[0-9A-Z]{10,})\b/i) ||  // CBE FT code
+                text.match(/\bref\s*no\s*[:\-]?\s*([A-Z0-9]+)/i) ||
+                text.match(/\btxn\s*id\s*[:\-]?\s*([A-Z0-9]+)/i) ||
+                text.match(/\btransaction\s*id\s*[:\-]?\s*([A-Z0-9]+)/i) ||
+                text.match(/your\s+transaction\s+number\s+is\s*([A-Z0-9]+)/i) ||
+                text.match(/transaction\s+number\s+is\s*([A-Z0-9]+)/i) ||
+                text.match(/id[:\s]*([A-Z0-9]{8,})/i) ||
+                text.match(/ref[:\s]*([A-Z0-9]{8,})/i);
+
+            // Determine payment method
+            let type = 'unknown';
+            const lowerText = text.toLowerCase();
+            if (lowerText.includes('telebirr')) {
+                type = 'telebirr';
+            } else if (lowerText.includes('cbebirr') || lowerText.includes('cbe birr')) {
+                type = 'cbebirr';
+            } else if (lowerText.includes('commercial') || (lowerText.includes('cbe') && !lowerText.includes('cbebirr'))) {
+                type = 'cbe';
+            }
+
+            return {
+                amount,
+                when: whenMatch ? (whenMatch[2] ? `${whenMatch[1]} ${whenMatch[2]}` : whenMatch[1]) : null,
+                ref: refMatch ? refMatch[1] : null,
+                type
+            };
         }
 
         async function isAdminByDB(telegramId) {
@@ -1429,7 +1491,24 @@ Thank you for your dedication! 🙏`;
                     }
                 }
                 const parsed = parseReceipt(messageText);
-                if (!parsed) { return ctx.reply('❌ Could not detect amount in your message.\n\n💡 Please paste the full receipt from your payment method.\n\n📋 Make sure it contains the amount (minimum ETB 50).'); }
+                if (!parsed) {
+                    // Log the message for debugging
+                    console.log('❌ Failed to parse SMS receipt:', {
+                        messagePreview: messageText.substring(0, 200),
+                        messageLength: messageText.length,
+                        userId: userId
+                    });
+                    return ctx.reply('❌ Could not detect amount in your message.\n\n💡 Please paste the full receipt from your payment method.\n\n📋 Make sure it contains the amount (minimum ETB 50).');
+                }
+
+                // Log successful parsing for debugging
+                console.log('✅ Parsed SMS receipt:', {
+                    amount: parsed.amount,
+                    hasRef: !!parsed.ref,
+                    hasWhen: !!parsed.when,
+                    type: parsed.type,
+                    userId: userId
+                });
 
                 let user = await UserService.getUserByTelegramId(userId);
                 if (!user) { user = await UserService.createOrUpdateUser(ctx.from); }

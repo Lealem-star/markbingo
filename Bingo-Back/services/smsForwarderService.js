@@ -16,6 +16,54 @@ class SmsForwarderService {
             // Parse content first to try to derive an accurate event timestamp from the SMS body
             const parsedData = this.parseSMSContent(smsData.message);
 
+            // Check for duplicate SMS: same reference, same source, same userId within 1 hour
+            // This prevents users from sending the same SMS twice to get verified
+            if (parsedData?.reference && smsData.userId) {
+                const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+                const existingDuplicate = await SMSRecord.findOne({
+                    'parsedData.reference': parsedData.reference,
+                    source: smsData.source || 'forwarder',
+                    userId: smsData.userId,
+                    timestamp: { $gte: oneHourAgo },
+                    status: { $in: ['pending', 'matched', 'verified'] }
+                });
+
+                if (existingDuplicate) {
+                    console.log(`⚠️ Duplicate SMS detected: Same reference (${parsedData.reference}), source (${smsData.source || 'forwarder'}), and userId (${smsData.userId}) within 1 hour. Skipping storage.`, {
+                        existingSMSId: existingDuplicate._id?.toString()?.substring(0, 8),
+                        existingStatus: existingDuplicate.status,
+                        reference: parsedData.reference
+                    });
+                    // Return the existing SMS record instead of creating a duplicate
+                    return existingDuplicate;
+                }
+            }
+
+            // Also check for duplicate by message content hash (for cases without reference)
+            // Check if same message content, same source, same userId within 1 hour
+            if (smsData.userId && smsData.message) {
+                const messageHash = require('crypto').createHash('md5').update(smsData.message.trim()).digest('hex');
+                const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+                const existingByContent = await SMSRecord.findOne({
+                    source: smsData.source || 'forwarder',
+                    userId: smsData.userId,
+                    timestamp: { $gte: oneHourAgo },
+                    status: { $in: ['pending', 'matched', 'verified'] }
+                });
+
+                // Compare message content if found
+                if (existingByContent && existingByContent.message) {
+                    const existingHash = require('crypto').createHash('md5').update(existingByContent.message.trim()).digest('hex');
+                    if (existingHash === messageHash) {
+                        console.log(`⚠️ Duplicate SMS detected: Same message content, source (${smsData.source || 'forwarder'}), and userId (${smsData.userId}) within 1 hour. Skipping storage.`, {
+                            existingSMSId: existingByContent._id?.toString()?.substring(0, 8),
+                            existingStatus: existingByContent.status
+                        });
+                        return existingByContent;
+                    }
+                }
+            }
+
             // Helper to convert parsed datetime like "04/11/2025 13:18:47" into a Date
             function parseParsedDatetimeToDate(dtString) {
                 if (!dtString || typeof dtString !== 'string') return null;
