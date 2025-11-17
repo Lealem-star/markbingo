@@ -31,6 +31,8 @@ class PlayerBot {
         this.stake = config.stake || parseInt(process.env.STAKE || '10');
         this.token = config.token || process.env.JWT_TOKEN;
         this.ws = null;
+        this.selectionDelayMs = this.computeSelectionDelay();
+        this.pendingSelectionTimeout = null;
         this.gameState = {
             phase: 'waiting',
             gameId: null,
@@ -48,6 +50,40 @@ class PlayerBot {
             gamesWon: 0,
             totalWinnings: 0
         };
+    }
+
+    /**
+     * Compute a deterministic per-bot delay (1s-2s) based on token
+     */
+    computeSelectionDelay() {
+        const base = 1000; // minimum 1s delay
+        if (!this.token) {
+            return base + Math.floor(Math.random() * 1000);
+        }
+        const hash = this.token.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+        return base + (hash % 1000); // 1000ms - 1999ms
+    }
+
+    clearSelectionTimeout() {
+        if (this.pendingSelectionTimeout) {
+            clearTimeout(this.pendingSelectionTimeout);
+            this.pendingSelectionTimeout = null;
+        }
+    }
+
+    scheduleCardSelection(extraDelay = 0) {
+        this.clearSelectionTimeout();
+        if (this.gameState.phase !== 'registration' || this.gameState.myCardNumber) {
+            return;
+        }
+        const jitter = Math.floor(Math.random() * 400); // add small randomness
+        const delay = this.selectionDelayMs + extraDelay + jitter;
+        this.pendingSelectionTimeout = setTimeout(() => {
+            this.pendingSelectionTimeout = null;
+            if (this.gameState.phase === 'registration' && !this.gameState.myCardNumber) {
+                this.selectRandomCard();
+            }
+        }, delay);
     }
 
     /**
@@ -179,12 +215,7 @@ class PlayerBot {
 
         if (availableCards.length === 0) {
             console.warn('⚠️  No available cards, will retry when registration updates');
-            // Retry after a short delay in case cards become available
-            setTimeout(() => {
-                if (this.gameState.phase === 'registration') {
-                    this.selectRandomCard();
-                }
-            }, 1000);
+            this.scheduleCardSelection(500);
             return false;
         }
 
@@ -268,7 +299,7 @@ class PlayerBot {
                 this.gameState.myCardNumber = payload.yourSelection;
 
                 if (this.gameState.phase === 'registration' && !this.gameState.myCardNumber) {
-                    setTimeout(() => this.selectRandomCard(), 1000);
+                    this.scheduleCardSelection();
                 }
                 break;
 
@@ -282,19 +313,14 @@ class PlayerBot {
                 this.gameState.calledNumbers = [];
 
                 console.log(`📋 Registration open for game ${payload.gameId} (${payload.playersCount} players)`);
-                // Add small random delay to avoid all bots selecting at once
-                const selectDelay = 300 + Math.random() * 700; // 300-1000ms
-                setTimeout(() => {
-                    if (this.gameState.phase === 'registration') {
-                        this.selectRandomCard();
-                    }
-                }, selectDelay);
+                this.scheduleCardSelection();
                 break;
 
             case 'selection_confirmed':
                 this.gameState.myCardNumber = payload.cardNumber;
                 this.gameState.playersCount = payload.playersCount || 0;
                 console.log(`✅ Card ${payload.cardNumber} selected! Players: ${payload.playersCount}, Prize Pool: ${payload.prizePool || 0}`);
+                this.clearSelectionTimeout();
                 break;
 
             case 'selection_rejected':
@@ -304,16 +330,10 @@ class PlayerBot {
                     if (payload.takenCards) {
                         this.gameState.takenCards = payload.takenCards;
                     }
-                    // Retry with a small random delay to avoid collisions
-                    const retryDelay = 300 + Math.random() * 500; // 300-800ms
-                    setTimeout(() => {
-                        if (this.gameState.phase === 'registration') {
-                            this.selectRandomCard();
-                        }
-                    }, retryDelay);
+                    this.scheduleCardSelection(300); // retry soon with stagger
                 } else if (payload.reason === 'NOT_IN_REGISTRATION') {
-                    // Wait for registration to open
                     console.log('⏳ Waiting for registration to open...');
+                    this.clearSelectionTimeout();
                 }
                 break;
 
@@ -328,6 +348,7 @@ class PlayerBot {
 
                 console.log(`🎮 Game ${payload.gameId} started!`);
                 console.log(`   Card: ${payload.cardNumber}, Players: ${payload.playersCount}, Prize Pool: ${payload.prizePool || 0}`);
+                this.clearSelectionTimeout();
                 break;
 
             case 'number_called':
@@ -362,6 +383,7 @@ class PlayerBot {
                 this.gameState.myCardNumber = null;
                 this.gameState.myCard = null;
                 this.gameState.calledNumbers = [];
+                this.clearSelectionTimeout();
                 break;
 
             case 'game_cancelled':
@@ -369,6 +391,7 @@ class PlayerBot {
                 this.gameState.phase = 'registration';
                 this.gameState.gameId = null;
                 this.gameState.playersCount = 0;
+                this.clearSelectionTimeout();
                 break;
 
             case 'players_update':
@@ -377,9 +400,8 @@ class PlayerBot {
 
             case 'registration_update':
                 this.gameState.takenCards = payload.takenCards || [];
-                // If we don't have a card selected yet, try to select one
                 if (this.gameState.phase === 'registration' && !this.gameState.myCardNumber) {
-                    setTimeout(() => this.selectRandomCard(), 200);
+                    this.scheduleCardSelection(200);
                 }
                 break;
 
