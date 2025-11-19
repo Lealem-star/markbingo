@@ -212,13 +212,46 @@ async function attemptAutoMatching(newSMS) {
                         continue;
                     }
 
+                    // Check if userSMS is already matched (prevent duplicate verifications)
+                    if (userSMS.status === 'matched') {
+                        console.log(`⚠️ Skipping match: UserSMS ${userSMS._id?.toString()?.substring(0, 8)} is already matched`);
+                        continue;
+                    }
+
+                    // CRITICAL: Check if userSMS is already part of ANY verification before attempting to match
+                    // This prevents matching the same userSMS with different receiver SMS
+                    const DepositVerification = require('../models/DepositVerification');
+                    const existingVerification = await DepositVerification.findOne({
+                        userSMS: userSMS._id,
+                        status: { $in: ['pending_review', 'verified', 'approved'] }
+                    }).session(session);
+
+                    if (existingVerification) {
+                        const statusText = existingVerification.status === 'pending_review' ? 'pending' : existingVerification.status;
+                        console.log(`⚠️ Skipping match: UserSMS ${userSMS._id?.toString()?.substring(0, 8)} is already part of ${statusText} verification ${existingVerification._id?.toString()?.substring(0, 8)}`);
+                        // Mark SMS as matched to prevent further attempts
+                        await SMSRecord.findByIdAndUpdate(userSMS._id, { status: 'matched' }).session(session);
+                        continue;
+                    }
+
                     // Create deposit verification within transaction
-                    await SmsForwarderService.createDepositVerification(
-                        resolvedUserId,
-                        userSMS,
-                        receiverSMS,
-                        matchResult
-                    );
+                    // This will throw an error if duplicate verification is detected
+                    try {
+                        await SmsForwarderService.createDepositVerification(
+                            resolvedUserId,
+                            userSMS,
+                            receiverSMS,
+                            matchResult
+                        );
+                    } catch (error) {
+                        if (error.message && error.message.includes('DUPLICATE_VERIFICATION')) {
+                            console.log(`⚠️ Duplicate verification prevented: ${error.message}`);
+                            // Mark SMS as matched to prevent further attempts
+                            await SMSRecord.findByIdAndUpdate(userSMS._id, { status: 'matched' }).session(session);
+                            continue; // Skip to next potential match
+                        }
+                        throw error; // Re-throw other errors
+                    }
 
                     // Update SMS records status within transaction
                     await SMSRecord.findByIdAndUpdate(

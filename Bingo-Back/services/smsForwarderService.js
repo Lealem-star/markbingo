@@ -24,8 +24,8 @@ class SmsForwarderService {
                     'parsedData.reference': parsedData.reference,
                     source: smsData.source || 'forwarder',
                     userId: smsData.userId,
-                    timestamp: { $gte: oneHourAgo },
-                    status: { $in: ['pending', 'matched', 'verified'] }
+                    timestamp: { $gte: oneHourAgo }
+                    // Removed status filter to catch ALL duplicates regardless of status
                 });
 
                 if (existingDuplicate) {
@@ -47,8 +47,8 @@ class SmsForwarderService {
                 const existingByContent = await SMSRecord.findOne({
                     source: smsData.source || 'forwarder',
                     userId: smsData.userId,
-                    timestamp: { $gte: oneHourAgo },
-                    status: { $in: ['pending', 'matched', 'verified'] }
+                    timestamp: { $gte: oneHourAgo }
+                    // Removed status filter to catch ALL duplicates regardless of status
                 });
 
                 // Compare message content if found
@@ -624,6 +624,54 @@ class SmsForwarderService {
             // Validate userId is provided
             if (!userId) {
                 throw new Error(`Cannot create deposit verification: userId is required but was ${userId}. UserSMS phone: ${userSMS?.phoneNumber || 'unknown'}`);
+            }
+
+            // CRITICAL: Check if this userSMS is already part of ANY verification (pending, verified, or approved)
+            // This prevents duplicate deposits when user sends the same SMS twice
+            // Also prevents matching the same userSMS with different receiver SMS
+            const existingVerification = await DepositVerification.findOne({
+                userSMS: userSMS._id,
+                status: { $in: ['pending_review', 'verified', 'approved'] }
+            });
+
+            if (existingVerification) {
+                const statusText = existingVerification.status === 'pending_review' ? 'pending' : existingVerification.status;
+                console.log(`⚠️ Duplicate verification prevented: UserSMS ${userSMS._id?.toString()?.substring(0, 8)} is already part of ${statusText} verification ${existingVerification._id?.toString()?.substring(0, 8)}`);
+                throw new Error(`DUPLICATE_VERIFICATION: This SMS receipt is already being processed. Verification ID: ${existingVerification._id}, Status: ${existingVerification.status}`);
+            }
+
+            // Also check by reference if available (additional safety check)
+            // Find all verifications (pending, verified, approved) for this user and check their userSMS references
+            if (userSMS.parsedData?.reference) {
+                const existingVerifications = await DepositVerification.find({
+                    userId,
+                    status: { $in: ['pending_review', 'verified', 'approved'] }
+                })
+                .populate('userSMS');
+
+                // Check if any existing verification has the same reference
+                for (const existingVer of existingVerifications) {
+                    if (existingVer.userSMS?.parsedData?.reference === userSMS.parsedData.reference) {
+                        const statusText = existingVer.status === 'pending_review' ? 'pending' : existingVer.status;
+                        console.log(`⚠️ Duplicate verification prevented: Reference ${userSMS.parsedData.reference} already ${statusText} in verification ${existingVer._id?.toString()?.substring(0, 8)}`);
+                        throw new Error(`DUPLICATE_VERIFICATION: This transaction reference is already being processed. Verification ID: ${existingVer._id}, Status: ${existingVer.status}`);
+                    }
+                }
+            }
+
+            // Check if receiverSMS is already matched (unless it's a placeholder)
+            // Check for ALL verification statuses to prevent matching with already-used receiver SMS
+            if (receiverSMS.message !== 'PENDING RECEIVER MATCH' && receiverSMS.status === 'matched') {
+                const existingReceiverVerification = await DepositVerification.findOne({
+                    receiverSMS: receiverSMS._id,
+                    status: { $in: ['pending_review', 'verified', 'approved'] }
+                });
+
+                if (existingReceiverVerification) {
+                    const statusText = existingReceiverVerification.status === 'pending_review' ? 'pending' : existingReceiverVerification.status;
+                    console.log(`⚠️ Duplicate verification prevented: ReceiverSMS ${receiverSMS._id?.toString()?.substring(0, 8)} is already matched in ${statusText} verification ${existingReceiverVerification._id?.toString()?.substring(0, 8)}`);
+                    throw new Error(`DUPLICATE_VERIFICATION: This receiver SMS is already being processed. Verification ID: ${existingReceiverVerification._id}, Status: ${existingReceiverVerification.status}`);
+                }
             }
 
             const verification = new DepositVerification({
