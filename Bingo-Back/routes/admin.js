@@ -783,4 +783,16 @@ router.get('/stats/invites', adminMiddleware, async (req, res) => {
     }
 });
 
+// --- Admin Wallet Statistics ---
+router.get('/stats/wallets/total-main', adminMiddleware, async (req, res) => {
+    try {
+        const wallets = await Wallet.find({}).lean();
+        const totalMain = wallets.reduce((sum, wallet) => sum + (wallet.main || 0), 0);
+        res.json({ totalMain });
+    } catch (error) {
+        console.error('Total main wallet stats error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
 module.exports = router;

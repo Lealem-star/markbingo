@@ -14,6 +14,7 @@ export default function AdminStats() {
         },
         topInviters: []
     });
+    const [totalMainWallet, setTotalMainWallet] = useState(0);
 
     useEffect(() => {
         (async () => {
@@ -47,15 +48,20 @@ export default function AdminStats() {
                         const dayGames = dayData.games;
                         const totalRevenue = dayGames.reduce((sum, g) => sum + (g.systemCut || 0), 0);
                         const totalPlayers = dayGames.reduce((sum, g) => sum + (g.playersCount || 0), 0);
-                        // Get the most recent game for that day as representative
-                        const latestGame = dayGames.sort((a, b) =>
-                            new Date(b.finishedAt) - new Date(a.finishedAt)
-                        )[0];
+
+                        // Collect all unique stakes for this day
+                        const uniqueStakes = [...new Set(dayGames.map(g => g.stake || 0).filter(s => s > 0))];
+                        // Sort stakes in ascending order for display
+                        uniqueStakes.sort((a, b) => a - b);
+                        // Format stakes as comma-separated string
+                        const stakesDisplay = uniqueStakes.length > 0
+                            ? uniqueStakes.map(s => `ETB ${s}`).join(', ')
+                            : 'N/A';
 
                         return {
                             day: dayData.day,
-                            gameId: latestGame?.gameId || 'N/A',
-                            stake: latestGame?.stake || 0,
+                            stakes: uniqueStakes,
+                            stakesDisplay: stakesDisplay,
                             noPlayed: totalPlayers,
                             systemRevenue: totalRevenue,
                             totalGames: dayGames.length
@@ -103,6 +109,10 @@ export default function AdminStats() {
             try {
                 const inviteData = await apiFetch('/admin/stats/invites');
                 setInviteStats(inviteData);
+            } catch { }
+            try {
+                const walletData = await apiFetch('/admin/stats/wallets/total-main');
+                setTotalMainWallet(walletData?.totalMain || 0);
             } catch { }
         })();
     }, []);
@@ -153,15 +163,8 @@ export default function AdminStats() {
                 </div>
                 <div className="admin-stats-card">
                     <div>
-                        <div className="admin-stats-label">Invite Rewards Paid</div>
-                        <div className="admin-stats-value admin-stats-value-purple">ETB {inviteStats.global.totalInviteRewards}</div>
-                        <div className="admin-stats-subtitle">(1 ETB per 10 invites)</div>
-                    </div>
-                </div>
-                <div className="admin-stats-card">
-                    <div>
-                        <div className="admin-stats-label">Avg Invites per User</div>
-                        <div className="admin-stats-value admin-stats-value-yellow">{inviteStats.global.avgInvitesPerUser?.toFixed(1) || 0}</div>
+                        <div className="admin-stats-label">Total Sum of All User Main Wallet</div>
+                        <div className="admin-stats-value admin-stats-value-purple">ETB {totalMainWallet.toFixed(2)}</div>
                     </div>
                 </div>
             </div>
@@ -217,7 +220,7 @@ export default function AdminStats() {
                             <div key={index} className="admin-stats-table-row">
                                 <div className="admin-stats-table-cell">{new Date(stat.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                                 <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.totalGames || 0}</div>
-                                <div className="admin-stats-table-cell admin-stats-table-cell-center">ETB {stat.stake}</div>
+                                <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.stakesDisplay}</div>
                                 <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.noPlayed}</div>
                                 <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {stat.systemRevenue.toFixed(2)}</div>
                             </div>

@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api/client';
 import AdminHome from './AdminHome';
-import AdminBalance from './AdminBalance';
 import AdminStats from './AdminStats';
 import AdminUserBalanceAccess from './AdminUserBalanceAccess';
 
 function AdminNav({ current, onNavigate }) {
     const tabs = [
         { key: 'home', label: 'Home', icon: '🏠' },
-        { key: 'balance', label: 'Transactions', icon: '💵' },
         { key: 'users', label: 'Wallets', icon: '👥' },
         { key: 'stats', label: 'Stats', icon: '📊' }
     ];
@@ -209,7 +207,6 @@ export default function AdminLayout({ onNavigate }) {
             </header>
             <main>
                 {tab === 'home' && <AdminHome />}
-                {tab === 'balance' && <AdminBalance />}
                 {tab === 'users' && <AdminUserBalanceAccess />}
                 {tab === 'stats' && <AdminStats />}
             </main>
