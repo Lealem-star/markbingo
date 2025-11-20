@@ -174,7 +174,10 @@ export default function AdminStats() {
 
             {/* Top Inviters Table */}
             {topInviters.length > 0 && (
-                <div className="admin-stats-table-container" style={{ '--stats-table-cols': 3 }}>
+                <div
+                    className="admin-stats-table-container"
+                    style={{ '--stats-table-cols': 3, minHeight: '320px' }}
+                >
                     <h3 className="admin-stats-table-title">Top Inviters</h3>
 
                     {/* Table Header */}
@@ -204,7 +207,10 @@ export default function AdminStats() {
             )}
 
             {/* Daily Statistics Table */}
-            <div className="admin-stats-table-container" style={{ '--stats-table-cols': 5 }}>
+            <div
+                className="admin-stats-table-container"
+                style={{ '--stats-table-cols': 5, minHeight: '420px' }}
+            >
                 <h3 className="admin-stats-table-title">Daily Statistics</h3>
 
                 {/* Table Header */}
