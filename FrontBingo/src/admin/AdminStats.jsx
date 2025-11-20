@@ -117,7 +117,37 @@ export default function AdminStats() {
         })();
     }, []);
 
-    const topInviters = (inviteStats.topInviters || []).slice(0, 10);
+    const topInviterSections = [
+        {
+            key: 'daily',
+            label: 'Daily Top Inviters',
+            rows: (inviteStats.topInviters?.daily || []).slice(0, 10)
+        },
+        {
+            key: 'weekly',
+            label: 'Weekly Top Inviters',
+            rows: (inviteStats.topInviters?.weekly || []).slice(0, 10)
+        },
+        {
+            key: 'monthly',
+            label: 'Monthly Top Inviters',
+            rows: (inviteStats.topInviters?.monthly || []).slice(0, 10)
+        }
+    ];
+
+    const fallbackTopInviters = Array.isArray(inviteStats.topInviters)
+        ? inviteStats.topInviters.slice(0, 10)
+        : [];
+
+    const sectionsToRender = topInviterSections.filter(section => section.rows.length > 0);
+
+    if (sectionsToRender.length === 0 && fallbackTopInviters.length > 0) {
+        sectionsToRender.push({
+            key: 'all-time',
+            label: 'Top Inviters',
+            rows: fallbackTopInviters
+        });
+    }
     const weeklyStats = dailyStats.slice(0, 7);
 
     return (
@@ -172,39 +202,39 @@ export default function AdminStats() {
                 </div>
             </div>
 
-            {/* Top Inviters Table */}
-            {topInviters.length > 0 && (
-                <div
-                    className="admin-stats-table-container"
-                    style={{ '--stats-table-cols': 3, minHeight: '320px' }}
-                >
-                    <h3 className="admin-stats-table-title">Top Inviters</h3>
+            {/* Top Inviters Tables by Range */}
+            {sectionsToRender.length > 0 &&
+                sectionsToRender.map(section => (
+                    <div
+                        key={section.key}
+                        className="admin-stats-table-container"
+                        style={{ '--stats-table-cols': 3, minHeight: '320px' }}
+                    >
+                        <h3 className="admin-stats-table-title">{section.label}</h3>
 
-                    {/* Table Header */}
-                    <div className="admin-stats-table-header">
-                        <div className="admin-stats-table-header-item">User</div>
-                        <div className="admin-stats-table-header-item">Invites</div>
-                        <div className="admin-stats-table-header-item">Rewards (Play Wallet)</div>
-                    </div>
+                        <div className="admin-stats-table-header">
+                            <div className="admin-stats-table-header-item">User</div>
+                            <div className="admin-stats-table-header-item">Invites</div>
+                            <div className="admin-stats-table-header-item">Rewards (Play Wallet)</div>
+                        </div>
 
-                    {/* Table Content */}
-                    <div className="admin-stats-table-content">
-                        {topInviters.map((inviter, index) => (
-                            <div key={index} className="admin-stats-table-row">
-                                <div className="admin-stats-table-cell">
-                                    {inviter.firstName} {inviter.lastName}
+                        <div className="admin-stats-table-content">
+                            {section.rows.map((inviter, index) => (
+                                <div key={`${section.key}-${index}`} className="admin-stats-table-row">
+                                    <div className="admin-stats-table-cell">
+                                        {inviter.firstName} {inviter.lastName}
+                                    </div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">
+                                        {inviter.totalInvites}
+                                    </div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-right">
+                                        ETB {inviter.inviteRewards || 0}
+                                    </div>
                                 </div>
-                                <div className="admin-stats-table-cell admin-stats-table-cell-center">
-                                    {inviter.totalInvites}
-                                </div>
-                                <div className="admin-stats-table-cell admin-stats-table-cell-right">
-                                    ETB {inviter.inviteRewards || 0}
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                ))}
 
             {/* Daily Statistics Table */}
             <div
