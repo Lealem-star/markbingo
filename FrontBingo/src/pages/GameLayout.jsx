@@ -612,7 +612,7 @@ export default function GameLayout({
                     {/* Leave Button */}
                     <button
                         onClick={() => {
-                            onNavigate?.('game', true);
+                            onNavigate?.('cartela-selection');
                         }}
                         className="action-button leave-button"
                     >
