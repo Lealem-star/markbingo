@@ -117,6 +117,9 @@ export default function AdminStats() {
         })();
     }, []);
 
+    const topInviters = (inviteStats.topInviters || []).slice(0, 10);
+    const weeklyStats = dailyStats.slice(0, 7);
+
     return (
         <div className="admin-stats-container admin-stats-page">
             {/* Today's Stats Section */}
@@ -170,8 +173,7 @@ export default function AdminStats() {
             </div>
 
             {/* Top Inviters Table */}
-            {/* Top Inviters Table */}
-            {inviteStats.topInviters.length > 0 && (
+            {topInviters.length > 0 && (
                 <div className="admin-stats-table-container" style={{ '--stats-table-cols': 3 }}>
                     <h3 className="admin-stats-table-title">Top Inviters</h3>
 
@@ -184,7 +186,7 @@ export default function AdminStats() {
 
                     {/* Table Content */}
                     <div className="admin-stats-table-content">
-                        {inviteStats.topInviters.map((inviter, index) => (
+                        {topInviters.map((inviter, index) => (
                             <div key={index} className="admin-stats-table-row">
                                 <div className="admin-stats-table-cell">
                                     {inviter.firstName} {inviter.lastName}
@@ -216,8 +218,8 @@ export default function AdminStats() {
 
                 {/* Table Content */}
                 <div className="admin-stats-table-content">
-                    {dailyStats.length > 0 ? (
-                        dailyStats.map((stat, index) => (
+                    {weeklyStats.length > 0 ? (
+                        weeklyStats.map((stat, index) => (
                             <div key={index} className="admin-stats-table-row">
                                 <div className="admin-stats-table-cell">{new Date(stat.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                                 <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.totalGames || 0}</div>
