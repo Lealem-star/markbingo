@@ -120,14 +120,14 @@ export default function AdminLayout({ onNavigate }) {
 
     if (isAdmin === null) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900">
+            <div className="min-h-screen" style={{ backgroundColor: '#e6e6fa' }}>
                 <div className="max-w-md mx-auto p-4 text-white text-center">
                     <div className="mt-20">
-                        {/* Animated Love Bingo Logo */}
+                        {/* Animated FUN Bingo Logo */}
                         <div className="relative mb-6">
                             <img
                                 src="/lb.png"
-                                alt="Love Bingo Logo"
+                                alt="FUN Bingo Logo"
                                 className="w-16 h-16 mx-auto animate-pulse"
                             />
                             {/* Search animation overlay */}
@@ -157,7 +157,7 @@ export default function AdminLayout({ onNavigate }) {
 
     if (!isAdmin) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900">
+            <div className="min-h-screen" style={{ backgroundColor: '#e6e6fa' }}>
                 <div className="max-w-md mx-auto p-4 text-white text-center">
                     <div className="mt-20">
                         <div className="text-6xl mb-4">🚫</div>
@@ -184,7 +184,7 @@ export default function AdminLayout({ onNavigate }) {
                 <div className="app-header">
                     <div className="app-logo">
                         <div className="logo-circle">
-                            <img src="/lb.png" alt="Love Bingo Logo" className="logo-image" />
+                            <img src="/lb.png" alt="FUN Bingo Logo" className="logo-image" />
                         </div>
                         <span className="app-title">Admin</span>
                     </div>

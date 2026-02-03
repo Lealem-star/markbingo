@@ -71,7 +71,7 @@ export default function Winner({ onNavigate, onResetToGame }) {
     if (!hasWinners) {
         return (
             <div className="app-container flex items-center justify-center min-h-screen py-8 px-4">
-                <div className="w-full max-w-md rounded-2xl backdrop-blur-md border border-yellow-500/20 shadow-2xl p-6 text-white relative bg-gradient-to-br from-yellow-500/10 via-amber-500/5 to-yellow-600/10">
+                <div className="w-full max-w-md rounded-3xl backdrop-blur-xl border-2 border-purple-300/40 shadow-2xl p-8 text-gray-800 relative bg-gradient-to-br from-white/90 via-purple-50/80 to-pink-50/70" style={{ boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(196, 181, 253, 0.2)' }}>
 
                     {/* Back Button */}
                     <div className="flex items-center justify-end mb-4">
@@ -84,33 +84,33 @@ export default function Winner({ onNavigate, onResetToGame }) {
                     </div>
 
                     <div className="flex flex-col items-center gap-4 mb-6">
-                        <div className="w-16 h-16 rounded-full background-color: rgba(226, 206, 26, 0.05) flex items-center justify-center shadow-lg">
-                            <span className="text-slate-900 text-2xl">🎯</span>
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center shadow-xl" style={{ boxShadow: '0 10px 30px rgba(168, 85, 247, 0.4)' }}>
+                            <span className="text-white text-3xl">🎯</span>
                         </div>
-                        <div className="text-yellow-300 font-extrabold text-3xl tracking-wide">BINGO!</div>
-                        <div className="px-4 py-2 rounded-full bg-yellow-400/20 border border-yellow-400/50 text-yellow-300 font-bold text-lg">
+                        <div className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-extrabold text-4xl tracking-wide">BINGO!</div>
+                        <div className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300/60 text-purple-700 font-bold text-lg shadow-lg">
                             No Winner This Game
                         </div>
-                        <div className="text-lg text-white/90 text-center">
+                        <div className="text-lg text-gray-700 text-center font-medium">
                             The game ended without a winner.<br />
                             Better luck next time!
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/10 p-4 sm:p-6 bg-[rgba(238, 211, 10, 0.05)]">
+                    <div className="rounded-2xl border-2 border-purple-200/50 p-5 sm:p-6 bg-gradient-to-br from-white/60 to-purple-50/40 backdrop-blur-sm shadow-lg">
                         <div className="text-center mb-4">
-                            <div className="text-white/80 text-sm mb-2">
+                            <div className="text-purple-700 text-sm mb-2 font-semibold">
                                 Game Completed
                             </div>
-                            <div className="text-white/60 text-xs">
+                            <div className="text-gray-600 text-xs">
                                 No player achieved a BINGO in this round.
                             </div>
                         </div>
 
-                        <div className="w-full h-8 rounded-md bg-amber-700/70 text-amber-200 text-xs flex items-center justify-center">
+                        <div className="w-full h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold flex items-center justify-center shadow-md">
                             አዲስ ጭዋታ ለመጀመር.....
                         </div>
-                        <div className="w-full h-8 rounded-md bg-slate-800/80 text-slate-200 text-xs flex items-center justify-center mt-2">
+                        <div className="w-full h-10 rounded-lg bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300/50 text-purple-700 text-xs font-semibold flex items-center justify-center mt-3 shadow-sm">
                             {countdown > 0 ? (
                                 <>Auto-starting next game in {countdown}s</>
                             ) : (
@@ -126,7 +126,7 @@ export default function Winner({ onNavigate, onResetToGame }) {
 
     return (
         <div className="app-container flex items-center justify-center min-h-screen py-8 px-4">
-            <div className="w-full max-w-md rounded-2xl backdrop-blur-md border border-yellow-500/20 shadow-2xl p-6 text-white relative bg-gradient-to-br from-yellow-500/10 via-amber-500/5 to-yellow-600/10">
+            <div className="w-full max-w-md rounded-3xl backdrop-blur-xl border-2 border-purple-300/40 shadow-2xl p-8 text-gray-800 relative bg-gradient-to-br from-white/90 via-purple-50/80 to-pink-50/70" style={{ boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(196, 181, 253, 0.2)' }}>
 
                 {/* Back Button */}
                 <div className="flex items-center justify-end mb-4">
@@ -139,31 +139,31 @@ export default function Winner({ onNavigate, onResetToGame }) {
                 </div>
 
                 <div className="flex flex-col items-center gap-4 mb-6">
-                    <div className="w-16 h-16 rounded-full background-color: rgba(226, 206, 26, 0.05) flex items-center justify-center shadow-lg">
-                        <span className="text-slate-900 text-2xl">👑</span>
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-xl animate-pulse" style={{ boxShadow: '0 10px 40px rgba(168, 85, 247, 0.5)' }}>
+                        <span className="text-white text-3xl">👑</span>
                     </div>
-                    <div className="text-yellow-300 font-extrabold text-3xl tracking-wide">BINGO!</div>
+                    <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 bg-clip-text text-transparent font-extrabold text-4xl tracking-wide">BINGO!</div>
                     {isCurrentUserWinner && (
-                        <div className="px-4 py-2 rounded-full bg-yellow-400/20 border border-yellow-400/50 text-yellow-300 font-bold text-lg animate-pulse">
+                        <div className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 border-2 border-purple-400/60 text-white font-bold text-lg animate-pulse shadow-lg" style={{ boxShadow: '0 8px 25px rgba(168, 85, 247, 0.4)' }}>
                             🎉 CONGRATULATIONS! YOU WON! 🎉
                         </div>
                     )}
                     {isMulti ? (
                         <>
-                            <div className="text-lg text-white/90">
+                            <div className="text-lg text-gray-700 font-semibold text-center">
                                 🎉 {winners.length} player{winners.length > 1 ? 's' : ''} won!
-                                {isCurrentUserWinner && <span className="block text-yellow-300 text-sm mt-1">(Including you!)</span>}
+                                {isCurrentUserWinner && <span className="block text-purple-600 text-sm mt-1 font-bold">(Including you!)</span>}
                             </div>
                             {typeof main.prize === 'number' && (
-                                <div className="text-sm text-amber-300">
-                                    Each wins: <span className="font-bold">{main.prize.toLocaleString()} ETB</span>
+                                <div className="text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-bold">
+                                    Each wins: <span className="text-purple-700">{main.prize.toLocaleString()} ETB</span>
                                 </div>
                             )}
                         </>
                     ) : (
-                        <div className="text-lg text-white/90">
+                        <div className="text-lg text-gray-700 font-semibold text-center">
                             🎉 {main.name || main.playerName || main.firstName || `Cartella #${main.cartelaNumber || main.cardId || 'Winner'}`} WON! 🎉
-                            {isCurrentUserWinner && <span className="block text-yellow-300 text-sm mt-1">That's you! 🎊</span>}
+                            {isCurrentUserWinner && <span className="block text-purple-600 text-sm mt-1 font-bold">That's you! 🎊</span>}
                         </div>
                     )}
                 </div>
@@ -172,28 +172,28 @@ export default function Winner({ onNavigate, onResetToGame }) {
                 {isMulti && (
                     <div className="flex flex-wrap gap-2 justify-center mb-6">
                         {winners.map((w, i) => (
-                            <div key={i} className="px-3 py-2 rounded-full bg-white/10 border border-white/15 text-sm">
-                                <span className="font-semibold mr-2">
+                            <div key={i} className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300/50 text-sm shadow-md">
+                                <span className="font-semibold mr-2 text-purple-700">
                                     {w.name || w.playerName || w.firstName || `Cartella #${w.cartelaNumber || w.cardId || (i + 1)}`}
                                 </span>
-                                <span className="opacity-80">#{w.cartelaNumber || w.cardId}</span>
+                                <span className="text-purple-600 opacity-80">#{w.cartelaNumber || w.cardId}</span>
                             </div>
                         ))}
                     </div>
                 )}
 
 
-                <div className="rounded-xl border border-white/10 p-4 sm:p-6 bg-[rgba(238, 211, 10, 0.05)]">
+                <div className="rounded-2xl border-2 border-purple-200/50 p-5 sm:p-6 bg-gradient-to-br from-white/60 to-purple-50/40 backdrop-blur-sm shadow-lg">
                     <div className="text-sm mb-4 flex items-center justify-center gap-2">
-                        <span className="text-white/80">Winning Cartella:</span>
-                        <span className="font-bold text-yellow-300">#{main.cartelaNumber || main.cardId || '-'}</span>
+                        <span className="text-purple-700 font-semibold">Winning Cartella:</span>
+                        <span className="font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">#{main.cartelaNumber || main.cardId || '-'}</span>
                     </div>
 
                     {typeof main.prize === 'number' && (
-                        <div className="text-sm mb-4 flex items-center justify-center gap-2 text-amber-300">
-                            <span>💰</span>
-                            <span>Prize per winner:</span>
-                            <span className="font-bold">{main.prize.toLocaleString()} ETB</span>
+                        <div className="text-sm mb-4 flex items-center justify-center gap-2">
+                            <span className="text-2xl">💰</span>
+                            <span className="text-gray-700 font-medium">Prize per winner:</span>
+                            <span className="font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{main.prize.toLocaleString()} ETB</span>
                         </div>
                     )}
 
@@ -243,16 +243,16 @@ export default function Winner({ onNavigate, onResetToGame }) {
 
                             // Fallback UI when card data is missing or invalid
                             return (
-                                <div className="text-center p-8 bg-white/10 rounded-lg border border-white/20">
-                                    <div className="text-yellow-300 text-lg mb-2">🏆</div>
-                                    <div className="text-white/80 text-sm font-semibold mb-1">
+                                <div className="text-center p-8 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200/50 shadow-md">
+                                    <div className="text-3xl mb-2">🏆</div>
+                                    <div className="text-purple-700 text-sm font-semibold mb-1">
                                         Cartella #{main.cartelaNumber || main.cardId || 'Winner'}
                                     </div>
-                                    <div className="text-white/60 text-xs mt-2">
+                                    <div className="text-gray-600 text-xs mt-2">
                                         Card preview not available
                                     </div>
                                     {main.called && Array.isArray(main.called) && main.called.length > 0 && (
-                                        <div className="text-white/50 text-xs mt-2">
+                                        <div className="text-purple-600 text-xs mt-2 font-medium">
                                             Called numbers: {main.called.length}
                                         </div>
                                     )}
@@ -261,10 +261,10 @@ export default function Winner({ onNavigate, onResetToGame }) {
                         })()}
                     </div>
 
-                    <div className="w-full h-8 rounded-md bg-amber-700/70 text-amber-200 text-xs flex items-center justify-center">
+                    <div className="w-full h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold flex items-center justify-center shadow-md">
                         አዲስ ጭዋታ ለመጀመር.....
                     </div>
-                    <div className="w-full h-8 rounded-md bg-slate-800/80 text-slate-200 text-xs flex items-center justify-center mt-2">
+                    <div className="w-full h-10 rounded-lg bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300/50 text-purple-700 text-xs font-semibold flex items-center justify-center mt-3 shadow-sm">
                         {countdown > 0 ? (
                             <>Auto-starting next game in {countdown}s</>
                         ) : (

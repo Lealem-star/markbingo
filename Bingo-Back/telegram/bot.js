@@ -182,7 +182,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                             if (inviter.telegramId) {
                                 await ctx.telegram.sendMessage(
                                     inviter.telegramId,
-                                    `🎉 Great news! Someone joined Love Bingo using your invite link!`
+                                    `🎉 Great news! Someone joined FUN Bingo using your invite link!`
                                 ).catch(() => { }); // Ignore errors if user blocked bot
                             }
                         }
@@ -216,12 +216,12 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 registered = !!(user && (user.isRegistered || user.phone));
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '👋 Welcome to Love Bingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
+                    const regText = '👋 Welcome to FUN Bingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
                     const photoPath = path.join(__dirname, '..', 'static', 'lb.png');
                     const photo = fs.existsSync(photoPath) ? { source: fs.createReadStream(photoPath) } : (WEBAPP_URL || '').replace(/\/$/, '') + '/lb.png';
                     return ctx.replyWithPhoto(photo, { caption: regText, reply_markup: regKeyboard.reply_markup });
                 }
-                const welcomeText = `👋 Welcome to Love Bingo! Choose an Option below.`;
+                const welcomeText = `👋 Welcome to FUN Bingo! Choose an Option below.`;
                 const keyboard = { reply_markup: { inline_keyboard: [[{ text: '🎮 Play', callback_data: 'play' }], [{ text: '💵 Check Balance', callback_data: 'balance' }, { text: '💰 Deposit', callback_data: 'deposit' }], [{ text: '☎️ Contact Support', callback_data: 'support' }, { text: '📖 Instruction', callback_data: 'instruction' }], [{ text: '🤑 Withdraw', callback_data: 'withdraw' }, { text: '🔗 Invite', callback_data: 'invite' }]] } };
                 const photoPath = path.join(__dirname, '..', 'static', 'lb.png');
                 const photo = fs.existsSync(photoPath) ? { source: fs.createReadStream(photoPath) } : (WEBAPP_URL || '').replace(/\/$/, '') + '/lb.png';
@@ -510,7 +510,7 @@ Thank you for your dedication! 🙏`;
 
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '👋 Welcome to Love Bingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
+                    const regText = '👋 Welcome to FUN Bingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
                     return ctx.reply(regText, regKeyboard);
                 }
 
@@ -524,11 +524,11 @@ Thank you for your dedication! 🙏`;
                             ]
                         }
                     };
-                    return ctx.reply('🎮 Ready to play Love Bingo!', keyboard);
+                    return ctx.reply('🎮 Ready to play FUN Bingo!', keyboard);
                 } else {
                     // Fallback if no HTTPS web app URL
                     const keyboard = { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } };
-                    return ctx.reply('🎮 To play Love Bingo, please use our web app:\n\n' + webAppUrl, keyboard);
+                    return ctx.reply('🎮 To play FUN Bingo, please use our web app:\n\n' + webAppUrl, keyboard);
                 }
             } catch {
                 return ctx.reply('❌ Database unavailable. Please try again later.');
@@ -577,13 +577,13 @@ Thank you for your dedication! 🙏`;
         });
 
         bot.command('support', (ctx) => {
-            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@haset_life\n@itsjustpark\n\n💬 For general support:\n@haset_life\n@itsjustpark\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@Funbingosupport1\n\n💬 For general support:\n@Funbingosupport1\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
         });
 
         bot.command('instruction', (ctx) => {
             const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
             if (isHttpsWebApp) keyboard.inline_keyboard.unshift([{ text: '🎮 Start Playing', web_app: { url: webAppUrl } }]);
-            ctx.reply('📖 How to Play Love Bingo:\n\n1️⃣ Select a bingo card\n2️⃣ Wait for numbers to be called\n3️⃣ Mark numbers on your card\n4️⃣ Call "BINGO!" when you win\n\n🎯 Win by getting 5 in a row (horizontal, vertical, or diagonal)\n\n💰 Prizes are shared among all winners!', { reply_markup: keyboard });
+            ctx.reply('📖 How to Play FUN Bingo:\n\n1️⃣ Select a bingo card\n2️⃣ Wait for numbers to be called\n3️⃣ Mark numbers on your card\n4️⃣ Call "BINGO!" when you win\n\n🎯 Win by getting 5 in a row (horizontal, vertical, or diagonal)\n\n💰 Prizes are shared among all winners!', { reply_markup: keyboard });
         });
 
         // Admin: manual daily report trigger (optional date: YYYY-MM-DD)
@@ -758,14 +758,14 @@ Thank you for your dedication! 🙏`;
 
         bot.action('support', (ctx) => {
             ctx.answerCbQuery('☎️ Support info...');
-            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@haset_life\n@itsjustpark\n\n💬 For general support:\n@haset_life\n@itsjustpark\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@Funbingosupport1\n\n💬 For general support:\n@Funbingosupport1\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
         });
 
         bot.action('instruction', (ctx) => {
             ctx.answerCbQuery('📖 Instructions...');
             const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
             if (isHttpsWebApp) keyboard.inline_keyboard.unshift([{ text: '🎮 Start Playing', web_app: { url: webAppUrl } }]);
-            ctx.reply('📖 How to Play Love Bingo:\n\n1️⃣ Select a bingo card\n2️⃣ Wait for numbers to be called\n3️⃣ Mark numbers on your card\n4️⃣ Call "BINGO!" when you win\n\n🎯 Win by getting 5 in a row (horizontal, vertical, or diagonal)\n\n💰 Prizes are shared among all winners!', { reply_markup: keyboard });
+            ctx.reply('📖 How to Play FUN Bingo:\n\n1️⃣ Select a bingo card\n2️⃣ Wait for numbers to be called\n3️⃣ Mark numbers on your card\n4️⃣ Call "BINGO!" when you win\n\n🎯 Win by getting 5 in a row (horizontal, vertical, or diagonal)\n\n💰 Prizes are shared among all winners!', { reply_markup: keyboard });
         });
 
 
@@ -1128,7 +1128,7 @@ Thank you for your dedication! 🙏`;
             ctx.answerCbQuery('🔗 Invite friends...');
             const inviteLink = `https://t.me/${ctx.botInfo.username}?start=invite_${ctx.from.id}`;
             const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
-            keyboard.inline_keyboard.unshift([{ text: '📤 Share Link', url: `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=Join me in Love Bingo!` }]);
+            keyboard.inline_keyboard.unshift([{ text: '📤 Share Link', url: `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=Join me in FUN Bingo!` }]);
 
             // Send image with caption
             const imagePath = path.join(__dirname, '../static/lb.png');
@@ -1136,21 +1136,21 @@ Thank you for your dedication! 🙏`;
                 await ctx.replyWithPhoto(
                     { source: imagePath },
                     {
-                        caption: `🔗 Invite Friends to Love Bingo!\n\n👥 Share this link with your friends:\n\n${inviteLink}`,
+                        caption: `🔗 Invite Friends to FUN Bingo!\n\n👥 Share this link with your friends:\n\n${inviteLink}`,
                         reply_markup: keyboard
                     }
                 );
             } catch (error) {
                 console.error('Error sending invite image:', error);
                 // Fallback to text message if image fails
-                ctx.reply(`🔗 Invite Friends to Love Bingo!\n\n👥 Share this link with your friends:\n\n${inviteLink}`, { reply_markup: keyboard });
+                ctx.reply(`🔗 Invite Friends to FUN Bingo!\n\n👥 Share this link with your friends:\n\n${inviteLink}`, { reply_markup: keyboard });
             }
         });
 
         bot.action('back_to_menu', async (ctx) => {
             if (!(await requireRegistration(ctx))) return;
             ctx.answerCbQuery('🔙 Back to menu');
-            const welcomeText = `👋 Welcome to Love Bingo! Choose an Option below.`;
+            const welcomeText = `👋 Welcome to FUN Bingo! Choose an Option below.`;
             const keyboard = { reply_markup: { inline_keyboard: [[{ text: '🎮 Play', callback_data: 'play' }], [{ text: '💵 Check Balance', callback_data: 'balance' }, { text: '💰 Deposit', callback_data: 'deposit' }], [{ text: '☎️ Contact Support', callback_data: 'support' }, { text: '📖 Instruction', callback_data: 'instruction' }], [{ text: '🤑 Withdraw', callback_data: 'withdraw' }, { text: '🔗 Invite', callback_data: 'invite' }]] } };
             return ctx.editMessageText(welcomeText, keyboard);
         });
@@ -1158,18 +1158,20 @@ Thank you for your dedication! 🙏`;
         bot.action(/^deposit_telebirr_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
             const amount = ctx.match[1];
             ctx.answerCbQuery('📱 Telebirr deposit...');
-            ctx.reply(`📱 Telebirr Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Agent Name: Meseret Tebabal\n📱 Telebirr: \`0934551781\`\n\n💡 Steps:\n1️⃣ የቴሌብር  አፖን ይክፈቱ \n2️⃣ "Send Money" የሚለውን ይምረጡ\n3️⃣ ከዛም ይህን ቁጥር ያስገቡ: \`0934551781\`\n4️⃣ ከዛ ቦቱ ላይ ለማስቀመጥ የላኩትን መጠን እዚህ ያስገቡ እኩል መሆኑን አረጋግጡ!: ETB ${amount}\n5️⃣ ከቴሌብር የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n✅ ሂሳብዎም ወዲያውኑ ይሞላል።\nYour wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Number', callback_data: 'copy_telebirr' }], [{ text: '📱 ደረሰኝ ላክ', callback_data: 'send_receipt_telebirr' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
+            ctx.reply(`📱 Telebirr Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Agent Name: Mengistu beyene worku\n📱 Telebirr: \`0994237676\`\n\n💡 Steps:\n1️⃣ የቴሌብር  አፖን ይክፈቱ \n2️⃣ "Send Money" የሚለውን ይምረጡ\n3️⃣ ከዛም ይህን ቁጥር ያስገቡ: \`0994237676\`\n4️⃣ ከዛ ቦቱ ላይ ለማስቀመጥ የላኩትን መጠን እዚህ ያስገቡ እኩል መሆኑን አረጋግጡ!: ETB ${amount}\n5️⃣ ከቴሌብር የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n✅ ሂሳብዎም ወዲያውኑ ይሞላል።\nYour wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Number', callback_data: 'copy_telebirr' }], [{ text: '📱 ደረሰኝ ላክ', callback_data: 'send_receipt_telebirr' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
         });
-        bot.action(/^deposit_commercial_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
-            const amount = ctx.match[1];
-            ctx.answerCbQuery('🏦 Commercial Bank deposit...');
-            ctx.reply(`🏦 Commercial Bank Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Name: Lealem Meseret\n🏦 Account: \`1000415847959\`\n🏛️ Bank: Commercial Bank of Ethiopia\n\n💡 Steps:\n1️⃣ በስልክዎ ወደ 889 የንግድ ባንክ አጭር ኮድ ይግቡ\n2️⃣ Transfer to account: \`1000415847959\`\n3️⃣ ከዛ ቦቱ ላይ ለማስቀመጥ የላኩትን መጠን እዚህ ያስገቡ እኩል መሆኑን አረጋግጡ!: ETB ${amount}\n4️⃣ Complete the transaction\n5️⃣ ከCBE የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n Send the SMS receipt here\n\n✅ ሂሳብዎም ወዲያውኑ ይሞላል።\n Your wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Account', callback_data: 'copy_commercial' }], [{ text: '📱 ደረሰኝ ላክ', callback_data: 'send_receipt_commercial' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
-        });
-        bot.action(/^deposit_cbe_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
-            const amount = ctx.match[1];
-            ctx.answerCbQuery('💳 CBE Birr deposit...');
-            ctx.reply(`💳 CBE Birr Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Name: Lealem Meseret\n💳 CBE Birr: \`0934551781\`\n🏦 Bank: Commercial Bank of Ethiopia\n\n💡 Steps:\n1️⃣ Open CBE Birr app ወይም አጭር ቁጥር 847 ይጠቀሙ\n2️⃣ Select "Send Money"\n3️⃣ Enter agent number: \`0934551781\`\n4️⃣ Enter amount: ETB ${amount}\n5️⃣ Send the transaction\n6️⃣ ከCBEBirr የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ ሂሳብዎም ወዲያውኑ ይሞላል። \n Your wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Number', callback_data: 'copy_cbe' }], [{ text: '📱 ደረሰኝ ላክላክ', callback_data: 'send_receipt_cbe' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
-        });
+        // Temporarily disabled - Commercial Bank payment method
+        // bot.action(/^deposit_commercial_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
+        //     const amount = ctx.match[1];
+        //     ctx.answerCbQuery('🏦 Commercial Bank deposit...');
+        //     ctx.reply(`🏦 Commercial Bank Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Name: Lealem Meseret\n🏦 Account: \`1000415847959\`\n🏛️ Bank: Commercial Bank of Ethiopia\n\n💡 Steps:\n1️⃣ በስልክዎ ወደ 889 የንግድ ባንክ አጭር ኮድ ይግቡ\n2️⃣ Transfer to account: \`1000415847959\`\n3️⃣ ከዛ ቦቱ ላይ ለማስቀመጥ የላኩትን መጠን እዚህ ያስገቡ እኩል መሆኑን አረጋግጡ!: ETB ${amount}\n4️⃣ Complete the transaction\n5️⃣ ከCBE የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n Send the SMS receipt here\n\n✅ ሂሳብዎም ወዲያውኑ ይሞላል።\n Your wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Account', callback_data: 'copy_commercial' }], [{ text: '📱 ደረሰኝ ላክ', callback_data: 'send_receipt_commercial' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
+        // });
+        // Temporarily disabled - CBE Birr payment method
+        // bot.action(/^deposit_cbe_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
+        //     const amount = ctx.match[1];
+        //     ctx.answerCbQuery('💳 CBE Birr deposit...');
+        //     ctx.reply(`💳 CBE Birr Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Name: Lealem Meseret\n💳 CBE Birr: \`0934551781\`\n🏦 Bank: Commercial Bank of Ethiopia\n\n💡 Steps:\n1️⃣ Open CBE Birr app ወይም አጭር ቁጥር 847 ይጠቀሙ\n2️⃣ Select "Send Money"\n3️⃣ Enter agent number: \`0934551781\`\n4️⃣ Enter amount: ETB ${amount}\n5️⃣ Send the transaction\n6️⃣ ከCBEBirr የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ ሂሳብዎም ወዲያውኑ ይሞላል። \n Your wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Number', callback_data: 'copy_cbe' }], [{ text: '📱 ደረሰኝ ላክላክ', callback_data: 'send_receipt_cbe' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
+        // });
 
         bot.action('send_receipt_telebirr', (ctx) => {
             const userId = String(ctx.from.id);
@@ -1177,32 +1179,36 @@ Thank you for your dedication! 🙏`;
             ctx.answerCbQuery('📱 Ready for Telebirr receipt...');
             ctx.reply('📱 Send your Telebirr transaction receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ Your wallet will be credited automatically!');
         });
-        bot.action('send_receipt_commercial', (ctx) => {
-            const userId = String(ctx.from.id);
-            depositStates.set(userId, 'awaiting_receipt');
-            ctx.answerCbQuery('📱 Ready for Commercial Bank SMS...');
-            ctx.reply('📱 Send your Commercial Bank SMS receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ Your wallet will be credited automatically!');
-        });
-        bot.action('send_receipt_cbe', (ctx) => {
-            const userId = String(ctx.from.id);
-            depositStates.set(userId, 'awaiting_receipt');
-            ctx.answerCbQuery('📱 Ready for CBE Birr receipt...');
-            ctx.reply('📱 Send your CBE Birr transaction receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ! \n\n✅ Your wallet will be credited automatically!');
-        });
+        // Temporarily disabled - Commercial Bank receipt handler
+        // bot.action('send_receipt_commercial', (ctx) => {
+        //     const userId = String(ctx.from.id);
+        //     depositStates.set(userId, 'awaiting_receipt');
+        //     ctx.answerCbQuery('📱 Ready for Commercial Bank SMS...');
+        //     ctx.reply('📱 Send your Commercial Bank SMS receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ Your wallet will be credited automatically!');
+        // });
+        // Temporarily disabled - CBE Birr receipt handler
+        // bot.action('send_receipt_cbe', (ctx) => {
+        //     const userId = String(ctx.from.id);
+        //     depositStates.set(userId, 'awaiting_receipt');
+        //     ctx.answerCbQuery('📱 Ready for CBE Birr receipt...');
+        //     ctx.reply('📱 Send your CBE Birr transaction receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ! \n\n✅ Your wallet will be credited automatically!');
+        // });
 
         // Copy button handlers
         bot.action('copy_telebirr', (ctx) => {
             ctx.answerCbQuery('📋 Telebirr number copied!');
-            ctx.reply('📱 Telebirr Number:\n\n`0934551781`\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
+            ctx.reply('📱 Telebirr Number:\n\n`0994237676`\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
         });
-        bot.action('copy_commercial', (ctx) => {
-            ctx.answerCbQuery('📋 Commercial Bank account copied!');
-            ctx.reply('🏦 Commercial Bank Account:\n\n`1000415847959`\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
-        });
-        bot.action('copy_cbe', (ctx) => {
-            ctx.answerCbQuery('📋 CBE Birr number copied!');
-            ctx.reply('💳 CBE Birr Number:\n\n`0934551781`\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
-        });
+        // Temporarily disabled - Commercial Bank copy handler
+        // bot.action('copy_commercial', (ctx) => {
+        //     ctx.answerCbQuery('📋 Commercial Bank account copied!');
+        //     ctx.reply('🏦 Commercial Bank Account:\n\n`1000415847959`\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
+        // });
+        // Temporarily disabled - CBE Birr copy handler
+        // bot.action('copy_cbe', (ctx) => {
+        //     ctx.answerCbQuery('📋 CBE Birr number copied!');
+        //     ctx.reply('💳 CBE Birr Number:\n\n`0934551781`\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
+        // });
 
         bot.on('contact', async (ctx) => {
             try {
@@ -1502,7 +1508,7 @@ Thank you for your dedication! 🙏`;
                 if (amountMatch) {
                     const amount = Number(amountMatch[1]);
                     if (amount >= 50) {
-                        ctx.reply('💡 You can only deposit money using the options below. \n ብር ማስገባት የምትችሉት ከታች ባለው አማራጮች ብቻ ይሆናል። \n\n📋 Transfer Methods:\n1️⃣ From Telebirr to Agent Telebirr only\n2️⃣ From Commercial Bank to Agent Commercial Bank only\n3️⃣ From CBE Birr to Agent CBE Birr only \n1.  ከቴሌብር ወደ ኤጀንት ቴሌብር ብቻ።\n2.  ከንግድ ባንክ ወደ ኤጀንት ንግድ ባንክ ብቻ።\n3.  ከአቢሲኒያ ባንክ ወደ ኤጀንት አቢሲኒያ ባንክ ብቻ።\n4.  ከሲቢኢ ብር ወደ ኤጀንት ሲቢኢ ብር ብቻ። \n\n\n🏦 Choose your preferred payment option:', { reply_markup: { inline_keyboard: [[{ text: '📱 Telebirr', callback_data: `deposit_telebirr_${amount}` }], [{ text: '🏦 Commercial Bank', callback_data: `deposit_commercial_${amount}` }], [{ text: '💳 CBE Birr', callback_data: `deposit_cbe_${amount}` }], [{ text: '❌ Cancel', callback_data: 'back_to_menu' }]] } });
+                        ctx.reply('💡 You can only deposit money using the options below. \n ብር ማስገባት የምትችሉት ከታች ባለው አማራጮች ብቻ ይሆናል። \n\n📋 Transfer Methods:\n1️⃣ From Telebirr to Agent Telebirr only\n1.  ከቴሌብር ወደ ኤጀንት ቴሌብር ብቻ።\n\n\n🏦 Choose your preferred payment option:', { reply_markup: { inline_keyboard: [[{ text: '📱 Telebirr', callback_data: `deposit_telebirr_${amount}` }], /* Temporarily disabled: [{ text: '🏦 Commercial Bank', callback_data: `deposit_commercial_${amount}` }], [{ text: '💳 CBE Birr', callback_data: `deposit_cbe_${amount}` }] */ [{ text: '❌ Cancel', callback_data: 'back_to_menu' }]] } });
                         return;
                     } else {
                         return ctx.reply('❌ Minimum deposit amount is 50 Birr. Please enter a valid amount.');

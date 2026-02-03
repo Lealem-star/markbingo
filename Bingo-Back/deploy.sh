@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Love Bingo Bot Deployment Script
-echo "🚀 Deploying Love Bingo Bot..."
+# FUN Bingo Bot Deployment Script
+echo "🚀 Deploying FUN Bingo Bot..."
 
 # Create logs directory
 mkdir -p logs
@@ -18,8 +18,8 @@ npm install
 
 # Stop existing processes
 echo "🛑 Stopping existing processes..."
-pm2 stop love-bingo-bot 2>/dev/null || true
-pm2 delete love-bingo-bot 2>/dev/null || true
+pm2 stop fun-bingo-bot 2>/dev/null || true
+pm2 delete fun-bingo-bot 2>/dev/null || true
 
 # Start with PM2
 echo "🤖 Starting bot with PM2..."
@@ -33,4 +33,4 @@ pm2 startup
 
 echo "✅ Deployment completed!"
 echo "📊 Check status: pm2 status"
-echo "📝 View logs: pm2 logs love-bingo-bot"
+echo "📝 View logs: pm2 logs fun-bingo-bot"

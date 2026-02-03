@@ -90,9 +90,9 @@ export default function History({ onNavigate }) {
     };
 
     return (
-        <div className="min-h-screen overflow-y-auto pb-28 bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900">
+        <div className="min-h-screen overflow-y-auto pb-28" style={{ backgroundColor: '#e6e6fa' }}>
             <header className="p-6 pt-16">
-                <h1 className="text-2xl font-extrabold text-white">Game History</h1>
+                <h1 className="text-2xl font-extrabold text-gray-800">Game History</h1>
             </header>
 
             <main className="p-6 space-y-5">
@@ -109,26 +109,29 @@ export default function History({ onNavigate }) {
                 )}
 
                 {/* Stats cards */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="wallet-card">
-                        <div className="text-slate-300 text-xs font-semibold">Total Games</div>
-                        <div className="value mt-1">{totalGames}</div>
+                {!loading && (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="wallet-card">
+                            <div className="text-gray-600 text-xs font-semibold">Total Games</div>
+                            <div className="value mt-1">{totalGames}</div>
+                        </div>
+                        <div className="wallet-card">
+                            <div className="text-gray-600 text-xs font-semibold">Games Won</div>
+                            <div className="value green mt-1">{gamesWon}</div>
+                        </div>
                     </div>
-                    <div className="wallet-card">
-                        <div className="text-slate-300 text-xs font-semibold">Games Won</div>
-                        <div className="value green mt-1">{gamesWon}</div>
-                    </div>
-                </div>
+                )}
 
                 {/* Recent games */}
                 <h3 className="history-title">Recent Games</h3>
                 {loading ? (
-                    <div className="flex justify-center items-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-400"></div>
+                    <div className="flex flex-col justify-center items-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
+                        <div className="text-gray-700 text-sm">Loading game history...</div>
                     </div>
                 ) : games.length === 0 ? (
-                    <div className="rounded-2xl p-8 border border-white/10 bg-slate-900/40 text-center">
-                        <div className="text-slate-400">No games yet</div>
+                    <div className="rounded-2xl p-8 border-2 border-purple-200/50 bg-white/60 backdrop-blur-sm text-center shadow-md">
+                        <div className="text-gray-600">No games yet</div>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -138,18 +141,18 @@ export default function History({ onNavigate }) {
                                     <div className="flex items-center gap-3">
                                         <div className="icon">🎮</div>
                                         <div>
-                                            <div className="text-white font-semibold">Game {g.gameId}</div>
-                                            <div className="text-slate-400 text-xs mt-0.5">{g.finishedAt ? new Date(g.finishedAt).toLocaleString() : ''}</div>
+                                            <div className="text-gray-800 font-semibold">Game {g.gameId}</div>
+                                            <div className="text-gray-600 text-xs mt-0.5">{g.finishedAt ? new Date(g.finishedAt).toLocaleString() : ''}</div>
                                         </div>
                                     </div>
                                     <div>
                                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${g.userResult?.won ? 'bg-emerald-600/90 text-white' : 'bg-rose-600/90 text-white'}`}>{g.userResult?.won ? 'Won' : 'Lost'}</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-5 text-slate-300 text-sm mt-3">
-                                    <div>Stake: <span className="text-white font-semibold">{g.stake}</span></div>
-                                    <div>Prize: <span className="text-white font-semibold">{g.userResult?.prize || 0}</span></div>
-                                    <div>Status: <span className="text-white font-semibold">{g.status}</span></div>
+                                <div className="flex items-center gap-5 text-gray-700 text-sm mt-3">
+                                    <div>Stake: <span className="text-gray-800 font-semibold">{g.stake}</span></div>
+                                    <div>Prize: <span className="text-gray-800 font-semibold">{g.userResult?.prize || 0}</span></div>
+                                    <div>Status: <span className="text-gray-800 font-semibold">{g.status}</span></div>
                                 </div>
                             </div>
                         ))}

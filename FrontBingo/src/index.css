@@ -2,17 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Love Bingo Design tokens and color theme */
+/* FUN Bingo Design tokens and color theme */
 :root {
-    /* Love Bingo Primary Colors */
+    /* FUN Bingo Primary Colors */
     --soft-pink: #FFB6C1;
     --crimson-red: #DC143C;
 
-    /* Love Bingo Secondary Colors */
+    /* FUN Bingo Secondary Colors */
     --lavender: #E6E6FA;
     --peach: #FFDAB9;
 
-    /* Love Bingo Accent Colors */
+    /* FUN Bingo Accent Colors */
     --gold: #FFD700;
     --mint-green: #98FF98;
 
@@ -20,7 +20,7 @@
     --footer-background: #2d1b69;
     --primary-boarder: #4c1d95;
 
-    /* Love Bingo Background Gradients */
+    /* FUN Bingo Background Gradients */
     --love-bg-primary: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
     --love-bg-secondary: linear-gradient(135deg, #ec4899 0%, #db2777 50%, #be185d 100%);
     --love-bg-accent: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
@@ -48,8 +48,8 @@
 
 /* Base app layout helpers */
 body {
-    background-color: #0f172a;
-    /* slate-900 */
+    background-color: #e6e6fa;
+    /* Light lavender/purple background */
     color: #e2e8f0;
     /* slate-200 */
 }
@@ -58,7 +58,7 @@ body {
     min-height: 100vh;
     padding-bottom: 6rem;
     /* leave space for bottom nav on mobile */
-    background: radial-gradient(1200px 800px at 50% -200px, #8b5cf6 0%, #7c3aed 30%, #6d28d9 60%, #4c1d95 100%);
+    background: #e6e6fa; /* Light lavender/purple background */
 }
 
 .bottom-nav {
@@ -694,9 +694,10 @@ body {
 }
 
 /* Stats Page overflow fixes */
+/* Mobile-first: Base styles for mobile */
 .admin-stats-page {
-    max-height: calc(100vh - 200px);
-    /* Account for header and bottom nav */
+    max-height: calc(100vh - 180px);
+    /* Account for header and bottom nav - mobile optimized */
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
@@ -704,10 +705,32 @@ body {
 }
 
 .admin-stats-page .admin-stats-table-content {
-    max-height: 40vh;
-    /* Limit table content height */
+    max-height: 35vh;
+    /* Limit table content height - mobile optimized */
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+/* Tablet and up - more space */
+@media (min-width: 768px) {
+    .admin-stats-page {
+        max-height: calc(100vh - 200px);
+    }
+    
+    .admin-stats-page .admin-stats-table-content {
+        max-height: 40vh;
+    }
+}
+
+/* Desktop and up - even more space */
+@media (min-width: 1024px) {
+    .admin-stats-page {
+        max-height: calc(100vh - 220px);
+    }
+    
+    .admin-stats-page .admin-stats-table-content {
+        max-height: 45vh;
+    }
 }
 
 /* Balance Page Styles */
@@ -1301,11 +1324,11 @@ body {
 
 /* Stats Page Styles */
 .admin-stats-container {
-    padding: 1rem 1rem 6rem 1rem;
+    padding: 0.75rem 0.75rem 6rem 0.75rem;
     /* Added bottom padding for fixed nav */
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
     color: white;
     width: 100%;
     max-width: 100%;
@@ -1314,15 +1337,15 @@ body {
 
 @media (min-width: 768px) {
     .admin-stats-container {
-        padding: 1.5rem 1.5rem 6rem 1.5rem;
-        gap: 2rem;
+        padding: 1rem 1rem 6rem 1rem;
+        gap: 1.25rem;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-container {
-        padding: 2rem 2rem 6rem 2rem;
-        gap: 2.5rem;
+        padding: 1.25rem 1.25rem 6rem 1.25rem;
+        gap: 1.5rem;
         max-width: 1600px;
         margin: 0 auto;
     }
@@ -1331,35 +1354,35 @@ body {
 .admin-stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .admin-stats-card {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 1rem;
-    padding: 1.5rem;
+    border-radius: 0.75rem;
+    padding: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
     text-align: center;
 }
 
 .admin-stats-label {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     opacity: 0.8;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.375rem;
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
-    line-height: 1.4;
+    line-height: 1.3;
 }
 
 .admin-stats-value {
-    font-size: 1.875rem;
+    font-size: 1.5rem;
     font-weight: 800;
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
 .admin-stats-subtitle {
@@ -1395,8 +1418,8 @@ body {
 
 .admin-stats-table-container {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 1rem;
-    padding: 1.5rem;
+    border-radius: 0.75rem;
+    padding: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
     overflow-x: auto;
@@ -1410,45 +1433,45 @@ body {
 /* Tablet and up - wider tables */
 @media (min-width: 768px) {
     .admin-stats-table-container {
-        padding: 2rem;
+        padding: 1.25rem;
     }
 }
 
 /* Desktop and up - even wider */
 @media (min-width: 1024px) {
     .admin-stats-table-container {
-        padding: 2.5rem;
+        padding: 1.5rem;
         max-width: 1400px;
     }
 }
 
 .admin-stats-table-title {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     text-align: center;
 }
 
 @media (min-width: 768px) {
     .admin-stats-table-title {
-        font-size: 1.25rem;
-        margin-bottom: 2rem;
+        font-size: 1.125rem;
+        margin-bottom: 1.25rem;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-title {
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
     }
 }
 
 .admin-stats-table-header {
     display: grid;
-    grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(100px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1rem;
-    padding: 1rem;
+    grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(80px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 0.5rem;
 }
@@ -1456,91 +1479,91 @@ body {
 /* Responsive column widths */
 @media (min-width: 768px) {
     .admin-stats-table-header {
-        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(120px, 1fr));
-        gap: 1.25rem;
-        padding: 1.25rem;
+        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(90px, 1fr));
+        gap: 0.75rem;
+        padding: 0.875rem;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-header {
-        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(150px, 1fr));
-        gap: 1.5rem;
-        padding: 1.5rem;
+        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(100px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
     }
 }
 
 .admin-stats-table-header-item {
     font-weight: 600;
     color: #f59e0b;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
-    min-width: 100px;
+    min-width: 80px;
     hyphens: auto;
 }
 
 @media (min-width: 768px) {
     .admin-stats-table-header-item {
-        font-size: 0.9375rem;
-        min-width: 120px;
+        font-size: 0.8125rem;
+        min-width: 90px;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-header-item {
-        font-size: 1rem;
-        min-width: 150px;
+        font-size: 0.875rem;
+        min-width: 100px;
     }
 }
 
 .admin-stats-table-content {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
     overflow: visible;
 }
 
 @media (min-width: 768px) {
     .admin-stats-table-content {
-        gap: 1rem;
+        gap: 0.625rem;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-content {
-        gap: 1rem;
+        gap: 0.75rem;
     }
 }
 
 .admin-stats-table-row {
     display: grid;
-    grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(100px, 1fr));
-    gap: 1rem;
-    padding: 1rem;
+    grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(80px, 1fr));
+    gap: 0.5rem;
+    padding: 0.75rem;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 0.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     align-items: center;
 }
 
 @media (min-width: 768px) {
     .admin-stats-table-row {
-        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(120px, 1fr));
-        gap: 1.25rem;
-        padding: 1.25rem;
-        font-size: 0.9375rem;
+        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(90px, 1fr));
+        gap: 0.75rem;
+        padding: 0.875rem;
+        font-size: 0.8125rem;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-row {
-        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(150px, 1fr));
-        gap: 1.5rem;
-        padding: 1.5rem;
-        font-size: 1rem;
+        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(100px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+        font-size: 0.875rem;
     }
 }
 
@@ -1549,19 +1572,19 @@ body {
     overflow-wrap: break-word;
     white-space: normal;
     overflow: visible;
-    min-width: 100px;
-    line-height: 1.6;
+    min-width: 80px;
+    line-height: 1.4;
 }
 
 @media (min-width: 768px) {
     .admin-stats-table-cell {
-        min-width: 120px;
+        min-width: 90px;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-cell {
-        min-width: 150px;
+        min-width: 100px;
     }
 }
 
@@ -1587,7 +1610,8 @@ body {
 .admin-stats-empty {
     text-align: center;
     color: rgba(255, 255, 255, 0.6);
-    padding: 2rem 0;
+    padding: 1.5rem 0;
+    font-size: 0.875rem;
 }
 
 .bottom-nav li button {
@@ -2853,18 +2877,19 @@ body {
 .wallet-card {
     border-radius: 16px;
     padding: 14px 16px;
-    background: linear-gradient(180deg, rgba(30, 41, 59, 0.75), rgba(2, 6, 23, 0.5));
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+    border: 2px solid rgba(196, 181, 253, 0.3);
+    box-shadow: 0 10px 28px rgba(139, 92, 246, 0.15);
+    backdrop-filter: blur(10px);
 }
 
 .wallet-card .label {
-    color: #cbd5e1;
+    color: #4b5563;
     font-weight: 600;
 }
 
 .wallet-card .value {
-    color: #fff;
+    color: #1f2937;
     font-weight: 800;
     font-size: 20px;
 }
@@ -2900,7 +2925,7 @@ body {
 }
 
 .history-title {
-    color: #e2e8f0;
+    color: #1f2937;
     font-weight: 700;
     margin-top: 4px;
 }
@@ -2908,9 +2933,10 @@ body {
 .history-item {
     border-radius: 16px;
     padding: 14px 16px;
-    background: linear-gradient(180deg, rgba(2, 6, 23, 0.55), rgba(2, 6, 23, 0.35));
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+    border: 2px solid rgba(196, 181, 253, 0.3);
+    box-shadow: 0 10px 28px rgba(139, 92, 246, 0.15);
+    backdrop-filter: blur(10px);
 }
 
 .history-item .icon {
@@ -2951,7 +2977,7 @@ body {
     min-height: 100vh;
     overflow-y: auto;
     padding-bottom: 112px;
-    background: linear-gradient(to bottom right, #581c87, #7c3aed, #581c87);
+    background: #e6e6fa; /* Light lavender/purple background */
 }
 
 .scores-main {
@@ -3145,7 +3171,7 @@ body {
     min-height: 100vh;
     overflow-y: auto;
     padding-bottom: 112px;
-    background: linear-gradient(to bottom right, #581c87, #7c3aed, #581c87);
+    background: #e6e6fa; /* Light lavender/purple background */
 }
 
 .wallet-header {
@@ -3739,7 +3765,7 @@ body {
     min-height: 100vh;
     overflow-y: auto;
     padding-bottom: 112px;
-    background: linear-gradient(to bottom right, #581c87, #7c3aed, #581c87);
+    background: #e6e6fa; /* Light lavender/purple background */
 }
 
 .profile-header {

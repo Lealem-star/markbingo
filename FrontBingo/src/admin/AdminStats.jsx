@@ -208,7 +208,7 @@ export default function AdminStats() {
                     <div
                         key={section.key}
                         className="admin-stats-table-container"
-                        style={{ '--stats-table-cols': 3, minHeight: '320px' }}
+                        style={{ '--stats-table-cols': 3, minHeight: '280px' }}
                     >
                         <h3 className="admin-stats-table-title">{section.label}</h3>
 
@@ -239,7 +239,7 @@ export default function AdminStats() {
             {/* Daily Statistics Table */}
             <div
                 className="admin-stats-table-container"
-                style={{ '--stats-table-cols': 5, minHeight: '420px' }}
+                style={{ '--stats-table-cols': 5, minHeight: '360px' }}
             >
                 <h3 className="admin-stats-table-title">Daily Statistics</h3>
 

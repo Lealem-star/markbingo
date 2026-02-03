@@ -425,14 +425,14 @@ export function AuthProvider({ children }) {
     if (isLoading) {
         console.log('AuthProvider: Showing loading screen');
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 flex items-center justify-center p-4">
+            <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#e6e6fa' }}>
                 <div className="text-center w-full max-w-sm">
-                    {/* Animated Love Bingo Logo - Mobile First */}
+                    {/* Animated FUN Bingo Logo - Mobile First */}
                     <div className="relative mb-6 mx-auto w-fit">
                         <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto">
                             <img
                                 src="/lb.png"
-                                alt="Love Bingo Logo"
+                                alt="FUN Bingo Logo"
                                 className="w-full h-full object-contain animate-pulse"
                             />
                             {/* Spinning loader overlay */}
@@ -483,7 +483,7 @@ export function AuthProvider({ children }) {
 
                             <strong>How to access:</strong><br />
 
-                            1. Open the Love Bingo bot in Telegram<br />
+                            1. Open the FUN Bingo bot in Telegram<br />
 
                             2. Click the "Play" button<br />
 

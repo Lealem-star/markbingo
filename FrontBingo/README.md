@@ -1,4 +1,4 @@
-# Beteseb Bingo - React Frontend
+# FUN Bingo - React Frontend
 
 A modern, mobile-first bingo game application built with React and Tailwind CSS.
 

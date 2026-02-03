@@ -300,13 +300,13 @@ function AppContent() {
   // Don't block the main game page if no stake is selected
   if (!connected && selectedStake && currentPage !== 'game') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 flex items-center justify-center">
-        <div className="text-center text-white">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#e6e6fa' }}>
+        <div className="text-center text-gray-800">
           <div className="relative mb-6 mx-auto w-fit">
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto">
               <img
                 src="/lb.png"
-                alt="Love Bingo Logo"
+                alt="FUN Bingo Logo"
                 className="w-full h-full object-contain animate-pulse"
               />
               <div className="absolute inset-0 flex items-center justify-center">
@@ -352,7 +352,7 @@ function AppContent() {
   return (
     <div className="App">
       {pageContent || (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#e6e6fa' }}>
           <div className="text-center text-white">
             <div className="text-6xl mb-4">⚠️</div>
             <h1 className="text-2xl font-bold mb-4">Loading Error</h1>
