@@ -48,17 +48,16 @@
 
 /* Base app layout helpers */
 body {
-    background-color: #e6e6fa;
-    /* Light lavender/purple background */
-    color: #111827;
-    /* near-black for strong contrast on light background */
+    background-color: #d6b3f2;
+    /* Flat purple background */
+    color: #111827; /* near-black for strong contrast on light background */
 }
 
 .app-container {
     min-height: 100vh;
     padding-bottom: 6rem;
     /* leave space for bottom nav on mobile */
-    background: #e6e6fa; /* Light lavender/purple background */
+    background: #d6b3f2; /* Flat purple background */
 }
 
 .bottom-nav {
@@ -2977,7 +2976,7 @@ body {
     min-height: 100vh;
     overflow-y: auto;
     padding-bottom: 112px;
-    background: #e6e6fa; /* Light lavender/purple background */
+    background: #d6b3f2; /* Flat purple background */
 }
 
 .scores-main {
@@ -3171,7 +3170,7 @@ body {
     min-height: 100vh;
     overflow-y: auto;
     padding-bottom: 112px;
-    background: #e6e6fa; /* Light lavender/purple background */
+    background: #d6b3f2; /* Flat purple background */
 }
 
 .wallet-header {
@@ -3765,7 +3764,7 @@ body {
     min-height: 100vh;
     overflow-y: auto;
     padding-bottom: 112px;
-    background: #e6e6fa; /* Light lavender/purple background */
+    background: #d6b3f2; /* Flat purple background */
 }
 
 .profile-header {

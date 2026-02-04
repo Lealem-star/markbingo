@@ -15,6 +15,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const [error, setError] = useState(null);
     const [wallet, setWallet] = useState({ main: 0, play: 0, coins: 0, creditAvailable: 0, creditUsed: 0 });
     const [walletLoading, setWalletLoading] = useState(true);
+    const [centerMessage, setCenterMessage] = useState(null);
 
     // WebSocket integration
     const { connected, gameState, selectCartella, deselectCartella, connectToStake, wsReadyState, isConnecting, lastEvent, messageCount } = useWebSocket();
@@ -338,7 +339,10 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         const hasCredit = creditAvailable >= stake && totalBalance === 0; // Credit only if no balance
 
         if (!hasBalance && !hasCredit) {
-            showError(`Insufficient balance and credit. You need ${stake} ETB but have ${totalBalance} ETB balance and ${creditAvailable} ETB credit available.`);
+            const msg = `Insufficient balance and credit.\nYou need ${stake} ETB but have ${totalBalance} ETB balance and ${creditAvailable} ETB credit available.`;
+            showError(msg);
+            setCenterMessage(msg);
+            setTimeout(() => setCenterMessage(null), 3000);
             return;
         }
 
@@ -631,7 +635,19 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     console.log('Rendering main CartelaSelection interface with', cards.length, 'cards');
 
     return (
-        <div className="app-container">
+        <div className="app-container relative">
+            {/* Center message overlay for important alerts (e.g., insufficient balance) */}
+            {centerMessage && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+                    <div className="bg-white rounded-2xl shadow-2xl px-6 py-5 max-w-sm w-[90%] text-center">
+                        <div className="text-3xl mb-2">⚠️</div>
+                        <div className="text-gray-900 text-sm font-semibold whitespace-pre-line">
+                            {centerMessage}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <header className="p-4 mb-6">
                 {/* Top Row: Back and Refresh buttons */}
                 <div className="flex items-center justify-between mb-4">
