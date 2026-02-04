@@ -18,7 +18,7 @@ module.exports = {
                 WEBAPP_URL: 'https://fikirbingo.com',
                 API_BASE_URL: 'http://localhost:3001',
                 JWT_SECRET: 'your_super_secret_jwt_key_here_change_this',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1',
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo',
                 AGENT_PHONE_NUMBERS: '+251994237676',
                 AGENT_SERVICES: 'CBEBirr,CBE',
                 SMS_WEBHOOK_SECRET: 'i_secreted_lealem'
@@ -49,7 +49,7 @@ module.exports = {
                 WEBAPP_URL: 'https://fikirbingo.com',
                 API_BASE_URL: 'http://localhost:3001',
                 API_URL: 'http://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/bot-err.log',
             out_file: './logs/bot-out.log',
@@ -78,7 +78,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-yared-err.log',
             out_file: './logs/player-bot-yared-out.log',
@@ -102,7 +102,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-beti-err.log',
             out_file: './logs/player-bot-beti-out.log',
@@ -126,7 +126,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-kalkidan-err.log',
             out_file: './logs/player-bot-kalkidan-out.log',
@@ -150,7 +150,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-dawit-err.log',
             out_file: './logs/player-bot-dawit-out.log',
@@ -174,7 +174,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-meaza-err.log',
             out_file: './logs/player-bot-meaza-out.log',
@@ -198,7 +198,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-birhanu-err.log',
             out_file: './logs/player-bot-birhanu-out.log',
@@ -222,7 +222,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-liya-err.log',
             out_file: './logs/player-bot-liya-out.log',
@@ -246,7 +246,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-kidus-err.log',
             out_file: './logs/player-bot-kidus-out.log',
@@ -270,7 +270,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-frehiwot-err.log',
             out_file: './logs/player-bot-frehiwot-out.log',
@@ -294,7 +294,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-tewodros-err.log',
             out_file: './logs/player-bot-tewodros-out.log',
@@ -318,7 +318,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-mulugeta-err.log',
             out_file: './logs/player-bot-mulugeta-out.log',
@@ -342,7 +342,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-sara-err.log',
             out_file: './logs/player-bot-sara-out.log',
@@ -366,7 +366,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-tadesse-err.log',
             out_file: './logs/player-bot-tadesse-out.log',
@@ -390,7 +390,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-hana-err.log',
             out_file: './logs/player-bot-hana-out.log',
@@ -414,7 +414,7 @@ module.exports = {
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-abebe-err.log',
             out_file: './logs/player-bot-abebe-out.log',
@@ -439,7 +439,7 @@ module.exports = {
                 STAKE: '25',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-alemayehu-err.log',
             out_file: './logs/player-bot-alemayehu-out.log',
@@ -463,7 +463,7 @@ module.exports = {
                 STAKE: '25',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-habtamu-err.log',
             out_file: './logs/player-bot-habtamu-out.log',
@@ -487,7 +487,7 @@ module.exports = {
                 STAKE: '25',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-mebrat-err.log',
             out_file: './logs/player-bot-mebrat-out.log',
@@ -511,7 +511,7 @@ module.exports = {
                 STAKE: '25',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-elias-err.log',
             out_file: './logs/player-bot-elias-out.log',
@@ -535,7 +535,7 @@ module.exports = {
                 STAKE: '25',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
-                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:PF1ruEYjsSW3T5ak@bingo1.drzbzl7.mongodb.net/?retryWrites=true&w=majority&appName=bingo1'
+                MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
             },
             error_file: './logs/player-bot-getachew-err.log',
             out_file: './logs/player-bot-getachew-out.log',
