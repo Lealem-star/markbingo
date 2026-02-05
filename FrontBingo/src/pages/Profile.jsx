@@ -35,39 +35,39 @@ export default function Profile({ onNavigate }) {
     const initials = displayName.charAt(0).toUpperCase();
 
     // Fetch profile data
-    useEffect(() => {
-        const fetchProfileData = async () => {
-            if (authLoading || !sessionId) {
-                setLoading(false);
-                return;
+    const fetchProfileData = React.useCallback(async () => {
+        if (authLoading || !sessionId) {
+            setLoading(false);
+            return;
+        }
+        try {
+            setLoading(true);
+            setError(null);
+
+            const [profileData, inviteData] = await Promise.all([
+                apiFetch('/user/profile', { sessionId }),
+                apiFetch('/user/invite-stats', { sessionId }).catch(() => null)
+            ]);
+
+            setProfileData(profileData);
+            if (inviteData) {
+                setInviteStats(inviteData);
             }
-            try {
-                setLoading(true);
-                setError(null);
-
-                const [profileData, inviteData] = await Promise.all([
-                    apiFetch('/user/profile', { sessionId }),
-                    apiFetch('/user/invite-stats', { sessionId }).catch(() => null)
-                ]);
-
-                setProfileData(profileData);
-                if (inviteData) {
-                    setInviteStats(inviteData);
-                }
-            } catch (error) {
-                console.error('Failed to fetch profile data:', error);
-                if (error.message === 'request_timeout') {
-                    setError('Request timeout - please try again');
-                } else {
-                    setError('Failed to load profile. Please try again.');
-                }
-            } finally {
-                setLoading(false);
+        } catch (error) {
+            console.error('Failed to fetch profile data:', error);
+            if (error.message === 'request_timeout') {
+                setError('Request timeout - please try again');
+            } else {
+                setError('Failed to load profile. Please try again.');
             }
-        };
-
-        fetchProfileData();
+        } finally {
+            setLoading(false);
+        }
     }, [sessionId, authLoading]);
+
+    useEffect(() => {
+        fetchProfileData();
+    }, [fetchProfileData]);
 
     return (
         <div className="profile-page">
@@ -97,7 +97,7 @@ export default function Profile({ onNavigate }) {
                         <div className="profile-error-icon">❌ Error Loading Data</div>
                         <div className="profile-error-text">{error}</div>
                         <button
-                            onClick={() => window.location.reload()}
+                            onClick={fetchProfileData}
                             className="profile-retry-button"
                         >
                             Retry

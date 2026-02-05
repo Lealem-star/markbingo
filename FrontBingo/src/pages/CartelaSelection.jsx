@@ -713,6 +713,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                         </div>
                     </div>
                 </div>
+
+
+                
             </header>
 
             {/* In-flow toast card under header (compact, centered) */}
