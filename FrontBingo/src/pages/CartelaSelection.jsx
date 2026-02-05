@@ -647,11 +647,15 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
     return (
         <>
-            {/* Fixed full-width alert bar near top of screen */}
+            {/* Floating toast notification, centered near top, does not affect layout */}
             {alertMessage && (
-                <div className="fixed top-16 left-0 right-0 z-[10000] bg-white border-b border-gray-300 shadow-md flex items-start gap-2 px-3 py-2">
-                    <span className="text-lg mt-0.5 text-red-500">{alertIcon}</span>
-                    <div className="text-sm leading-snug text-gray-900">{alertMessage}</div>
+                <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[10000] pointer-events-none">
+                    <div className="pointer-events-none cursor-default max-w-sm w-full rounded-lg bg-white shadow-lg px-4 py-3 flex items-start gap-2">
+                        <span className="text-lg mt-0.5 text-red-500">{alertIcon}</span>
+                        <div className="text-sm leading-snug text-gray-900">
+                            {alertMessage}
+                        </div>
+                    </div>
                 </div>
             )}
 
