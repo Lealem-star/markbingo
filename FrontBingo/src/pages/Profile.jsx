@@ -34,7 +34,7 @@ export default function Profile({ onNavigate }) {
     const displayName = profileData.user?.firstName || user?.firstName || 'Player';
     const initials = displayName.charAt(0).toUpperCase();
 
-    // Fetch profile data
+    // Fetch profile data: user info from /user/profile (optional) and wallet from /wallet (authoritative)
     const fetchProfileData = React.useCallback(async () => {
         if (authLoading || !sessionId) {
             setLoading(false);
@@ -44,14 +44,46 @@ export default function Profile({ onNavigate }) {
             setLoading(true);
             setError(null);
 
-            const [profileData, inviteData] = await Promise.all([
-                apiFetch('/user/profile', { sessionId }),
+            const [profileRes, walletRes, inviteRes] = await Promise.all([
+                apiFetch('/user/profile', { sessionId }).catch(err => {
+                    // 404 means no extra profile info yet - fall back to auth user
+                    if (err?.message === 'api_error_404') {
+                        console.warn('Profile 404 - using auth user info only');
+                        return null;
+                    }
+                    throw err;
+                }),
+                apiFetch('/wallet', { sessionId }),
                 apiFetch('/user/invite-stats', { sessionId }).catch(() => null)
             ]);
 
-            setProfileData(profileData);
-            if (inviteData) {
-                setInviteStats(inviteData);
+            const userInfo = profileRes?.user || {
+                firstName: user?.firstName || 'User',
+                lastName: user?.lastName || '',
+                phone: user?.phone || null,
+                isRegistered: user?.isRegistered || false,
+                totalGamesPlayed: 0,
+                totalGamesWon: 0,
+                registrationDate: new Date()
+            };
+
+            const walletInfo = {
+                balance: walletRes.balance ?? 0,
+                main: walletRes.main ?? walletRes.balance ?? 0,
+                play: walletRes.play ?? walletRes.balance ?? 0,
+                coins: walletRes.coins ?? 0,
+                gamesWon: walletRes.gamesWon ?? 0,
+                creditAvailable: walletRes.creditAvailable ?? 0,
+                creditUsed: walletRes.creditUsed ?? 0
+            };
+
+            setProfileData({
+                user: userInfo,
+                wallet: walletInfo
+            });
+
+            if (inviteRes) {
+                setInviteStats(inviteRes);
             }
         } catch (error) {
             console.error('Failed to fetch profile data:', error);
@@ -66,7 +98,7 @@ export default function Profile({ onNavigate }) {
         } finally {
             setLoading(false);
         }
-    }, [sessionId, authLoading]);
+    }, [sessionId, authLoading, user]);
 
     useEffect(() => {
         fetchProfileData();
