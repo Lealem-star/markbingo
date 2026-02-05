@@ -699,24 +699,24 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 </div>
             </header>
 
-            {/* Compact toast for balance issues (top overlay) */}
+            {/* Inline toast for balance issues (under header) */}
             {centerMessage && (
-                <div className="fixed top-0 left-0 right-0 z-[70] flex justify-center px-3 pointer-events-none">
-                    <div className="pointer-events-auto w-full max-w-3xl flex items-center gap-3 px-3 py-2 bg-red-600 text-white border-b border-red-700 shadow-md">
-                        <span className="text-lg">ℹ️</span>
-                        <span className="text-sm font-medium truncate">
+                <div className="px-4 pt-2">
+                    <div className="flex items-center gap-2 rounded-md bg-red-600 text-white px-3 py-2 shadow-md">
+                        <span className="text-lg">!</span>
+                        <span className="text-sm font-medium">
                             {centerMessage}
                         </span>
                     </div>
                 </div>
             )}
 
-            {/* Compact toast for registration expired (top overlay) */}
+            {/* Inline toast for registration expired (same style) */}
             {gameState.phase === 'registration' && gameState.countdown <= 0 && (
-                <div className="fixed top-0 left-0 right-0 z-[65] flex justify-center px-3 pointer-events-none">
-                    <div className="pointer-events-auto w-full max-w-3xl flex items-center gap-3 px-3 py-2 bg-red-600 text-white border-b border-red-700 shadow-md">
+                <div className="px-4 pt-2">
+                    <div className="flex items-center gap-2 rounded-md bg-red-600 text-white px-3 py-2 shadow-md">
                         <span className="text-lg">⏰</span>
-                        <span className="text-sm font-medium truncate">
+                        <span className="text-sm font-medium">
                             Registration time has ended due to low number of players. Please wait for the next game to start.
                         </span>
                     </div>
