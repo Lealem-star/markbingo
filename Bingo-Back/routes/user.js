@@ -13,11 +13,15 @@ router.get('/profile', authMiddleware, async (req, res) => {
         // req.userId comes from JWT 'sub' which is Mongo _id
         let userData = await UserService.getUserWithWalletById(req.userId);
 
-        // If user exists but wallet was never created (older accounts), create it on the fly
+        // If user+wallet combo not found, try to repair wallet for existing users
         if (!userData) {
-            return res.status(404).json({ error: 'USER_NOT_FOUND' });
-        }
-        if (!userData.wallet) {
+            const user = await UserService.getUserById(req.userId);
+            if (!user) {
+                return res.status(404).json({ error: 'USER_NOT_FOUND' });
+            }
+            await UserService.createWallet(user._id);
+            userData = await UserService.getUserWithWalletById(req.userId);
+        } else if (!userData.wallet) {
             await UserService.createWallet(req.userId);
             userData = await UserService.getUserWithWalletById(req.userId);
         }
