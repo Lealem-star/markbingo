@@ -699,24 +699,24 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 </div>
             </header>
 
-            {/* Overlay toast for balance issues - top of page, does not shift layout */}
+            {/* Overlay card for balance issues - centered button-like card at top */}
             {centerMessage && (
-                <div className="fixed inset-x-0 top-0 z-[999] flex justify-center px-2 pointer-events-none">
-                    <div className="mt-1 pointer-events-auto w-full max-w-3xl flex items-center gap-2 bg-red-600 text-white px-3 py-2 shadow-md">
-                        <span className="text-lg">!</span>
-                        <span className="text-sm font-medium truncate">
+                <div className="fixed inset-x-0 top-2 z-[999] flex justify-center px-4 pointer-events-none">
+                    <div className="pointer-events-auto inline-flex items-center gap-2 max-w-xl rounded-full bg-red-600 px-4 py-2 shadow-lg border border-red-300">
+                        <span className="w-6 h-6 flex items-center justify-center rounded-full bg-white/15 text-white text-sm">!</span>
+                        <span className="text-sm font-medium text-white text-center">
                             {centerMessage}
                         </span>
                     </div>
                 </div>
             )}
 
-            {/* Overlay toast for registration expired - same style */}
+            {/* Overlay card for registration expired - same style */}
             {gameState.phase === 'registration' && gameState.countdown <= 0 && (
-                <div className="fixed inset-x-0 top-0 z-[998] flex justify-center px-2 pointer-events-none">
-                    <div className="mt-1 pointer-events-auto w-full max-w-3xl flex items-center gap-2 bg-red-600 text-white px-3 py-2 shadow-md">
-                        <span className="text-lg">⏰</span>
-                        <span className="text-sm font-medium truncate">
+                <div className="fixed inset-x-0 top-2 z-[998] flex justify-center px-4 pointer-events-none">
+                    <div className="pointer-events-auto inline-flex items-center gap-2 max-w-xl rounded-full bg-red-600 px-4 py-2 shadow-lg border border-red-300">
+                        <span className="w-6 h-6 flex items-center justify-center rounded-full bg-white/15 text-white text-sm">⏰</span>
+                        <span className="text-sm font-medium text-white text-center">
                             Registration time has ended due to low number of players. Please wait for the next game to start.
                         </span>
                     </div>
