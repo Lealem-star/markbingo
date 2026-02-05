@@ -699,61 +699,29 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 </div>
             </header>
 
-            {/* Floating toast for balance issues */}
+            {/* Compact toast for balance issues (top overlay) */}
             {centerMessage && (
-                <div className="fixed top-4 left-0 right-0 z-[60] flex justify-center px-4 pointer-events-none">
-                    <div className="relative max-w-2xl w-full">
-                        <div className="absolute inset-0 blur-2xl bg-red-500/30 rounded-3xl"></div>
-                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-700 via-red-600 to-orange-500 border border-white/15 shadow-2xl shadow-red-900/40 backdrop-blur-md text-white px-4 py-3 sm:px-5 sm:py-4 pointer-events-auto">
-                            <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0">
-                                    <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg">
-                                        ⚠️
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-white/20 border border-white/30 uppercase tracking-wide">Balance Alert</span>
-                                        <span className="text-xs text-white/80">Action needed</span>
-                                    </div>
-                                    <div className="text-sm leading-relaxed font-semibold">
-                                        {centerMessage}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div className="fixed top-2 left-0 right-0 z-[70] flex justify-center px-3 pointer-events-none">
+                    <div className="pointer-events-auto w-full max-w-3xl rounded-md bg-white shadow-md border border-gray-200/80 flex items-center gap-3 px-3 py-2">
+                        <span className="text-blue-600 text-lg">ℹ️</span>
+                        <span className="text-sm text-gray-900 font-medium">{centerMessage}</span>
                     </div>
                 </div>
             )}
 
-            {/* Floating toast for registration expired */}
+            {/* Compact toast for registration expired (top overlay) */}
             {gameState.phase === 'registration' && gameState.countdown <= 0 && (
-                <div className="fixed top-20 left-0 right-0 z-[55] flex justify-center px-4 pointer-events-none">
-                    <div className="relative max-w-2xl w-full">
-                        <div className="absolute inset-0 blur-2xl bg-purple-500/25 rounded-3xl"></div>
-                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-800 via-fuchsia-700 to-orange-500 border border-white/12 shadow-2xl shadow-purple-900/40 backdrop-blur-md text-white px-4 py-3 sm:px-5 sm:py-4 pointer-events-auto">
-                            <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0">
-                                    <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg">
-                                        ⏰
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-white/15 border border-white/25 uppercase tracking-wide">Registration Closed</span>
-                                        <span className="text-xs text-white/80">Next round starting soon</span>
-                                    </div>
-                                    <div className="text-sm leading-relaxed font-semibold">
-                                        Registration time has ended due to low number of players. Please wait for the next game to start.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div className="fixed top-2 left-0 right-0 z-[65] flex justify-center px-3 pointer-events-none">
+                    <div className="pointer-events-auto w-full max-w-3xl rounded-md bg-white shadow-md border border-gray-200/80 flex items-center gap-3 px-3 py-2">
+                        <span className="text-orange-600 text-lg">⏰</span>
+                        <span className="text-sm text-gray-900 font-medium">
+                            Registration time has ended due to low number of players. Please wait for the next game to start.
+                        </span>
                     </div>
                 </div>
             )}
 
-            <main className="p-4 mt-2">
+            <main className="p-4 mt-4 pb-6">
 
                 {/* Status Message */}
                 {gameState.phase === 'waiting' && (
@@ -770,7 +738,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
                 {/* Number Selection Grid - Inside Scrollable Box */}
                 <div className="my-4 mx-4">
-                    <div className="bg-gray-800 rounded-lg p-4 max-h-[250px] overflow-y-auto">
+                    <div className="bg-gray-800 rounded-lg p-4 max-h-[320px] min-h-[260px] overflow-y-auto">
                         <div className="cartela-numbers-grid">
                             {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
                                 // Ensure type consistency for comparison (convert to number)
