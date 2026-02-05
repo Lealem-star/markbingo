@@ -726,19 +726,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
             <main className="p-4 mt-2 pb-6">
 
-                {/* Status Message */}
-                {gameState.phase === 'waiting' && (
-                    <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-500 rounded-lg">
-                        <div className="text-yellow-300 text-sm">
-                            <div className="font-semibold mb-1">⏳ Waiting for Game</div>
-                            <div>Connecting to game server... Please wait for the connection to establish.</div>
-                            <div className="mt-2 text-xs">
-                                Debug: Connected={connected ? 'Yes' : 'No'}, WS State={wsReadyState}, Messages={messageCount}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {/* Number Selection Grid - Inside Scrollable Box */}
                 <div className="my-4 mx-4">
                     <div className="bg-gray-800 rounded-lg p-4 max-h-[320px] min-h-[260px] overflow-y-auto">
