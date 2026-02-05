@@ -340,9 +340,14 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
         if (!hasBalance && !hasCredit) {
             const msg = `Insufficient balance and credit. You need ${stake} ETB but have ${totalBalance} ETB balance and ${creditAvailable} ETB credit available.`;
+
+            // Avoid stacking multiple overlays/toasts on repeated clicks
+            if (centerMessage !== msg) {
+                setCenterMessage(msg);
+                setTimeout(() => setCenterMessage(null), 3000);
+            }
+
             showError(msg);
-            setCenterMessage(msg);
-            setTimeout(() => setCenterMessage(null), 3000);
             return;
         }
 
