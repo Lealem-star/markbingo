@@ -11,10 +11,15 @@ const router = express.Router();
 router.get('/profile', authMiddleware, async (req, res) => {
     try {
         // req.userId comes from JWT 'sub' which is Mongo _id
-        const userData = await UserService.getUserWithWalletById(req.userId);
+        let userData = await UserService.getUserWithWalletById(req.userId);
 
+        // If user exists but wallet was never created (older accounts), create it on the fly
         if (!userData) {
             return res.status(404).json({ error: 'USER_NOT_FOUND' });
+        }
+        if (!userData.wallet) {
+            await UserService.createWallet(req.userId);
+            userData = await UserService.getUserWithWalletById(req.userId);
         }
 
         // Get game statistics using Mongo ObjectId
