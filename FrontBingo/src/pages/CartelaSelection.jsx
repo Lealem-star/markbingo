@@ -647,13 +647,11 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
     return (
         <>
-            {/* Fixed alert bar near top of screen (below Telegram chrome, above content) */}
+            {/* Fixed full-width alert bar near top of screen */}
             {alertMessage && (
-                <div className="fixed top-16 left-0 right-0 z-[9999] flex justify-center px-3 pointer-events-none">
-                    <div className="pointer-events-auto w-full max-w-3xl flex items-start gap-2 rounded-lg bg-white border border-gray-300 shadow-md px-3 py-2">
-                        <span className="text-lg mt-0.5 text-red-500">{alertIcon}</span>
-                        <div className="text-sm leading-snug text-gray-900">{alertMessage}</div>
-                    </div>
+                <div className="fixed top-16 left-0 right-0 z-[10000] bg-white border-b border-gray-300 shadow-md flex items-start gap-2 px-3 py-2">
+                    <span className="text-lg mt-0.5 text-red-500">{alertIcon}</span>
+                    <div className="text-sm leading-snug text-gray-900">{alertMessage}</div>
                 </div>
             )}
 
