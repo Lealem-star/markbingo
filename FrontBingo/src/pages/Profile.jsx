@@ -55,10 +55,13 @@ export default function Profile({ onNavigate }) {
             }
         } catch (error) {
             console.error('Failed to fetch profile data:', error);
-            if (error.message === 'request_timeout') {
-                setError('Request timeout - please try again');
+            const code = error?.message || 'unknown';
+            if (code === 'request_timeout') {
+                setError('Request timeout - please try again.');
+            } else if (code.startsWith('api_error_')) {
+                setError(`Failed to load profile (API ${code.replace('api_error_', '')}). Please try again.`);
             } else {
-                setError('Failed to load profile. Please try again.');
+                setError(`Failed to load profile (${code}). Please try again.`);
             }
         } finally {
             setLoading(false);
@@ -96,6 +99,9 @@ export default function Profile({ onNavigate }) {
                     <div className="profile-error">
                         <div className="profile-error-icon">❌ Error Loading Data</div>
                         <div className="profile-error-text">{error}</div>
+                        <div className="text-xs text-gray-400 mt-2">
+                            Session: {sessionId ? 'present' : 'missing'}
+                        </div>
                         <button
                             onClick={fetchProfileData}
                             className="profile-retry-button"
