@@ -149,7 +149,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     useEffect(() => {
         const fetchWallet = async () => {
             if (!sessionId) {
-                setWalletLoading(false);
                 return;
             }
 
