@@ -646,22 +646,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const alertIcon = centerMessage ? '!' : '⏰';
 
     return (
-        <>
-            {/* Floating toast notification, centered near top, does not affect layout */}
-            {alertMessage && (
-                <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[10000] pointer-events-none">
-                    <div className="pointer-events-none cursor-default max-w-sm w-full rounded-lg bg-white shadow-lg px-4 py-3 flex items-start gap-2">
-                        <span className="text-lg mt-0.5 text-red-500">{alertIcon}</span>
-                        <div className="text-sm leading-snug text-gray-900">
-                            {alertMessage}
-                        </div>
-                    </div>
-                </div>
-            )}
+        <div className="app-container relative">
 
-            <div className="app-container relative">
-
-            <header className="p-4 mb-2">
+            <header className="p-4 mb-0">
                 {/* Top Row: Back and Refresh buttons */}
                 <div className="flex items-center justify-between mb-4">
                     <button onClick={() => {
@@ -722,6 +709,20 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                     </div>
                 </div>
             </header>
+
+            {/* In-flow toast card under header (compact, centered) */}
+            {alertMessage && (
+                <div className="px-4 mt-1 mb-3 flex justify-center">
+                    <div className="max-w-md w-full rounded-xl bg-white shadow-lg border border-red-200 flex items-start gap-3 px-4 py-3">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-red-600 text-sm font-semibold">
+                            {alertIcon}
+                        </span>
+                        <div className="text-sm leading-snug text-gray-900">
+                            {alertMessage}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <main className="p-4 mt-2 pb-6">
 
@@ -797,6 +798,5 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
             <BottomNav current="game" onNavigate={onNavigate} />
         </div>
-        </>
     );
 }
