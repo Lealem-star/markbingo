@@ -482,29 +482,46 @@ export default function GameLayout({
                                 });
                             })()}
                         </div>
+
+                        {/* Single Cartela - Render in Right Column if only one */}
+                        {yourCards.length === 1 && (
+                            <div className="user-cartelas-single">
+                                {yourCards.map(({ cardNumber, card }) => (
+                                    <CartellaCard
+                                        key={cardNumber}
+                                        id={cardNumber}
+                                        card={card}
+                                        called={calledNumbers}
+                                        isPreview={false}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* User Cartelas - Below Both Columns */}
-                <div className="user-cartelas-container-full">
-                    {yourCards.length === 0 ? (
-                        <div className="waiting-message-box">
-                            <p className="waiting-message-text">Please wait for this game to be completed</p>
-                        </div>
-                    ) : (
-                        <div className="user-cartelas-list">
-                            {yourCards.map(({ cardNumber, card }) => (
-                                <CartellaCard
-                                    key={cardNumber}
-                                    id={cardNumber}
-                                    card={card}
-                                    called={calledNumbers}
-                                    isPreview={false}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
+                {/* User Cartelas - Below Both Columns (only for multiple cartelas or no cartelas) */}
+                {(yourCards.length === 0 || yourCards.length > 1) && (
+                    <div className="user-cartelas-container-full">
+                        {yourCards.length === 0 ? (
+                            <div className="waiting-message-box">
+                                <p className="waiting-message-text">Please wait for this game to be completed</p>
+                            </div>
+                        ) : (
+                            <div className="user-cartelas-list">
+                                {yourCards.map(({ cardNumber, card }) => (
+                                    <CartellaCard
+                                        key={cardNumber}
+                                        id={cardNumber}
+                                        card={card}
+                                        called={calledNumbers}
+                                        isPreview={false}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <BottomNav current="game" onNavigate={onNavigate} />
 
