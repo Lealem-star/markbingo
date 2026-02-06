@@ -747,7 +747,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 {/* Selected Cartella Preview (up to 2 cartelas, side-by-side) */}
                 {selectedCards.length > 0 && (
                     <div className="mt-6">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">Your Selected Cartella</h3>
+                        {/* <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">Your Selected Cartella</h3> */}
                         <div className="bg-purple-200 rounded-lg p-4" style={{ background: '#e9d5ff' }}>
                             <div className="flex justify-center gap-4 flex-wrap">
                                 {selectedCards.map(({ number, card }) => (
@@ -761,9 +761,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                                     />
                                 ))}
                             </div>
-                            <div className="text-center text-sm text-gray-700 mt-3">
+                            {/* <div className="text-center text-sm text-gray-700 mt-3">
                                 🎫 {selectedNumbers.map(n => `Cartella #${n}`).join('  |  ')}
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 )}
