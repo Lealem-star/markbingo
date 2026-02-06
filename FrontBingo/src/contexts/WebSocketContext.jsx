@@ -18,9 +18,8 @@ export function WebSocketProvider({ children }) {
         calledNumbers: [],
         currentNumber: null,
         takenCards: [],
-        yourSelection: null,
-        yourCard: null,
-        yourCardNumber: null,
+        yourSelections: [],
+        yourCards: [], // [{ cardNumber, card }]
         countdown: 0,
         registrationEndTime: null,
         isWatchMode: false,
@@ -211,14 +210,13 @@ export function WebSocketProvider({ children }) {
                                     prizePool: event.payload.prizePool || 0,
                                     calledNumbers: event.payload.calledNumbers || event.payload.called || [],
                                     takenCards: event.payload.takenCards || [],
-                                    yourSelection: event.payload.yourSelection,
+                                    yourSelections: event.payload.yourSelections || [],
                                     countdown: phase === 'registration' ? remainingSeconds : (event.payload.countdown || 0),
                                     registrationEndTime,
                                     isWatchMode: event.payload.isWatchMode || false,
                                     ...(phase === 'registration' ? {
-                                        yourCard: null,
-                                        yourCardNumber: null,
-                                        yourSelection: null,
+                                        yourCards: [],
+                                        yourSelections: [],
                                         calledNumbers: [],
                                         currentNumber: null,
                                         winners: []
@@ -238,9 +236,8 @@ export function WebSocketProvider({ children }) {
                                 playersCount: event.payload.playersCount || 0,
                                 countdown: remainingSeconds,
                                 registrationEndTime,
-                                yourCard: null,
-                                yourCardNumber: null,
-                                yourSelection: null,
+                                yourCards: [],
+                                yourSelections: [],
                                 calledNumbers: [],
                                 currentNumber: null,
                                 winners: [],
@@ -260,8 +257,7 @@ export function WebSocketProvider({ children }) {
                                 playersCount: event.payload.playersCount,
                                 prizePool: event.payload.prizePool,
                                 calledNumbers: event.payload.calledNumbers || event.payload.called || [],
-                                yourCard: event.payload.card,
-                                yourCardNumber: event.payload.cardNumber,
+                                yourCards: event.payload.cards || [],
                                 isWatchMode: false
                             }));
                             setPendingGameStart(null);
@@ -294,7 +290,7 @@ export function WebSocketProvider({ children }) {
                         case 'selection_confirmed':
                             setGameState(prev => ({
                                 ...prev,
-                                yourSelection: event.payload.cardNumber,
+                                yourSelections: event.payload.selections || prev.yourSelections || [],
                                 playersCount: event.payload.playersCount,
                                 prizePool: event.payload.prizePool
                             }));
@@ -304,7 +300,7 @@ export function WebSocketProvider({ children }) {
                         case 'select_card':
                             setGameState(prev => ({
                                 ...prev,
-                                yourSelection: event.payload.cardNumber || event.payload.card,
+                                yourSelections: event.payload.selections || prev.yourSelections || [],
                                 takenCards: event.payload.takenCards || prev.takenCards,
                                 playersCount: event.payload.playersCount || prev.playersCount
                             }));
@@ -313,10 +309,7 @@ export function WebSocketProvider({ children }) {
                         case 'selection_cleared':
                             setGameState(prev => ({
                                 ...prev,
-                                yourSelection: null,
-                                takenCards: Array.isArray(prev.takenCards)
-                                    ? prev.takenCards.filter(n => n !== event.payload.previousCard)
-                                    : prev.takenCards,
+                                yourSelections: event.payload.selections || [],
                                 playersCount: event.payload.playersCount ?? prev.playersCount,
                                 prizePool: event.payload.prizePool ?? prev.prizePool
                             }));
@@ -338,9 +331,8 @@ export function WebSocketProvider({ children }) {
                                 winners: (event.payload && (event.payload.winners || event.payload.winner || [])) || prev.winners || [],
                                 calledNumbers: (event.payload && (event.payload.calledNumbers || event.payload.called)) || prev.calledNumbers,
                                 currentNumber: null,
-                                yourCard: null,
-                                yourCardNumber: null,
-                                yourSelection: null,
+                                yourCards: [],
+                                yourSelections: [],
                                 nextRegistrationStart: event.payload?.nextStartAt || null // Store when next registration will start
                             }));
                             // Do not auto-rejoin immediately here. We'll rejoin when:
@@ -455,9 +447,8 @@ export function WebSocketProvider({ children }) {
                 calledNumbers: [],
                 currentNumber: null,
                 takenCards: [],
-                yourSelection: null,
-                yourCard: null,
-                yourCardNumber: null,
+                    yourSelections: [],
+                    yourCards: [],
                 countdown: 0,
                 registrationEndTime: null,
                 isWatchMode: false,

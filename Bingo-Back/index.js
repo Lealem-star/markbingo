@@ -147,7 +147,7 @@ function makeRoom(stake) {
         cartellas: new Map(), // userId -> cartella
         winners: [],
         takenCards: new Set(), // numbers chosen during registration (1-100)
-        userCardSelections: new Map(), // userId -> cardNumber
+        userCardSelections: new Map(), // userId -> [cardNumber, ...] (max 2)
         // Prevent duplicate announce/payout and manage call timer lifecycle
         announceProcessed: false,
         callTimerId: null,
@@ -160,33 +160,40 @@ function makeRoom(stake) {
             room.players.set(ws.userId, { ws, cartella: null, name: 'Player' });
             ws.room = room;
 
+            const getUserSelections = (userId) => room.userCardSelections.get(userId) || [];
+            const selectedCount = Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
             const snapshot = {
                 phase: room.phase,
                 gameId: room.currentGameId,
-                playersCount: room.selectedPlayers.size,
+                playersCount: selectedCount,
                 calledNumbers: room.calledNumbers,
                 called: room.calledNumbers,
                 stake: room.stake,
                 takenCards: Array.from(room.takenCards),
-                yourSelection: room.userCardSelections.get(ws.userId) || null,
+                yourSelections: getUserSelections(ws.userId),
                 nextStartAt: room.registrationEndTime || room.gameEndTime || null,
                 isWatchMode: room.phase !== 'registration',
-                prizePool: room.phase === 'running' ? (room.selectedPlayers.size * room.stake) - Math.floor(room.selectedPlayers.size * room.stake * 0.2) : 0
+                prizePool: room.phase === 'running'
+                    ? (selectedCount * room.stake) - Math.floor(selectedCount * room.stake * 0.2)
+                    : 0
             };
 
             console.log('Sending snapshot to user:', { userId: ws.userId, snapshot });
-            broadcast('snapshot', snapshot, room);
+            // IMPORTANT: snapshot contains user-specific fields (yourSelections), so send only to this ws.
+            if (ws.readyState === ws.OPEN) {
+                ws.send(JSON.stringify({ type: 'snapshot', payload: snapshot }));
+            }
         },
         onLeave: (ws) => {
             room.players.delete(ws.userId);
             room.selectedPlayers.delete(ws.userId);
             room.cartellas.delete(ws.userId);
-            const prev = room.userCardSelections.get(ws.userId);
-            if (prev !== undefined && prev !== null) {
-                room.takenCards.delete(prev);
-                room.userCardSelections.delete(ws.userId);
-            }
-            broadcast('players_update', { playersCount: room.selectedPlayers.size }, room);
+            const prevSelections = room.userCardSelections.get(ws.userId) || [];
+            prevSelections.forEach((n) => room.takenCards.delete(n));
+            room.userCardSelections.delete(ws.userId);
+
+            const selectedCount = Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+            broadcast('players_update', { playersCount: selectedCount, prizePool: Math.floor(selectedCount * room.stake * 0.8) }, room);
             broadcast('registration_update', { takenCards: Array.from(room.takenCards) }, room);
         }
     };
@@ -273,21 +280,23 @@ async function startRegistration(room) {
 }
 
 function startGame(room) {
-    if (room.selectedPlayers.size === 0) {
+    const selectedCount = Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+
+    if (selectedCount === 0) {
         // No players, start new registration immediately
         console.log(`No players joined game ${room.currentGameId} - skipping database creation and starting new registration`);
         startRegistration(room);
         return;
     }
 
-    if (room.selectedPlayers.size === 1) {
+    if (selectedCount === 1) {
         // Not enough players to start a game. Inform clients and restart registration.
-        console.log(`Not enough players (1) for game ${room.currentGameId}. Cancelling and restarting registration.`);
+        console.log(`Not enough players (1 selection) for game ${room.currentGameId}. Cancelling and restarting registration.`);
         broadcast('game_cancelled', {
             gameId: room.currentGameId,
             reason: 'NOT_ENOUGH_PLAYERS',
             minimumPlayers: 2,
-            playersCount: room.selectedPlayers.size
+            playersCount: selectedCount
         }, room);
 
         // Small delay so clients can show the message, then reopen registration
@@ -299,7 +308,7 @@ function startGame(room) {
     let payingUsers = [];
     // Loan/credit play removed: only main/play wallet balances are supported
 
-    console.log(`Starting game ${room.currentGameId}: ${room.selectedPlayers.size} players`);
+    console.log(`Starting game ${room.currentGameId}: ${selectedCount} selections`);
     console.log('Room players:', Array.from(room.players.keys()));
     console.log('Selected players:', Array.from(room.selectedPlayers));
 
@@ -310,8 +319,8 @@ function startGame(room) {
         console.log('Player tracking:', { userId, hasPlayer, hasWs: !!hasWs });
     });
 
-    // Calculate pot based on selected players (before any deductions)
-    const pot = room.selectedPlayers.size * room.stake;
+    // Calculate pot based on selected cartelas (before any deductions)
+    const pot = selectedCount * room.stake;
     const systemCut = Math.floor(pot * 0.2);
     const prizePool = pot - systemCut;
 
@@ -320,30 +329,33 @@ function startGame(room) {
     (async () => {
         for (const userId of room.selectedPlayers) {
             try {
-                const result = await WalletService.processGameBet(userId, room.stake, room.currentGameId);
-                if (result && result.wallet) {
-                    players.push({
-                        userId,
-                        cartelaNumber: room.userCardSelections.get(userId),
-                        joinedAt: new Date()
-                    });
-                    payingUsers.push(userId);
-                    console.log(`Stake deducted for user ${userId} from ${result.source}`);
+                const selections = room.userCardSelections.get(userId) || [];
+                for (const cartelaNumber of selections) {
+                    const result = await WalletService.processGameBet(userId, room.stake, room.currentGameId);
+                    if (result && result.wallet) {
+                        players.push({
+                            userId,
+                            cartelaNumber,
+                            joinedAt: new Date()
+                        });
+                        payingUsers.push(userId);
+                        console.log(`Stake deducted for user ${userId} (cartela ${cartelaNumber}) from ${result.source}`);
 
-                    // Send wallet update to the player
-                    const playerObj = room.players.get(userId);
-                    const ws = playerObj && playerObj.ws;
-                    if (ws && ws.readyState === ws.OPEN) {
-                        const wallet = await WalletService.getWallet(userId);
-                        ws.send(JSON.stringify({
-                            type: 'wallet_update',
-                            payload: {
-                                main: wallet.main,
-                                play: wallet.play,
-                                coins: wallet.coins,
-                                source: result.source
-                            }
-                        }));
+                        // Send wallet update to the player (after each deduction)
+                        const playerObj = room.players.get(userId);
+                        const ws = playerObj && playerObj.ws;
+                        if (ws && ws.readyState === ws.OPEN) {
+                            const wallet = await WalletService.getWallet(userId);
+                            ws.send(JSON.stringify({
+                                type: 'wallet_update',
+                                payload: {
+                                    main: wallet.main,
+                                    play: wallet.play,
+                                    coins: wallet.coins,
+                                    source: result.source
+                                }
+                            }));
+                        }
                     }
                 }
             } catch (error) {
@@ -355,31 +367,34 @@ function startGame(room) {
                             console.log(`🤖 Bot ${userId} has insufficient funds, auto-funding...`);
                             await WalletService.autoFundBot(userId, room.stake);
                             
-                            // Retry processing the game bet after funding
-                            const result = await WalletService.processGameBet(userId, room.stake, room.currentGameId);
-                            if (result && result.wallet) {
-                                players.push({
-                                    userId,
-                                    cartelaNumber: room.userCardSelections.get(userId),
-                                    joinedAt: new Date()
-                                });
-                                payingUsers.push(userId);
-                                console.log(`✅ Bot ${userId} auto-funded and stake deducted from ${result.source}`);
+                            // Retry processing for all selected cartelas after funding
+                            const selections = room.userCardSelections.get(userId) || [];
+                            for (const cartelaNumber of selections) {
+                                const result = await WalletService.processGameBet(userId, room.stake, room.currentGameId);
+                                if (result && result.wallet) {
+                                    players.push({
+                                        userId,
+                                        cartelaNumber,
+                                        joinedAt: new Date()
+                                    });
+                                    payingUsers.push(userId);
+                                    console.log(`✅ Bot ${userId} auto-funded and stake deducted (cartela ${cartelaNumber}) from ${result.source}`);
 
-                                // Send wallet update to the bot
-                                const playerObj = room.players.get(userId);
-                                const ws = playerObj && playerObj.ws;
-                                if (ws && ws.readyState === ws.OPEN) {
-                                    const wallet = await WalletService.getWallet(userId);
-                                    ws.send(JSON.stringify({
-                                        type: 'wallet_update',
-                                        payload: {
-                                            main: wallet.main,
-                                            play: wallet.play,
-                                            coins: wallet.coins,
-                                            source: result.source
-                                        }
-                                    }));
+                                    // Send wallet update to the bot
+                                    const playerObj = room.players.get(userId);
+                                    const ws = playerObj && playerObj.ws;
+                                    if (ws && ws.readyState === ws.OPEN) {
+                                        const wallet = await WalletService.getWallet(userId);
+                                        ws.send(JSON.stringify({
+                                            type: 'wallet_update',
+                                            payload: {
+                                                main: wallet.main,
+                                                play: wallet.play,
+                                                coins: wallet.coins,
+                                                source: result.source
+                                            }
+                                        }));
+                                    }
                                 }
                             }
                         } catch (fundError) {
@@ -412,24 +427,26 @@ function startGame(room) {
             console.error('Error updating game record:', error);
         }
 
-        // Send individual game_started messages with computed prizePool
+        // Build and send per-user game_started payload (supports up to 2 cartelas per user)
         room.selectedPlayers.forEach(userId => {
             const player = room.players.get(userId);
             if (player && player.ws) {
-                const card = room.cartellas.get(userId);
-                const cardNumber = room.userCardSelections.get(userId);
+                const selections = room.userCardSelections.get(userId) || [];
+                const cards = selections.map(cardNumber => ({
+                    cardNumber,
+                    card: getPredefinedCartella(cardNumber)
+                }));
                 const message = JSON.stringify({
                     type: 'game_started',
                     payload: {
                         gameId: room.currentGameId,
                         stake: room.stake,
-                        playersCount: room.selectedPlayers.size,
+                        playersCount: selectedCount,
                         pot: pot,
                         prizePool: prizePool,
                         calledNumbers: room.calledNumbers,
                         called: room.calledNumbers,
-                        card: card,
-                        cardNumber: cardNumber
+                        cards
                     }
                 });
                 if (player.ws.readyState === player.ws.OPEN) {
@@ -449,14 +466,17 @@ function startGame(room) {
     // Create game record in database now that game is actually starting with players
     (async () => {
         try {
-            const gamePlayers = Array.from(room.selectedPlayers).map(userId => {
-                const cartelaNumber = room.userCardSelections.get(userId);
-                const cardData = getPredefinedCartella(cartelaNumber);
-                return {
-                    userId,
-                    cartelaNumber,
-                    cardData,
-                };
+            const gamePlayers = [];
+            Array.from(room.selectedPlayers).forEach(userId => {
+                const selections = room.userCardSelections.get(userId) || [];
+                selections.forEach(cartelaNumber => {
+                    const cardData = getPredefinedCartella(cartelaNumber);
+                    gamePlayers.push({
+                        userId,
+                        cartelaNumber,
+                        cardData
+                    });
+                });
             });
 
             const game = new Game({
@@ -471,20 +491,23 @@ function startGame(room) {
                 startedAt: new Date()
             });
             await game.save();
-            console.log(`Game ${room.currentGameId} created in database with ${room.selectedPlayers.size} players`);
+            console.log(`Game ${room.currentGameId} created in database with ${gamePlayers.length} cartelas`);
         } catch (error) {
             console.error('Error creating game record in database:', error);
         }
     })();
 
-    // Assign predefined cartellas based on selected card numbers
+    // Assign predefined cartellas based on selected card numbers (supports multiple per user)
     room.selectedPlayers.forEach(userId => {
-        const selectedCardNumber = room.userCardSelections.get(userId);
-        const cartella = getPredefinedCartella(selectedCardNumber);
-        room.cartellas.set(userId, cartella);
+        const selections = room.userCardSelections.get(userId) || [];
+        const byNumber = new Map();
+        selections.forEach(selectedCardNumber => {
+            byNumber.set(selectedCardNumber, getPredefinedCartella(selectedCardNumber));
+        });
+        room.cartellas.set(userId, byNumber);
         const player = room.players.get(userId);
         if (player) {
-            player.cartella = cartella;
+            player.cartella = byNumber;
         }
     });
 
@@ -859,10 +882,31 @@ wss.on('connection', async (ws, request) => {
                         return;
                     }
 
-                    const previous = room.userCardSelections.get(ws.userId);
-                    if (previous) {
-                        room.takenCards.delete(previous);
-                        room.selectedPlayers.delete(ws.userId);
+                    const selections = room.userCardSelections.get(ws.userId) || [];
+
+                    // Idempotent: clicking an already-selected cartela does nothing
+                    if (selections.includes(cardNumber)) {
+                        const selectedCount = Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+                        const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
+                        ws.send(JSON.stringify({
+                            type: 'selection_confirmed',
+                            payload: {
+                                cardNumber,
+                                selections,
+                                playersCount: selectedCount,
+                                prizePool: currentPrizePool
+                            }
+                        }));
+                        return;
+                    }
+
+                    // Max 2 cartelas per user
+                    if (selections.length >= 2) {
+                        ws.send(JSON.stringify({
+                            type: 'selection_rejected',
+                            payload: { reason: 'LIMIT_REACHED', limit: 2, cardNumber, selections }
+                        }));
+                        return;
                     }
 
                     if (room.takenCards.has(cardNumber)) {
@@ -872,25 +916,28 @@ wss.on('connection', async (ws, request) => {
                     }
 
                     // Just reserve the spot - no wallet deduction yet
-                    room.userCardSelections.set(ws.userId, cardNumber);
+                    const nextSelections = [...selections, cardNumber];
+                    room.userCardSelections.set(ws.userId, nextSelections);
                     room.takenCards.add(cardNumber);
                     room.selectedPlayers.add(ws.userId);
 
                     // Calculate current prize pool (80% of stake × players)
-                    const currentPrizePool = Math.floor(room.selectedPlayers.size * room.stake * 0.8);
+                    const selectedCount = Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+                    const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
 
                     ws.send(JSON.stringify({
                         type: 'selection_confirmed',
                         payload: {
                             cardNumber,
-                            playersCount: room.selectedPlayers.size,
+                            selections: nextSelections,
+                            playersCount: selectedCount,
                             prizePool: currentPrizePool
                         }
                     }));
 
                     // Broadcast updates to all players
                     broadcast('players_update', {
-                        playersCount: room.selectedPlayers.size,
+                        playersCount: selectedCount,
                         prizePool: currentPrizePool
                     }, room);
                     broadcast('registration_update', {
@@ -904,29 +951,51 @@ wss.on('connection', async (ws, request) => {
                 console.log('deselect_card received:', { cardNumber, roomPhase: room?.phase, userId: ws.userId });
 
                 if (room && room.phase === 'registration') {
-                    const current = room.userCardSelections.get(ws.userId);
-                    if (current && (!cardNumber || Number(cardNumber) === Number(current))) {
-                        // Clear user's selection
-                        room.userCardSelections.delete(ws.userId);
-                        room.takenCards.delete(current);
-                        room.selectedPlayers.delete(ws.userId);
+                    const currentSelections = room.userCardSelections.get(ws.userId) || [];
+                    if (currentSelections.length > 0) {
+                        // Remove specific card if provided; else clear all
+                        const toRemove = Number.isInteger(cardNumber) && cardNumber > 0 ? cardNumber : null;
+                        const nextSelections = toRemove
+                            ? currentSelections.filter(n => Number(n) !== Number(toRemove))
+                            : [];
+
+                        const removed = toRemove
+                            ? currentSelections.find(n => Number(n) === Number(toRemove)) ?? null
+                            : null;
+
+                        // Update takenCards
+                        if (toRemove) {
+                            room.takenCards.delete(toRemove);
+                        } else {
+                            currentSelections.forEach(n => room.takenCards.delete(n));
+                        }
+
+                        // Update selection map / selectedPlayers membership
+                        if (nextSelections.length === 0) {
+                            room.userCardSelections.delete(ws.userId);
+                            room.selectedPlayers.delete(ws.userId);
+                        } else {
+                            room.userCardSelections.set(ws.userId, nextSelections);
+                        }
 
                         // Recompute prize pool after removing player
-                        const currentPrizePool = Math.floor(room.selectedPlayers.size * room.stake * 0.8);
+                        const selectedCount = Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+                        const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
 
                         // Notify the user
                         ws.send(JSON.stringify({
                             type: 'selection_cleared',
                             payload: {
-                                previousCard: current,
-                                playersCount: room.selectedPlayers.size,
+                                removedCard: removed,
+                                selections: nextSelections,
+                                playersCount: selectedCount,
                                 prizePool: currentPrizePool
                             }
                         }));
 
                         // Broadcast updates to all players
                         broadcast('players_update', {
-                            playersCount: room.selectedPlayers.size,
+                            playersCount: selectedCount,
                             prizePool: currentPrizePool
                         }, room);
                         broadcast('registration_update', {
@@ -935,7 +1004,8 @@ wss.on('connection', async (ws, request) => {
                         }, room);
                     } else {
                         // Nothing to clear; reply benignly
-                        ws.send(JSON.stringify({ type: 'selection_cleared', payload: { previousCard: null, playersCount: room.selectedPlayers.size, prizePool: Math.floor(room.selectedPlayers.size * room.stake * 0.8) } }));
+                        const selectedCount = Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+                        ws.send(JSON.stringify({ type: 'selection_cleared', payload: { removedCard: null, selections: [], playersCount: selectedCount, prizePool: Math.floor(selectedCount * room.stake * 0.8) } }));
                     }
                 } else {
                     // Not in registration; ignore
@@ -944,9 +1014,15 @@ wss.on('connection', async (ws, request) => {
             } else if (data.type === 'bingo_claim' || data.type === 'claim_bingo') {
                 const room = ws.room;
                 if (room && room.phase === 'running') {
-                    const cartella = room.cartellas.get(ws.userId);
-                    if (cartella && checkBingo(cartella, room.calledNumbers)) {
-                        room.winners.push({ userId: ws.userId, cartella });
+                    const cartellasByNumber = room.cartellas.get(ws.userId);
+                    const entries = cartellasByNumber instanceof Map
+                        ? Array.from(cartellasByNumber.entries()).map(([cartelaNumber, cartella]) => ({ cartelaNumber, cartella }))
+                        : [];
+
+                    // Accept if any of the user's cartellas has bingo
+                    const winning = entries.find(e => e.cartella && checkBingo(e.cartella, room.calledNumbers));
+                    if (winning) {
+                        room.winners.push({ userId: ws.userId, cartelaNumber: winning.cartelaNumber, cartella: winning.cartella });
                         // Send bingo_accepted event to all players
                         broadcast('bingo_accepted', {
                             gameId: room.currentGameId,

@@ -10,7 +10,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const { sessionId } = useAuth();
     const { showError, showSuccess, showWarning } = useToast();
     const [cards, setCards] = useState([]);
-    const [selectedCardNumber, setSelectedCardNumber] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [wallet, setWallet] = useState({ main: 0, play: 0, coins: 0 });
@@ -18,7 +17,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const [centerMessage, setCenterMessage] = useState(null);
 
     // WebSocket integration
-    const { connected, gameState, selectCartella, deselectCartella, connectToStake, wsReadyState, isConnecting, lastEvent } = useWebSocket();
+    const { connected, gameState, selectCartella, connectToStake, wsReadyState, isConnecting, lastEvent } = useWebSocket();
     const hasConnectedRef = useRef(false);
     const rejoinTriedRef = useRef(false);
 
@@ -37,10 +36,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         hasConnectedRef.current = false;
     }, [stake]);
 
-    // Reset selected card when component mounts
+    // Reset transient UI state when component mounts
     useEffect(() => {
         console.log('CartelaSelection - Component mounted, resetting selected card');
-        setSelectedCardNumber(null);
         setError(null);
     }, []); // Empty dependency array - runs only on mount
 
@@ -48,7 +46,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     useEffect(() => {
         if (gameState.phase === 'registration') {
             console.log('CartelaSelection - Resetting selected card for new game registration');
-            setSelectedCardNumber(null);
             setError(null);
             console.log('CartelaSelection - State reset complete, ready for new game');
             console.log('CartelaSelection - Current game state:', {
@@ -66,7 +63,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     useEffect(() => {
         if (gameState.gameId && gameState.phase === 'registration') {
             console.log('CartelaSelection - New gameId detected in registration phase, resetting selection');
-            setSelectedCardNumber(null);
         }
     }, [gameState.gameId, gameState.phase]);
 
@@ -75,7 +71,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         // Check if we're coming from a winner announcement (game finished state)
         if (gameState.phase === 'announce' || gameState.winners?.length > 0) {
             console.log('CartelaSelection - Coming from Winner page, clearing all state');
-            setSelectedCardNumber(null);
             setError(null);
 
             // Force refresh data to get latest state
@@ -263,40 +258,36 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
     // Handle game state changes and navigation
     useEffect(() => {
+        const selectedNumbers = Array.isArray(gameState.yourSelections) ? gameState.yourSelections : [];
         console.log('Game state changed:', {
             phase: gameState.phase,
             gameId: gameState.gameId,
-            selectedCardNumber,
-            hasSelectedCard: !!selectedCardNumber,
-            yourCard: gameState.yourCard,
-            yourCardNumber: gameState.yourCardNumber,
+            selectedNumbers,
+            hasSelectedCard: selectedNumbers.length > 0,
+            yourCards: Array.isArray(gameState.yourCards) ? gameState.yourCards.length : 0,
             isWatchMode: gameState.isWatchMode
         });
 
-        // If game is running and we have a selected card, navigate to game layout
-        if (gameState.phase === 'running' && gameState.gameId && (selectedCardNumber || gameState.yourCardNumber)) {
+        // If game is running and we have selected cartela(s), navigate to game layout
+        if (gameState.phase === 'running' && gameState.gameId && selectedNumbers.length > 0) {
             console.log('🎮 NAVIGATION TRIGGERED - Game started with our cartella, navigating to game layout', {
                 gameId: gameState.gameId,
-                selectedCardNumber,
-                yourCardNumber: gameState.yourCardNumber,
+                selectedNumbers,
                 phase: gameState.phase,
-                hasCard: !!gameState.yourCard
+                hasCard: (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0)
             });
-
-            // Use WebSocket state as the source of truth
-            const cardToUse = gameState.yourCardNumber || selectedCardNumber;
 
             // Ensure gameId is updated in parent before navigation
             onGameIdUpdate?.(gameState.gameId);
-            console.log('Calling onCartelaSelected with:', cardToUse);
-            onCartelaSelected?.(cardToUse);
+            console.log('Calling onCartelaSelected with:', selectedNumbers);
+            onCartelaSelected?.(selectedNumbers);
         }
         // If game is running but we don't have a selected card, navigate to watch mode
-        else if (gameState.phase === 'running' && gameState.gameId && !selectedCardNumber && !gameState.yourCardNumber) {
+        else if (gameState.phase === 'running' && gameState.gameId && selectedNumbers.length === 0) {
             console.log('Game is ongoing, navigating to GameLayout for watch mode');
             onCartelaSelected?.(null);
         }
-    }, [gameState.phase, gameState.gameId, gameState.yourCardNumber, gameState.yourCard, selectedCardNumber, onCartelaSelected, onGameIdUpdate]);
+    }, [gameState.phase, gameState.gameId, gameState.yourSelections, gameState.yourCards, onCartelaSelected, onGameIdUpdate]);
 
     // Show message if game cancelled due to not enough players
     useEffect(() => {
@@ -304,7 +295,10 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         if (lastEvent.type === 'game_cancelled' && lastEvent.payload?.reason === 'NOT_ENOUGH_PLAYERS') {
             showWarning('Not Enough Player');
         }
-    }, [lastEvent, showWarning]);
+        if (lastEvent.type === 'selection_rejected' && lastEvent.payload?.reason === 'LIMIT_REACHED') {
+            showError('You can select maximum 2 cartelas.');
+        }
+    }, [lastEvent, showWarning, showError]);
 
 
     // Handle card selection - automatically confirm without separate confirmation step
@@ -327,39 +321,26 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             return;
         }
 
-        // Toggle off if clicking the same selected number during registration
-        const alreadySelectedByYou = selectedCardNumber === cardNum || Number(gameState.yourSelection) === cardNum;
-        if (alreadySelectedByYou) {
-            if (gameState.phase !== 'registration') {
-                showError(`Cannot unselect - current phase is ${gameState.phase}`);
-                return;
-            }
-            if (!connected || wsReadyState !== WebSocket.OPEN) {
-                showError('Not connected to game server. Please refresh and try again.');
-                return;
-            }
-            try {
-                console.log('Deselecting cartella:', cardNum);
-                const success = deselectCartella(cardNum);
-                if (success) {
-                    setSelectedCardNumber(null);
-                    showSuccess(`Cartella #${cardNum} unselected.`);
-                } else {
-                    showError('Failed to unselect cartella. Please try again.');
-                }
-            } catch (err) {
-                console.error('Error deselecting cartella:', err);
-                showError('Failed to unselect cartella. Please try again.');
-            }
+        const selectedNumbers = Array.isArray(gameState.yourSelections) ? gameState.yourSelections : [];
+
+        // No unselect/toggle behavior: clicking an already-selected number does nothing
+        if (selectedNumbers.includes(cardNum)) {
             return;
         }
 
-        // Check if player has sufficient balance
+        // Max 2 cartelas per user
+        if (selectedNumbers.length >= 2) {
+            showError('You can select maximum 2 cartelas.');
+            return;
+        }
+
+        // Check if player has sufficient balance (stake per cartela)
         const totalBalance = (wallet.main || 0) + (wallet.play || 0);
-        const hasBalance = totalBalance >= stake;
+        const needed = Number(stake) * (selectedNumbers.length + 1);
+        const hasBalance = totalBalance >= needed;
 
         if (!hasBalance) {
-            const msg = `Insufficient balance. You need ${stake} ETB but have ${totalBalance} ETB.`;
+            const msg = `Insufficient balance. You need ${needed} ETB but have ${totalBalance} ETB.`;
 
             // Avoid stacking multiple overlays/toasts on repeated clicks
             if (centerMessage !== msg) {
@@ -392,9 +373,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         try {
             console.log('Selecting cartella:', cardNum);
 
-            // Set local state immediately for UI feedback
-            setSelectedCardNumber(cardNum);
-
             // Send selection via WebSocket
             const success = selectCartella(cardNum);
 
@@ -403,12 +381,10 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 console.log('Cartella selection sent successfully');
             } else {
                 showError('Failed to select cartella. Please try again.');
-                setSelectedCardNumber(null); // Reset on failure
             }
         } catch (err) {
             console.error('Error selecting cartella:', err);
             showError('Failed to select cartella. Please try again.');
-            setSelectedCardNumber(null); // Reset on error
         }
     };
 
@@ -490,9 +466,10 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
     console.log('CartelaSelection render - loading:', loading, 'error:', error, 'cards:', cards.length);
 
-    // Derive currently selected card (by user or from websocket)
-    const effectiveSelectedNumber = selectedCardNumber || gameState.yourCardNumber || gameState.yourSelection || null;
-    const effectiveSelectedCard = effectiveSelectedNumber ? cards[effectiveSelectedNumber - 1] : null;
+    const selectedNumbers = Array.isArray(gameState.yourSelections) ? gameState.yourSelections : [];
+    const selectedCards = selectedNumbers
+        .map(n => ({ number: n, card: cards[n - 1] }))
+        .filter(x => x.card);
 
     if (loading) {
         console.log('Showing loading screen');
@@ -728,8 +705,8 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                                 // Ensure type consistency for comparison (convert to number)
                                 const cartelaNum = Number(cartelaNumber);
                                 const isTaken = gameState.takenCards.some(taken => Number(taken) === cartelaNum);
-                                const isSelected = selectedCardNumber === cartelaNum;
-                                const takenByMe = Number(gameState.yourSelection) === cartelaNum;
+                                const isSelected = selectedNumbers.includes(cartelaNum);
+                                const takenByMe = selectedNumbers.includes(cartelaNum);
 
                                 return (
                                     <button
@@ -755,22 +732,25 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 </div>
 
 
-                {/* Selected Cartella Preview (only the user's selected card) */}
-                {effectiveSelectedNumber && effectiveSelectedCard && (
+                {/* Selected Cartella Preview (up to 2 cartelas, side-by-side) */}
+                {selectedCards.length > 0 && (
                     <div className="mt-6">
                         <h3 className="text-lg font-semibold text-white mb-3 text-center">Your Selected Cartella</h3>
                         <div className="bg-gray-800 rounded-lg p-4">
-                            <div className="flex justify-center">
-                                <CartellaCard
-                                    id={effectiveSelectedNumber}
-                                    card={effectiveSelectedCard}
-                                    called={gameState.calledNumbers || []}
-                                    selectedNumber={effectiveSelectedNumber}
-                                    isPreview={true}
-                                />
+                            <div className="flex justify-center gap-4 flex-wrap">
+                                {selectedCards.map(({ number, card }) => (
+                                    <CartellaCard
+                                        key={number}
+                                        id={number}
+                                        card={card}
+                                        called={gameState.calledNumbers || []}
+                                        selectedNumber={number}
+                                        isPreview={true}
+                                    />
+                                ))}
                             </div>
                             <div className="text-center text-sm text-gray-300 mt-3">
-                                🎫 Cartella #{effectiveSelectedNumber}
+                                🎫 {selectedNumbers.map(n => `Cartella #${n}`).join('  |  ')}
                             </div>
                         </div>
                     </div>

@@ -17,7 +17,7 @@ import AdminLayout from './admin/AdminLayout.jsx';
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('game');
   const [selectedStake, setSelectedStake] = useState(null);
-  const [selectedCartela, setSelectedCartela] = useState(null);
+  const [selectedCartelas, setSelectedCartelas] = useState([]); // up to 2
   const [currentGameId, setCurrentGameId] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [connectionTimeout, setConnectionTimeout] = useState(false);
@@ -37,15 +37,14 @@ function AppContent() {
       console.log('🔍 App State Debug:', {
         currentPage,
         selectedStake,
-        selectedCartela,
+        selectedCartelas,
         currentGameId,
         connected,
         gameState: {
           phase: gameState.phase,
           gameId: gameState.gameId,
           playersCount: gameState.playersCount,
-          yourCard: gameState.yourCard ? 'present' : 'none',
-          yourCardNumber: gameState.yourCardNumber
+          yourCards: Array.isArray(gameState.yourCards) ? gameState.yourCards.length : 0
         },
         timestamp: new Date().toISOString()
       });
@@ -58,7 +57,7 @@ function AppContent() {
     logState();
 
     return () => clearInterval(interval);
-  }, [currentPage, selectedStake, selectedCartela, currentGameId, connected, gameState]);
+  }, [currentPage, selectedStake, selectedCartelas, currentGameId, connected, gameState]);
 
   // Specific check for authentication and initial load
   useEffect(() => {
@@ -91,17 +90,16 @@ function AppContent() {
       gameState: {
         phase: gameState.phase,
         gameId: gameState.gameId,
-        yourCard: gameState.yourCard,
-        yourCardNumber: gameState.yourCardNumber,
+        yourCards: gameState.yourCards,
         isWatchMode: gameState.isWatchMode
       },
       selectedStake,
-      selectedCartela,
+      selectedCartelas,
       connected
     });
 
     // If we have an active game and the player has a cartella, go to game layout
-    if (gameState.phase === 'running' && gameState.gameId && (gameState.yourCard || gameState.yourCardNumber || selectedCartela)) {
+    if (gameState.phase === 'running' && gameState.gameId && ((Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) || selectedCartelas.length > 0)) {
       console.log('→ Routing to game-layout (active game with cartella)');
       return 'game-layout';
     }
@@ -197,7 +195,7 @@ function AppContent() {
   const handleResetToGame = () => {
     console.log('Resetting to main game page');
     setSelectedStake(null);
-    setSelectedCartela(null);
+    setSelectedCartelas([]);
     setCurrentGameId(null);
     setCurrentPage('game');
   };
@@ -205,7 +203,7 @@ function AppContent() {
 
 
   const handleNavigate = (page, forceDirect = false) => {
-    console.log('Navigating from', currentPage, 'to', page, 'with stake:', selectedStake, 'cartela:', selectedCartela, 'forceDirect:', forceDirect);
+    console.log('Navigating from', currentPage, 'to', page, 'with stake:', selectedStake, 'cartelas:', selectedCartelas, 'forceDirect:', forceDirect);
 
     // Add smooth transition
     setIsNavigating(true);
@@ -251,9 +249,9 @@ function AppContent() {
             onNavigate={handleNavigate}
             onResetToGame={handleResetToGame}
             stake={selectedStake}
-            onCartelaSelected={(cartelaNumber) => {
-              // When a cartella is selected (or null for watch mode), go to the live game layout
-              setSelectedCartela(cartelaNumber);
+            onCartelaSelected={(cartelaNumbers) => {
+              // When cartela(s) are selected (or [] for watch mode), go to the live game layout
+              setSelectedCartelas(Array.isArray(cartelaNumbers) ? cartelaNumbers : []);
               setCurrentPage('game-layout');
             }}
             onGameIdUpdate={(gameId) => setCurrentGameId(gameId)}
@@ -267,7 +265,7 @@ function AppContent() {
             onNavigate={handleNavigate}
             onResetToGame={handleResetToGame}
             stake={selectedStake}
-            selectedCartela={selectedCartela}
+            selectedCartelas={selectedCartelas}
           />
         );
       case 'rules':
@@ -341,7 +339,7 @@ function AppContent() {
           <div><strong>Debug Info:</strong></div>
           <div>Page: {currentPage}</div>
           <div>Stake: {selectedStake || 'none'}</div>
-          <div>Cartela: {selectedCartela || 'none'}</div>
+          <div>Cartela: {selectedCartelas.length ? selectedCartelas.join(', ') : 'none'}</div>
           <div>WS Connected: {connected ? 'yes' : 'no'}</div>
           <div>Game Phase: {gameState.phase}</div>
           <div>Game ID: {gameState.gameId || 'none'}</div>

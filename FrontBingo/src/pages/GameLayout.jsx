@@ -10,7 +10,7 @@ import '../styles/action-buttons.css';
 
 export default function GameLayout({
     stake,
-    selectedCartela,
+    selectedCartelas,
     onNavigate,
     onResetToGame,
 }) {
@@ -161,11 +161,11 @@ export default function GameLayout({
             setShowTimeout(false);
         }
     }, [currentGameId]);
-    const yourBingoCard = gameState.yourCard;
-    const yourCardNumber = gameState.yourCardNumber || selectedCartela;
+    const yourCards = Array.isArray(gameState.yourCards) ? gameState.yourCards : [];
+    const selectedNumbers = Array.isArray(selectedCartelas) ? selectedCartelas : [];
 
     // Determine if we're in watch mode (no selected cartella and no bingo card from WebSocket)
-    const isWatchMode = !selectedCartela && !yourBingoCard;
+    const isWatchMode = selectedNumbers.length === 0 && yourCards.length === 0;
 
 
     // Auto-transition back to CartelaSelection when registration starts
@@ -588,17 +588,19 @@ export default function GameLayout({
                             ) : (
                                 /* Enhanced Normal Cartella Mode */
                                 <>
-                                    {/* Enhanced User's Cartella - 5x5 Grid */}
+                                    {/* User's Cartellas (stacked vertically) */}
                                     <div className="rounded-xl p-3 mt-8 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-black/10">
-
-
-                                        {/* Implemented cartella grid using CartellaCard */}
-                                        <CartellaCard
-                                            id={yourCardNumber || selectedCartela}
-                                            card={yourBingoCard}
-                                            called={calledNumbers}
-                                            isPreview={false}
-                                        />
+                                        <div className="flex flex-col gap-4">
+                                            {yourCards.map(({ cardNumber, card }) => (
+                                                <CartellaCard
+                                                    key={cardNumber}
+                                                    id={cardNumber}
+                                                    card={card}
+                                                    called={calledNumbers}
+                                                    isPreview={false}
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
 
 
@@ -606,100 +608,6 @@ export default function GameLayout({
                             )}
                         </div>
                     </div>
-                </div>
-
-                {/* Enhanced Bottom Action Buttons */}
-                <div className="action-buttons-container" style={{ marginTop: '1rem' }}>
-                    {/* Leave Button */}
-                    <button
-                        onClick={() => {
-                            if (typeof onResetToGame === 'function') {
-                                onResetToGame();
-                            } else {
-                                onNavigate?.('game', true);
-                            }
-                        }}
-                        className="action-button leave-button"
-                    >
-                        <div className="button-content">
-                            <span className="button-icon">🚪</span>
-                            <span className="button-text">Leave Game</span>
-                        </div>
-                    </button>
-
-                    {/* Refresh Button */}
-                    <button
-                        onClick={handleRefresh}
-                        disabled={isRefreshing}
-                        className="action-button refresh-button"
-                    >
-                        <div className="button-content">
-                            <span className="button-icon refresh-icon">
-                                {isRefreshing ? '⟳' : '🔄'}
-                            </span>
-                            <span className="button-text">
-                                {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                            </span>
-                        </div>
-                    </button>
-
-                    {/* BINGO Button */}
-                    <button
-                        onClick={() => {
-                            if (isWatchMode) {
-                                showError('❌ You need to select a cartella to play!');
-                                return;
-                            }
-
-                            // Check if player has a valid bingo before claiming
-                            const yourCard = gameState.yourCard;
-                            const calledNumbers = gameState.calledNumbers || [];
-
-                            if (!yourCard) {
-                                showError('❌ No cartella selected! Please select a cartella first.');
-                                return;
-                            }
-
-                            // Check if player actually has bingo
-                            const hasBingo = checkBingoPattern(yourCard, calledNumbers);
-
-                            if (hasBingo) {
-                                showSuccess('🎉 BINGO! Claiming your win...');
-                                claimBingo();
-                            } else {
-
-                                // Count how many numbers are marked in each row/column for helpful feedback
-                                const markedCounts = {
-                                    rows: yourCard.map(row => row.filter(num => num === 0 || calledNumbers.includes(num)).length),
-                                    cols: Array.from({ length: 5 }, (_, j) =>
-                                        yourCard.filter(row => row[j] === 0 || calledNumbers.includes(row[j])).length
-                                    )
-                                };
-
-                                const maxRow = Math.max(...markedCounts.rows);
-                                const maxCol = Math.max(...markedCounts.cols);
-                                const maxMarked = Math.max(maxRow, maxCol);
-
-                                if (maxMarked >= 4) {
-                                    showWarning(`❌ Almost there! You have ${maxMarked}/5 in a line. Keep playing!`);
-                                } else if (maxMarked >= 3) {
-                                    showWarning(`❌ Getting close! You have ${maxMarked}/5 in a line.`);
-                                } else {
-                                    showWarning('❌ No bingo yet! Keep playing to complete a line.');
-                                }
-                            }
-                        }}
-                        disabled={isWatchMode}
-                        className={`action-button bingo-button ${isWatchMode ? 'disabled' : ''}`}
-                    >
-                        <div className="button-content">
-                            <span className="button-icon bingo-icon">🎉</span>
-                            <span className="button-text">BINGO!</span>
-                        </div>
-                        {!isWatchMode && (
-                            <div className="bingo-overlay"></div>
-                        )}
-                    </button>
                 </div>
 
                 <BottomNav current="game" onNavigate={onNavigate} />
