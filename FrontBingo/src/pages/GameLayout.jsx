@@ -264,36 +264,33 @@ export default function GameLayout({
     }
 
 
-    return (
-        <div className="app-container relative overflow-hidden">
-            {/* Animated background elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-blue-500/20 to-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-            </div>
+    // Determine game phase display
+    const gamePhaseDisplay = gameState.phase === 'playing' ? 'STARTED' : gameState.phase === 'registration' ? 'REGISTRATION' : 'WAITING';
 
+    return (
+        <div className="app-container relative overflow-hidden joy-bingo-bg">
             <div className="max-w-md mx-auto px-3 py-3 relative z-10">
-                {/* Enhanced Top Information Bar (mobile-first compact design) */}
-                <div className="game-info-bar compact flex items-stretch rounded-2xl flex-nowrap mobile-info-bar" style={{ marginBottom: '1.5rem' }}>
-                    <div className="wallet-box wallet-box--compact flex-1 group">
-                        <div className="wallet-label">Game ID</div>
-                        <div className="wallet-value font-bold text-yellow-300 truncate">{currentGameId || 'LB000000'}</div>
+                {/* Top Information Bar - Light Purple Style */}
+                <div className="game-info-bar-light flex items-stretch rounded-lg flex-nowrap mobile-info-bar" style={{ marginBottom: '1rem' }}>
+                    <div className="info-box flex-1">
+                        <div className="info-label">Derash</div>
+                        <div className="info-value">{currentPrizePool}</div>
                     </div>
-                    <div className="wallet-box wallet-box--compact flex-1 group">
-                        <div className="wallet-label">Players</div>
-                        <div className="wallet-value font-bold text-green-300">{currentPlayersCount}</div>
+                    <div className="info-box flex-1">
+                        <div className="info-label">Players</div>
+                        <div className="info-value">{currentPlayersCount}</div>
                     </div>
-                    <div className="wallet-box wallet-box--compact flex-1 group">
-                        <div className="wallet-label">Bet</div>
-                        <div className="wallet-value font-bold text-blue-300">ETB {stake}</div>
+                    <div className="info-box flex-1">
+                        <div className="info-label">Bet</div>
+                        <div className="info-value">{stake}</div>
                     </div>
-                    <div className="wallet-box wallet-box--compact flex-1 group">
-                        <div className="wallet-label">Derash</div>
-                        <div className="wallet-value font-bold text-orange-300">ETB {currentPrizePool}</div>
+                    <div className="info-box flex-1">
+                        <div className="info-label">Call</div>
+                        <div className="info-value">{calledNumbers.length}</div>
                     </div>
-                    <div className="wallet-box wallet-box--compact flex-1 group">
-                        <div className="wallet-label">Called</div>
-                        <div className="wallet-value font-bold text-pink-300">{calledNumbers.length}/75</div>
+                    <div className="info-box flex-1">
+                        <div className="info-label">Game Nº</div>
+                        <div className="info-value truncate">{currentGameId ? currentGameId.replace('LB', '') : '1'}</div>
                     </div>
                 </div>
 
@@ -311,26 +308,27 @@ export default function GameLayout({
                     height: 'calc(100vh - 180px)',
                     maxHeight: '500px'
                 }}>
-                    {/* Left Card - Enhanced BINGO Grid */}
-                    <div className="rounded-2xl p-4 bg-gradient-to-br from-purple-900/70 to-slate-900/50 ring-1 ring-black/20 shadow-2xl shadow-purple-900/30 backdrop-blur-md" style={{ height: '100%', overflow: 'hidden' }}>
+                    {/* Left Card - BINGO Grid with Square Letters */}
+                    <div className="bingo-grid-container" style={{ height: '100%', overflow: 'hidden' }}>
                         <div className="grid grid-cols-5 gap-1" style={{ height: '100%' }}>
-                            {/* B Column */}
+                            {/* B Column - Yellow */}
                             <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                <div className="cartela-letter ball-b relative w-6 h-6 rounded-full text-white font-bold text-center flex items-center justify-center shadow-xl mx-auto" style={{ flexShrink: 0 }}>
-                                    <span className="relative z-10 text-sm drop-shadow-sm">B</span>
+                                <div className="bingo-letter-square bingo-letter-b">
+                                    <span>B</span>
                                 </div>
                                 {Array.from({ length: 15 }, (_, i) => i + 1).map(n => {
                                     const isCalled = calledNumbers.includes(n);
                                     const isCurrentNumber = currentNumber === n;
+                                    // Current number = green, old called = orange, normal = light purple
+                                    const className = isCurrentNumber 
+                                        ? 'current-number' 
+                                        : isCalled 
+                                            ? 'called-orange' 
+                                            : 'bingo-number-default';
                                     return (
                                         <button
                                             key={n}
-                                            className={`cartela-number-btn text-[8px] leading-none transition-all duration-200 ${isCurrentNumber
-                                                ? '!bg-gradient-to-b !from-green-500 !to-green-600 !text-white animate-pulse ring-2 ring-yellow-400'
-                                                : isCalled
-                                                    ? '!bg-gradient-to-b !from-red-500 !to-red-600 !text-white'
-                                                    : '!bg-gradient-to-b !from-slate-700/80 !to-slate-800/80 !text-slate-200'
-                                                }`}
+                                            className={`bingo-number-btn ${className}`}
                                             style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
@@ -339,23 +337,23 @@ export default function GameLayout({
                                 })}
                             </div>
 
-                            {/* I Column */}
+                            {/* I Column - Green */}
                             <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                <div className="cartela-letter ball-i relative w-6 h-6 rounded-full text-white font-bold text-center flex items-center justify-center shadow-xl mx-auto" style={{ flexShrink: 0 }}>
-                                    <span className="relative z-10 text-sm drop-shadow-sm">I</span>
+                                <div className="bingo-letter-square bingo-letter-i">
+                                    <span>I</span>
                                 </div>
                                 {Array.from({ length: 15 }, (_, i) => i + 16).map(n => {
                                     const isCalled = calledNumbers.includes(n);
                                     const isCurrentNumber = currentNumber === n;
+                                    const className = isCurrentNumber 
+                                        ? 'current-number' 
+                                        : isCalled 
+                                            ? 'called-orange' 
+                                            : 'bingo-number-default';
                                     return (
                                         <button
                                             key={n}
-                                            className={`cartela-number-btn text-[8px] leading-none transition-all duration-200 ${isCurrentNumber
-                                                ? '!bg-gradient-to-b !from-green-500 !to-green-600 !text-white animate-pulse ring-2 ring-yellow-400'
-                                                : isCalled
-                                                    ? '!bg-gradient-to-b !from-red-500 !to-red-600 !text-white'
-                                                    : '!bg-gradient-to-b !from-slate-700/80 !to-slate-800/80 !text-slate-200'
-                                                }`}
+                                            className={`bingo-number-btn ${className}`}
                                             style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
@@ -364,23 +362,23 @@ export default function GameLayout({
                                 })}
                             </div>
 
-                            {/* N Column */}
+                            {/* N Column - Purple */}
                             <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                <div className="cartela-letter ball-n relative w-6 h-6 rounded-full text-white font-bold text-center flex items-center justify-center shadow-xl mx-auto" style={{ flexShrink: 0 }}>
-                                    <span className="relative z-10 text-sm drop-shadow-sm">N</span>
+                                <div className="bingo-letter-square bingo-letter-n">
+                                    <span>N</span>
                                 </div>
                                 {Array.from({ length: 15 }, (_, i) => i + 31).map(n => {
                                     const isCalled = calledNumbers.includes(n);
                                     const isCurrentNumber = currentNumber === n;
+                                    const className = isCurrentNumber 
+                                        ? 'current-number' 
+                                        : isCalled 
+                                            ? 'called-orange' 
+                                            : 'bingo-number-default';
                                     return (
                                         <button
                                             key={n}
-                                            className={`cartela-number-btn text-[8px] leading-none transition-all duration-200 ${isCurrentNumber
-                                                ? '!bg-gradient-to-b !from-green-500 !to-green-600 !text-white animate-pulse ring-2 ring-yellow-400'
-                                                : isCalled
-                                                    ? '!bg-gradient-to-b !from-red-500 !to-red-600 !text-white'
-                                                    : '!bg-gradient-to-b !from-slate-700/80 !to-slate-800/80 !text-slate-200'
-                                                }`}
+                                            className={`bingo-number-btn ${className}`}
                                             style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
@@ -389,23 +387,23 @@ export default function GameLayout({
                                 })}
                             </div>
 
-                            {/* G Column */}
+                            {/* G Column - Red */}
                             <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                <div className="cartela-letter ball-g relative w-6 h-6 rounded-full text-white font-bold text-center flex items-center justify-center shadow-xl mx-auto" style={{ flexShrink: 0 }}>
-                                    <span className="relative z-10 text-sm drop-shadow-sm">G</span>
+                                <div className="bingo-letter-square bingo-letter-g">
+                                    <span>G</span>
                                 </div>
                                 {Array.from({ length: 15 }, (_, i) => i + 46).map(n => {
                                     const isCalled = calledNumbers.includes(n);
                                     const isCurrentNumber = currentNumber === n;
+                                    const className = isCurrentNumber 
+                                        ? 'current-number' 
+                                        : isCalled 
+                                            ? 'called-orange' 
+                                            : 'bingo-number-default';
                                     return (
                                         <button
                                             key={n}
-                                            className={`cartela-number-btn text-[8px] leading-none transition-all duration-200 ${isCurrentNumber
-                                                ? '!bg-gradient-to-b !from-green-500 !to-green-600 !text-white animate-pulse ring-2 ring-yellow-400'
-                                                : isCalled
-                                                    ? '!bg-gradient-to-b !from-red-500 !to-red-600 !text-white'
-                                                    : '!bg-gradient-to-b !from-slate-700/80 !to-slate-800/80 !text-slate-200'
-                                                }`}
+                                            className={`bingo-number-btn ${className}`}
                                             style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
@@ -414,23 +412,23 @@ export default function GameLayout({
                                 })}
                             </div>
 
-                            {/* O Column */}
+                            {/* O Column - Pink/Magenta */}
                             <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                <div className="cartela-letter ball-o relative w-6 h-6 rounded-full text-white font-bold text-center flex items-center justify-center shadow-xl mx-auto" style={{ flexShrink: 0 }}>
-                                    <span className="relative z-10 text-sm drop-shadow-sm">O</span>
+                                <div className="bingo-letter-square bingo-letter-o">
+                                    <span>O</span>
                                 </div>
                                 {Array.from({ length: 15 }, (_, i) => i + 61).map(n => {
                                     const isCalled = calledNumbers.includes(n);
                                     const isCurrentNumber = currentNumber === n;
+                                    const className = isCurrentNumber 
+                                        ? 'current-number' 
+                                        : isCalled 
+                                            ? 'called-orange' 
+                                            : 'bingo-number-default';
                                     return (
                                         <button
                                             key={n}
-                                            className={`cartela-number-btn text-[8px] leading-none transition-all duration-200 ${isCurrentNumber
-                                                ? '!bg-gradient-to-b !from-green-500 !to-green-600 !text-white animate-pulse ring-2 ring-yellow-400'
-                                                : isCalled
-                                                    ? '!bg-gradient-to-b !from-red-500 !to-red-600 !text-white'
-                                                    : '!bg-gradient-to-b !from-slate-700/80 !to-slate-800/80 !text-slate-200'
-                                                }`}
+                                            className={`bingo-number-btn ${className}`}
                                             style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
@@ -442,129 +440,70 @@ export default function GameLayout({
                         </div>
                     </div>
 
-                    {/* Right Side - Enhanced Two Cards Stacked */}
+                    {/* Right Side - Joy Bingo Style */}
                     <div className="right-side-container" style={{
-                        height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '0.5rem',
                         marginLeft: '0.25rem'
                     }}>
-                        {/* Floating Bingo Balls - Recent Numbers */}
-                        <div className="recent-numbers-container">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 flex-1 justify-start min-w-0 overflow-hidden flex-nowrap" style={{ maxWidth: 'calc(100% - 3rem)' }}>
-                                    {(() => {
-                                        // Get all called numbers including current number
-                                        const allNumbers = [...calledNumbers];
-                                        if (
-                                            currentNumber && typeof currentNumber === 'number' &&
-                                            (calledNumbers.length === 0 || calledNumbers[calledNumbers.length - 1] !== currentNumber)
-                                        ) {
-                                            allNumbers.push(currentNumber);
-                                        }
+                        {/* STARTED Status Box */}
+                        <div className="game-status-box">
+                            <span className="game-status-text">{gamePhaseDisplay}</span>
+                        </div>
 
-                                        // Get the last 4 numbers (most recent) - limit to exactly 4
-                                        const toShow = allNumbers.slice(-4);
-                                        const toBadge = (n, index) => {
-                                            const letter = n <= 15 ? 'B' : n <= 30 ? 'I' : n <= 45 ? 'N' : n <= 60 ? 'G' : 'O';
-                                            const ballClass = n <= 15
-                                                ? 'ball-b'
-                                                : n <= 30
-                                                    ? 'ball-i'
-                                                    : n <= 45
-                                                        ? 'ball-n'
-                                                        : n <= 60
-                                                            ? 'ball-g'
-                                                            : 'ball-o';
-                                            return (
-                                                <div
-                                                    key={`recent-${n}-${index}`}
-                                                    className={`recent-ball ${ballClass}`}
-                                                    style={{
-                                                        flexShrink: 0,
-                                                        minWidth: '2rem',
-                                                        maxWidth: '2rem'
-                                                    }}
-                                                >
-                                                    <span>{`${letter}-${n}`}</span>
-                                                </div>
-                                            );
-                                        };
-                                        return toShow.map(toBadge);
+                        {/* Current Call Bar */}
+                        <div className="current-call-bar">
+                            <span className="current-call-label">Current Call</span>
+                            {currentNumber ? (
+                                <div className="current-call-ball">
+                                    {(() => {
+                                        const letter = currentNumber <= 15 ? 'B' : currentNumber <= 30 ? 'I' : currentNumber <= 45 ? 'N' : currentNumber <= 60 ? 'G' : 'O';
+                                        return `${letter}-${currentNumber}`;
                                     })()}
                                 </div>
-                                <button
-                                    onClick={() => setIsSoundOn(v => !v)}
-                                    className={`sound-button ${isSoundOn ? '' : 'muted'}`}
-                                    aria-label={isSoundOn ? 'Mute' : 'Unmute'}
-                                    title={isSoundOn ? 'Mute' : 'Unmute'}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-                                        {isSoundOn ? (
-                                            <path d="M11 5l-4 4H4v6h3l4 4V5zm6.54 1.46a8 8 0 010 11.31M15.36 8.64a4.5 4.5 0 010 6.36" strokeLinecap="round" strokeLinejoin="round" />
-                                        ) : (
-                                            <>
-                                                <path d="M11 5l-4 4H4v6h3l4 4V5" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M18 9l-6 6M12 9l6 6" strokeLinecap="round" strokeLinejoin="round" />
-                                            </>
-                                        )}
-                                    </svg>
-                                </button>
-                            </div>
+                            ) : (
+                                <div className="current-call-ball waiting">--</div>
+                            )}
                         </div>
 
-                        {/* Floating Current Number Ball */}
-                        <div className="current-number-container">
-                            <div className="text-center">
-                                <div className="mx-auto w-full flex items-center justify-center">
-                                    {currentNumber ? (
-                                        <div className="relative">
-                                            <div className="current-ball">
-                                                <div className="current-ball-text">
-                                                    {(() => {
-                                                        const letter = currentNumber <= 15 ? 'B' : currentNumber <= 30 ? 'I' : currentNumber <= 45 ? 'N' : currentNumber <= 60 ? 'G' : 'O';
-                                                        return `${letter}-${currentNumber}`;
-                                                    })()}
-                                                </div>
-                                            </div>
+                        {/* Recently Called Numbers - Green Ovals */}
+                        <div className="recent-numbers-joy">
+                            {(() => {
+                                // Get recently called numbers (excluding current)
+                                const recent = calledNumbers.slice(-3);
+                                return recent.map((n, index) => {
+                                    const letter = n <= 15 ? 'B' : n <= 30 ? 'I' : n <= 45 ? 'N' : n <= 60 ? 'G' : 'O';
+                                    return (
+                                        <div key={`recent-${n}-${index}`} className="recent-number-oval">
+                                            {`${letter}${n}`}
                                         </div>
-                                    ) : (
-                                        <div className="relative">
-                                            <div className="current-ball waiting">
-                                                <div className="current-ball-text"></div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right Bottom Card - User Cartellas */}
-                        <div className="relative rounded-2xl p-3 bg-gradient-to-br from-purple-900/70 to-slate-900/50 ring-1 ring-black/20 shadow-2xl shadow-black/30 overflow-hidden">
-                            <div className="shimmer-overlay"></div>
-                            {/* User's Cartellas (stacked vertically) */}
-                            <div className="rounded-xl p-3 mt-8 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-black/10">
-                                {yourCards.length === 0 ? (
-                                    <div className="text-center text-white/80 py-6">
-                                        No cartela selected. Please go back and select cartela.
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col gap-4">
-                                        {yourCards.map(({ cardNumber, card }) => (
-                                            <CartellaCard
-                                                key={cardNumber}
-                                                id={cardNumber}
-                                                card={card}
-                                                called={calledNumbers}
-                                                isPreview={false}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                                    );
+                                });
+                            })()}
                         </div>
                     </div>
+                </div>
+
+                {/* User Cartelas - Below Both Columns */}
+                <div className="user-cartelas-container-full">
+                    {yourCards.length === 0 ? (
+                        <div className="waiting-message-box">
+                            <p className="waiting-message-text">Please wait for this game to be completed</p>
+                        </div>
+                    ) : (
+                        <div className="user-cartelas-list">
+                            {yourCards.map(({ cardNumber, card }) => (
+                                <CartellaCard
+                                    key={cardNumber}
+                                    id={cardNumber}
+                                    card={card}
+                                    called={calledNumbers}
+                                    isPreview={false}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <BottomNav current="game" onNavigate={onNavigate} />

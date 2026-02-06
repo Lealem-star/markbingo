@@ -4037,6 +4037,244 @@ body {
     z-index: 1;
 }
 
+/* Joy Bingo Light Purple Background */
+.joy-bingo-bg {
+    background: #e9d5ff !important; /* Light purple background */
+}
+
+/* Override app-container background for GameLayout */
+.app-container.joy-bingo-bg {
+    background: #e9d5ff !important;
+}
+
+/* Light Purple Info Bar */
+.game-info-bar-light {
+    background: #e9d5ff;
+    border-radius: 8px;
+    padding: 8px 4px;
+    border: none;
+    box-shadow: none;
+}
+
+.info-box {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 6px;
+    padding: 6px 4px;
+    margin: 0 2px;
+    text-align: center;
+    flex: 1;
+}
+
+.info-label {
+    font-size: 9px;
+    color: #6b21a8;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.info-value {
+    font-size: 11px;
+    color: #1e1b4b;
+    font-weight: 700;
+}
+
+/* BINGO Grid Container */
+.bingo-grid-container {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 8px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* BINGO Letter Squares */
+.bingo-letter-square {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    color: white;
+    margin: 0 auto 4px;
+    flex-shrink: 0;
+}
+
+.bingo-letter-b {
+    background: #fbbf24; /* Yellow */
+}
+
+.bingo-letter-i {
+    background: #10b981; /* Green */
+}
+
+.bingo-letter-n {
+    background: #8b5cf6; /* Purple */
+}
+
+.bingo-letter-g {
+    background: #ef4444; /* Red */
+}
+
+.bingo-letter-o {
+    background: #e60edb; /* Pink/Magenta */
+}
+
+/* BINGO Number Buttons */
+.bingo-number-btn {
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 9px;
+    transition: all 0.2s ease;
+    width: 100%;
+    outline: none;
+}
+
+.bingo-number-default {
+    background: #e9d5ff; /* Light purple */
+    color: white;
+}
+
+.bingo-number-btn.called-orange {
+    background: #f97316; /* Orange - for old called numbers */
+    color: white;
+}
+
+.bingo-number-btn.current-number {
+    background: #10b981; /* Green - for current called number */
+    color: white;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Game Status Box */
+.game-status-box {
+    background: #e9d5ff;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.game-status-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #6b21a8;
+}
+
+/* Current Call Bar */
+.current-call-bar {
+    background: #6b21a8; /* Dark purple */
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.current-call-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.current-call-ball {
+    background: #f97316; /* Orange */
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.current-call-ball.waiting {
+    background: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Recent Numbers - Green Ovals */
+.recent-numbers-joy {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.recent-number-oval {
+    background: #10b981; /* Green */
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 45px;
+    text-align: center;
+}
+
+/* User Cartelas Container - Full Width Below Columns */
+.user-cartelas-container-full {
+    width: 100%;
+    background: #e9d5ff;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    overflow-y: auto;
+}
+
+/* User Cartelas Container - Inside Right Column (kept for backward compatibility) */
+.user-cartelas-container {
+    flex: 1;
+    background: #e9d5ff;
+    border-radius: 8px;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.waiting-message-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 150px;
+    padding: 20px;
+}
+
+.waiting-message-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #6b21a8;
+    text-align: center;
+}
+
+.user-cartelas-list {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+}
+
 .game-info-bar {
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(124, 58, 237, 0.3) 100%);
     backdrop-filter: blur(20px);
