@@ -14,7 +14,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const [error, setError] = useState(null);
     const [wallet, setWallet] = useState({ main: 0, play: 0, coins: 0 });
     const [walletLoading, setWalletLoading] = useState(true);
-    const [centerMessage, setCenterMessage] = useState(null);
+    const [alertBanners, setAlertBanners] = useState([]);
 
     // WebSocket integration
     const { connected, gameState, selectCartella, connectToStake, wsReadyState, isConnecting, lastEvent } = useWebSocket();
@@ -295,6 +295,24 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         }
     }, [lastEvent, showWarning, showError]);
 
+    // Handle registration expired - add to alert banners
+    useEffect(() => {
+        const registrationExpired = gameState?.phase === 'registration' && typeof gameState?.countdown === 'number' && gameState.countdown <= 0;
+        const msg = 'Registration time has ended due to low number of players. Please wait for the next game to start.';
+        
+        setAlertBanners(prev => {
+            const hasExpiredMsg = prev.includes(msg);
+            if (registrationExpired && !hasExpiredMsg) {
+                // Add expired message if registration is expired and message not already present
+                return [...prev, msg];
+            } else if (!registrationExpired && hasExpiredMsg) {
+                // Remove expired message if registration is active again
+                return prev.filter(m => m !== msg);
+            }
+            return prev;
+        });
+    }, [gameState?.phase, gameState?.countdown]);
+
 
     // Handle card selection - automatically confirm without separate confirmation step
     const handleCardSelect = async (cardNumber) => {
@@ -335,13 +353,10 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         const hasBalance = totalBalance >= needed;
 
         if (!hasBalance) {
-            const msg = `Insufficient balance. You need ${needed} ETB but have ${totalBalance} ETB.`;
+            const msg = `Insufficient fund`;
 
-            // Avoid stacking multiple overlays/toasts on repeated clicks
-            if (centerMessage !== msg) {
-                setCenterMessage(msg);
-                setTimeout(() => setCenterMessage(null), 3000);
-            }
+            // Add banner to stack (like image showing multiple banners)
+            setAlertBanners(prev => [...prev, msg]);
 
             showError(msg);
             return;
@@ -613,14 +628,35 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
     console.log('Rendering main CartelaSelection interface with', cards.length, 'cards');
 
-    const registrationExpired = gameState.phase === 'registration' && gameState.countdown <= 0;
-    const alertMessage = centerMessage || (registrationExpired
-        ? 'Registration time has ended due to low number of players. Please wait for the next game to start.'
-        : null);
-    const alertIcon = centerMessage ? '!' : '⏰';
-
     return (
         <div className="app-container relative">
+            {/* Alert Banners - Fixed at top, stacked vertically (overlay, no push) */}
+            {Array.isArray(alertBanners) && alertBanners.length > 0 && (
+                <div className="fixed top-0 left-0 right-0 z-50">
+                    {alertBanners.map((alertMsg, index) => (
+                        <div key={index} className="w-full bg-white px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                            {/* Blue circular 'i' icon on the left */}
+                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                                <span className="text-white text-xs font-bold">i</span>
+                            </div>
+                            {/* Message text in black */}
+                            <div className="flex-1 text-sm text-black leading-snug">
+                                {alertMsg}
+                            </div>
+                            {/* Dismiss 'X' button on the right */}
+                            <button
+                                onClick={() => {
+                                    setAlertBanners(prev => prev.filter((_, i) => i !== index));
+                                }}
+                                className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-black hover:text-gray-600 transition-colors"
+                                aria-label="Dismiss"
+                            >
+                                <span className="text-lg font-semibold">×</span>
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <header className="p-4 mb-0">
                 {/* Top Row: Back and Refresh buttons */}
@@ -675,20 +711,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
                 
             </header>
-
-            {/* In-flow toast card under header (compact, centered) */}
-            {alertMessage && (
-                <div className="px-4 mt-1 mb-3 flex justify-center">
-                    <div className="max-w-md w-full rounded-xl bg-white shadow-lg border border-red-200 flex items-start gap-3 px-4 py-3">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-red-600 text-sm font-semibold">
-                            {alertIcon}
-                        </span>
-                        <div className="text-sm leading-snug text-gray-900">
-                            {alertMessage}
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <main className="p-4 mt-2 pb-6">
 
