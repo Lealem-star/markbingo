@@ -200,27 +200,30 @@ export function WebSocketProvider({ children }) {
                                 const snapshotPhase = event.payload.phase || 'waiting';
                                 const snapshotGameId = event.payload.gameId;
                                 
-                                // Don't overwrite phase if we're in a running game with cards
-                                // Only update phase from snapshot if:
-                                // 1. We're not in a running game, OR
-                                // 2. The snapshot is for the same gameId (same game update)
+                                // If we're in a running game with cards, completely ignore snapshots for different gameIds
                                 const isCurrentlyRunning = prev.phase === 'running';
                                 const hasCards = Array.isArray(prev.yourCards) && prev.yourCards.length > 0;
                                 const isSameGame = prev.gameId === snapshotGameId;
                                 
-                                // If we're running with cards, only update phase if it's for the same game
-                                // Otherwise, always update phase from snapshot
-                                const shouldUpdatePhase = !(isCurrentlyRunning && hasCards) || isSameGame;
-                                const phase = shouldUpdatePhase ? snapshotPhase : prev.phase;
+                                // Completely ignore snapshot if we're running with cards and it's for a different game
+                                if (isCurrentlyRunning && hasCards && !isSameGame) {
+                                    console.log('📸 Snapshot IGNORED - running game with cards, different gameId:', {
+                                        snapshotGameId,
+                                        currentGameId: prev.gameId,
+                                        currentPhase: prev.phase,
+                                        snapshotPhase
+                                    });
+                                    return prev; // Don't update anything
+                                }
                                 
-                                // If we're keeping the running phase, also keep the gameId and cards
-                                const gameId = shouldUpdatePhase ? snapshotGameId : prev.gameId;
-                                const yourCards = shouldUpdatePhase && phase === 'registration' ? [] : prev.yourCards;
+                                // Otherwise, process the snapshot normally
+                                const phase = snapshotPhase;
+                                const gameId = snapshotGameId;
                                 
                                 const registrationEndTime = event.payload.nextStartAt || event.payload.registrationEndTime;
                                 const remainingSeconds = registrationEndTime ? Math.max(0, Math.ceil((registrationEndTime - Date.now()) / 1000)) : 0;
                                 
-                                console.log('📸 Snapshot received:', {
+                                console.log('📸 Snapshot processed:', {
                                     snapshotPhase,
                                     snapshotGameId,
                                     currentPhase: prev.phase,
@@ -228,7 +231,6 @@ export function WebSocketProvider({ children }) {
                                     isCurrentlyRunning,
                                     hasCards,
                                     isSameGame,
-                                    shouldUpdatePhase,
                                     finalPhase: phase,
                                     finalGameId: gameId
                                 });
@@ -245,8 +247,8 @@ export function WebSocketProvider({ children }) {
                                     yourSelections: event.payload.yourSelections || [],
                                     countdown: phase === 'registration' ? remainingSeconds : (event.payload.countdown || 0),
                                     registrationEndTime,
-                                    yourCards,
-                                    ...(phase === 'registration' && shouldUpdatePhase ? {
+                                    ...(phase === 'registration' ? {
+                                        yourCards: [],
                                         yourSelections: [],
                                         calledNumbers: [],
                                         currentNumber: null,
