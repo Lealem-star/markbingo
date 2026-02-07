@@ -235,6 +235,19 @@ export function WebSocketProvider({ children }) {
                                     finalGameId: gameId
                                 });
                                 
+                                // Handle cards from snapshot (for rejoining running games)
+                                let yourCards = prev.yourCards || [];
+                                if (phase === 'running' && event.payload.cards && Array.isArray(event.payload.cards)) {
+                                    // Convert cards array to yourCards format
+                                    yourCards = event.payload.cards.map(cardData => ({
+                                        cardNumber: cardData.cardNumber,
+                                        card: cardData.card
+                                    }));
+                                    console.log('📸 Snapshot includes cards for running game:', { cardsCount: yourCards.length, cardNumbers: yourCards.map(c => c.cardNumber) });
+                                } else if (phase === 'registration') {
+                                    yourCards = [];
+                                }
+
                                 return {
                                     ...prev,
                                     ...event.payload,
@@ -245,10 +258,10 @@ export function WebSocketProvider({ children }) {
                                     calledNumbers: event.payload.calledNumbers || event.payload.called || [],
                                     takenCards: event.payload.takenCards || [],
                                     yourSelections: event.payload.yourSelections || [],
+                                    yourCards, // Set from cards if provided, otherwise keep previous or empty
                                     countdown: phase === 'registration' ? remainingSeconds : (event.payload.countdown || 0),
                                     registrationEndTime,
                                     ...(phase === 'registration' ? {
-                                        yourCards: [],
                                         yourSelections: [],
                                         calledNumbers: [],
                                         currentNumber: null,

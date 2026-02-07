@@ -230,6 +230,19 @@ function makeRoom(stake) {
                     : 0
             };
 
+            // If user is rejoining a running game, include their cards
+            if (room.phase === 'running') {
+                const userSelections = getUserSelections(ws.userId);
+                if (userSelections.length > 0) {
+                    const cards = userSelections.map(cardNumber => ({
+                        cardNumber,
+                        card: getPredefinedCartella(cardNumber)
+                    }));
+                    snapshot.cards = cards;
+                    console.log('Including cards in snapshot for running game:', { userId: ws.userId, cardNumbers: userSelections, cardsCount: cards.length });
+                }
+            }
+
             console.log('Sending snapshot to user:', { userId: ws.userId, snapshot });
             // IMPORTANT: snapshot contains user-specific fields (yourSelections), so send only to this ws.
             if (ws.readyState === ws.OPEN) {
