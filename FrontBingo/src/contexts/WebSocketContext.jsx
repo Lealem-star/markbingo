@@ -290,6 +290,18 @@ export function WebSocketProvider({ children }) {
                                 cards: event.payload.cards
                             });
                             setGameState(prev => {
+                                // If we're already in a running game with cards for a different game, ignore this
+                                if (prev.phase === 'running' && 
+                                    Array.isArray(prev.yourCards) && prev.yourCards.length > 0 &&
+                                    prev.gameId !== event.payload.gameId) {
+                                    console.log('🎮 game_started IGNORED - already in different running game:', {
+                                        eventGameId: event.payload.gameId,
+                                        currentGameId: prev.gameId,
+                                        currentPhase: prev.phase
+                                    });
+                                    return prev;
+                                }
+                                
                                 const newState = {
                                     ...prev,
                                     phase: 'running', // Keep 'running' to match App.jsx and CartelaSelection.jsx
@@ -310,6 +322,15 @@ export function WebSocketProvider({ children }) {
                             break;
 
                         case 'number_called':
+                            // Only process if it's for the current game
+                            if (event.payload.gameId && event.payload.gameId !== prev.gameId) {
+                                console.log('🔢 number_called IGNORED - different gameId:', {
+                                    eventGameId: event.payload.gameId,
+                                    currentGameId: prev.gameId,
+                                    number: event.payload.number
+                                });
+                                break;
+                            }
                             setGameState(prev => ({
                                 ...prev,
                                 currentNumber: event.payload.number,
@@ -318,6 +339,14 @@ export function WebSocketProvider({ children }) {
                             break;
 
                         case 'players_update':
+                            // Only process if it's for the current game (or no gameId specified - assume it's for current)
+                            if (event.payload?.gameId && event.payload.gameId !== prev.gameId) {
+                                console.log('👥 players_update IGNORED - different gameId:', {
+                                    eventGameId: event.payload.gameId,
+                                    currentGameId: prev.gameId
+                                });
+                                break;
+                            }
                             setGameState(prev => ({
                                 ...prev,
                                 playersCount: event.payload.playersCount,
@@ -326,6 +355,14 @@ export function WebSocketProvider({ children }) {
                             break;
 
                         case 'registration_update':
+                            // Only process if it's for the current game (or no gameId specified - assume it's for current)
+                            if (event.payload?.gameId && event.payload.gameId !== prev.gameId) {
+                                console.log('📝 registration_update IGNORED - different gameId:', {
+                                    eventGameId: event.payload.gameId,
+                                    currentGameId: prev.gameId
+                                });
+                                break;
+                            }
                             setGameState(prev => ({
                                 ...prev,
                                 takenCards: event.payload.takenCards || [],
@@ -334,6 +371,14 @@ export function WebSocketProvider({ children }) {
                             break;
 
                         case 'selection_confirmed':
+                            // Only process if it's for the current game (or no gameId specified - assume it's for current)
+                            if (event.payload?.gameId && event.payload.gameId !== prev.gameId) {
+                                console.log('✅ selection_confirmed IGNORED - different gameId:', {
+                                    eventGameId: event.payload.gameId,
+                                    currentGameId: prev.gameId
+                                });
+                                break;
+                            }
                             setGameState(prev => ({
                                 ...prev,
                                 yourSelections: event.payload.selections || prev.yourSelections || [],
@@ -371,6 +416,14 @@ export function WebSocketProvider({ children }) {
 
                         case 'game_finished':
                         case 'game_ended':
+                            // Only process if it's for the current game
+                            if (event.payload?.gameId && event.payload.gameId !== prev.gameId) {
+                                console.log('🏁 game_finished IGNORED - different gameId:', {
+                                    eventGameId: event.payload.gameId,
+                                    currentGameId: prev.gameId
+                                });
+                                break;
+                            }
                             setGameState(prev => ({
                                 ...prev,
                                 phase: 'announce',
