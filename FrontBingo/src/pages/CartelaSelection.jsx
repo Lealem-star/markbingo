@@ -15,6 +15,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const [wallet, setWallet] = useState({ main: 0, play: 0, coins: 0 });
     const [walletLoading, setWalletLoading] = useState(true);
     const [alertBanners, setAlertBanners] = useState([]);
+    const alertTimersRef = useRef(new Map());
 
     // WebSocket integration
     const { connected, gameState, selectCartella, connectToStake, wsReadyState, isConnecting, lastEvent } = useWebSocket();
@@ -312,6 +313,43 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             return prev;
         });
     }, [gameState?.phase, gameState?.countdown]);
+
+    // Auto-dismiss alerts after 3 seconds
+    useEffect(() => {
+        // Clear any existing timers for alerts that are no longer in the array
+        const currentMessages = new Set(alertBanners);
+        alertTimersRef.current.forEach((timer, msg) => {
+            if (!currentMessages.has(msg)) {
+                clearTimeout(timer);
+                alertTimersRef.current.delete(msg);
+            }
+        });
+
+        // Create new timers for alerts that don't have one yet
+        alertBanners.forEach((alertMsg) => {
+            if (!alertTimersRef.current.has(alertMsg)) {
+                const timer = setTimeout(() => {
+                    setAlertBanners(prev => prev.filter(msg => msg !== alertMsg));
+                    alertTimersRef.current.delete(alertMsg);
+                }, 3000);
+                alertTimersRef.current.set(alertMsg, timer);
+            }
+        });
+
+        // Cleanup function - only clear on unmount
+        return () => {
+            // Don't clear here - let timers complete naturally
+            // Only clear on component unmount (handled separately if needed)
+        };
+    }, [alertBanners]);
+
+    // Cleanup timers on component unmount
+    useEffect(() => {
+        return () => {
+            alertTimersRef.current.forEach(timer => clearTimeout(timer));
+            alertTimersRef.current.clear();
+        };
+    }, []);
 
 
     // Handle card selection - automatically confirm without separate confirmation step
@@ -630,28 +668,36 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
     return (
         <div className="app-container relative">
-            {/* Alert Banners - Fixed at top, stacked vertically (overlay, no push) */}
+            {/* Alert Banners - Fixed at top, stacked vertically with animations */}
             {Array.isArray(alertBanners) && alertBanners.length > 0 && (
-                <div className="fixed top-0 left-0 right-0 z-50">
+                <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-2 space-y-2">
                     {alertBanners.map((alertMsg, index) => (
-                        <div key={index} className="w-full bg-white px-4 py-3 flex items-center gap-3 border-b border-gray-200">
-                            {/* Blue circular 'i' icon on the left */}
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">i</span>
+                        <div 
+                            key={index} 
+                            className="alert-banner-appeal animate-slide-in"
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                        >
+                            {/* Icon on the left */}
+                            <div className="alert-icon-wrapper">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
                             </div>
-                            {/* Message text in black */}
-                            <div className="flex-1 text-sm text-black leading-snug">
+                            {/* Message text */}
+                            <div className="alert-message-text">
                                 {alertMsg}
                             </div>
-                            {/* Dismiss 'X' button on the right */}
+                            {/* Dismiss button on the right */}
                             <button
                                 onClick={() => {
                                     setAlertBanners(prev => prev.filter((_, i) => i !== index));
                                 }}
-                                className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-black hover:text-gray-600 transition-colors"
+                                className="alert-dismiss-btn"
                                 aria-label="Dismiss"
                             >
-                                <span className="text-lg font-semibold">×</span>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
                             </button>
                         </div>
                     ))}

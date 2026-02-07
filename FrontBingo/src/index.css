@@ -4251,6 +4251,101 @@ body {
     color: #6b21a8;
 }
 
+/* Game Controls Bar - One Line */
+.game-controls-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+/* Reduced Size Status Box */
+.game-status-box-small {
+    background: #e9d5ff;
+    border-radius: 6px;
+    padding: 4px 8px;
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.game-status-text-small {
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b21a8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Auto-Mark Toggle Button */
+.auto-mark-toggle {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.auto-mark-on {
+    background: #10b981; /* Green when ON */
+    color: white;
+}
+
+.auto-mark-on:hover {
+    background: #059669;
+    transform: scale(1.05);
+}
+
+.auto-mark-off {
+    background: #e9d5ff; /* Light purple when OFF */
+    color: #6b21a8;
+}
+
+.auto-mark-off:hover {
+    background: #d8b4fe;
+    transform: scale(1.05);
+}
+
+/* Sound Toggle Button (Microphone) */
+.sound-toggle {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.sound-on {
+    background: #3b82f6; /* Blue when ON */
+    color: white;
+}
+
+.sound-on:hover {
+    background: #2563eb;
+    transform: scale(1.05);
+}
+
+.sound-off {
+    background: #e5e7eb; /* Gray when OFF */
+    color: #6b7280;
+}
+
+.sound-off:hover {
+    background: #d1d5db;
+    transform: scale(1.05);
+}
+
 /* Current Call Bar */
 .current-call-bar {
     background: #6b21a8; /* Dark purple */
@@ -4286,23 +4381,54 @@ body {
     color: rgba(255, 255, 255, 0.6);
 }
 
-/* Recent Numbers - Green Ovals */
+/* Recent Numbers - Circular Buttons in Row */
 .recent-numbers-joy {
     display: flex;
-    gap: 6px;
+    flex-direction: row;
+    gap: 8px;
     margin-bottom: 8px;
-    flex-wrap: wrap;
+    padding: 8px 12px;
+    background: #e9d5ff; /* Light purple/lavender background */
+    border: 3px solid #dc2626; /* Red border */
+    border-radius: 8px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
-.recent-number-oval {
-    background: #10b981; /* Green */
+.recent-number-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
-    min-width: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
+    flex-shrink: 0;
+}
+
+/* Color coding based on letter */
+.recent-number-b {
+    background: #6B21A8; /* Dark purple */
+}
+
+.recent-number-i {
+    background: #059669; /* Dark green */
+}
+
+.recent-number-n {
+    background: #7C3AED; /* Purple */
+}
+
+.recent-number-g {
+    background: #F59E0B; /* Golden yellow/orange */
+}
+
+.recent-number-o {
+    background: #EA580C; /* Orange */
 }
 
 /* User Cartelas Container - Full Width Below Columns */
@@ -4613,4 +4739,89 @@ body {
         padding: 0.75rem 0.5rem;
         font-size: 0.75rem;
     }
+}
+
+/* Alert Banners - Appealing Style */
+.alert-banner-appeal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.alert-banner-appeal:hover {
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5), 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.alert-icon-wrapper {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.alert-message-text {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    line-height: 1.5;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.alert-dismiss-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.alert-dismiss-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.1);
+}
+
+.alert-dismiss-btn:active {
+    transform: scale(0.95);
+}
+
+/* Slide-in animation for alerts */
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-slide-in {
+    animation: slide-in 0.3s ease-out forwards;
 }

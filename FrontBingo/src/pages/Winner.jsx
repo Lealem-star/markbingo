@@ -152,73 +152,66 @@ export default function Winner({ onNavigate, onResetToGame }) {
     const boardNumber = main.cartelaNumber || main.cardId || 'N/A';
 
     return (
-        <div className="app-container flex items-center justify-center min-h-screen py-4 px-4 bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50">
+        <div className="app-container flex items-center justify-center min-h-screen py-4 px-4" style={{ background: '#e9d5ff' }}>
             <div className="w-full max-w-md">
-                {/* Large Orange BINGO! Banner */}
-                <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-t-2xl px-6 py-8 mb-4 shadow-2xl">
-                    <div className="text-center">
-                        <h1 className="text-white font-extrabold text-5xl md:text-6xl tracking-wider mb-4 drop-shadow-lg">
-                            BINGO!
-                        </h1>
-                        <div className="flex items-center justify-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                                {winnerInitial}
-                            </div>
-                            <p className="text-white text-lg md:text-xl font-semibold">
-                                {isMulti ? `${winners.length} players have won` : 'has won the game'}
-                            </p>
-                        </div>
-                        {isMulti && winners.length > 1 && (
-                            <p className="text-white text-sm mt-2 opacity-90">
-                                Showing winning card for {winnerName}
-                            </p>
-                        )}
-                    </div>
-                </div>
-
-                {/* Card Container */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-b-2xl p-6 shadow-2xl">
-                    {/* Cartella Card */}
-                    <div className="flex justify-center mb-4">
-                        {cardData ? (
-                            <CartellaCard
-                                id={boardNumber}
-                                card={cardData}
-                                called={calledNumbers}
-                                isPreview={false}
-                                showWinningPattern={true}
-                            />
-                        ) : (
-                            <div className="text-center p-8 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200/50 shadow-md">
-                                <div className="text-3xl mb-2">🏆</div>
-                                <div className="text-purple-700 text-sm font-semibold mb-1">
-                                    Cartella #{boardNumber}
+                {/* Main Card Container with Light Purple Background */}
+                <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#e9d5ff' }}>
+                    {/* Large Orange BINGO! Banner */}
+                    <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8">
+                        <div className="text-center">
+                            <h1 className="text-white font-extrabold text-5xl md:text-6xl tracking-wider mb-4 drop-shadow-lg">
+                                BINGO!
+                            </h1>
+                            <div className="flex items-center justify-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                    {winnerInitial}
                                 </div>
-                                <div className="text-gray-600 text-xs mt-2">
-                                    Card preview not available
-                                </div>
+                                <p className="text-white text-lg md:text-xl font-semibold">
+                                    {winnerName} {isMulti ? `and ${winners.length - 1} other${winners.length > 2 ? 's' : ''} have won` : 'has won the game'}
+                                </p>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Board Number */}
-                    <div className="text-center mt-4">
-                        <p className="text-orange-400 text-sm font-semibold">
-                            Board number {boardNumber}
-                        </p>
-                    </div>
-
-                    {/* Countdown Section */}
-                    <div className="mt-6 space-y-2">
-                        <div className="w-full h-10 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold flex items-center justify-center shadow-md">
-                            አዲስ ጭዋታ ለመጀመር.....
                         </div>
-                        <div className="w-full h-10 rounded-lg bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300/50 text-purple-700 text-xs font-semibold flex items-center justify-center shadow-sm">
-                            {countdown > 0 ? (
-                                <>Auto-starting next game in {countdown}s</>
+                    </div>
+
+                    {/* Card Section with Light Purple Background */}
+                    <div className="p-6" style={{ background: '#e9d5ff' }}>
+                        {/* Cartella Card */}
+                        <div className="flex justify-center mb-4">
+                            {cardData ? (
+                                <CartellaCard
+                                    id={boardNumber}
+                                    card={cardData}
+                                    called={calledNumbers}
+                                    isPreview={false}
+                                    showWinningPattern={true}
+                                />
                             ) : (
-                                <>Navigating to next game...</>
+                                <div className="text-center p-8 rounded-xl border-2 border-purple-200/50 shadow-md" style={{ background: '#e9d5ff' }}>
+                                    <div className="text-3xl mb-2">🏆</div>
+                                    <div className="text-purple-700 text-sm font-semibold mb-1">
+                                        Cartella #{boardNumber}
+                                    </div>
+                                    <div className="text-gray-600 text-xs mt-2">
+                                        Card preview not available
+                                    </div>
+                                </div>
                             )}
+                        </div>
+
+                        {/* Board Number */}
+                        <div className="text-center mt-4">
+                            <p className="text-purple-800 text-sm font-semibold">
+                                Board number {boardNumber}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Countdown Section - Orange Background with Large Number */}
+                    <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8">
+                        <div className="text-center">
+                            <div className="text-white font-extrabold text-6xl md:text-7xl tracking-wider drop-shadow-lg">
+                                {countdown > 0 ? countdown : '0'}
+                            </div>
                         </div>
                     </div>
                 </div>
