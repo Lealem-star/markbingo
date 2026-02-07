@@ -282,7 +282,18 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             console.log('Calling onCartelaSelected with:', selectedNumbers);
             onCartelaSelected?.(selectedNumbers);
         }
-        // If game is running but user has no selection, stay on CartelaSelection (no watch mode)
+        // Watch mode: If game is running but user has no selection, allow watching the game
+        else if (gameState.phase === 'running' && gameState.gameId && selectedNumbers.length === 0) {
+            console.log('👀 WATCH MODE - Game is running, navigating to watch mode', {
+                gameId: gameState.gameId,
+                phase: gameState.phase,
+            });
+
+            // Ensure gameId is updated in parent before navigation
+            onGameIdUpdate?.(gameState.gameId);
+            // Navigate with empty array to indicate watch mode
+            onCartelaSelected?.([]);
+        }
     }, [gameState.phase, gameState.gameId, gameState.yourSelections, gameState.yourCards, onCartelaSelected, onGameIdUpdate]);
 
     // Show message if game cancelled due to not enough players

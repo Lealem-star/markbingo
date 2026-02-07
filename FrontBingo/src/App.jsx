@@ -97,9 +97,13 @@ function AppContent() {
       connected
     });
 
-    // If we have an active game and the player has a cartella, go to game layout
-    if (gameState.phase === 'running' && gameState.gameId && ((Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) || selectedCartelas.length > 0)) {
-      console.log('→ Routing to game-layout (active game with cartella)');
+    // If we have an active game, go to game layout (with or without cartella - watch mode supported)
+    if (gameState.phase === 'running' && gameState.gameId) {
+      if ((Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) || selectedCartelas.length > 0) {
+        console.log('→ Routing to game-layout (active game with cartella)');
+      } else {
+        console.log('→ Routing to game-layout (watch mode - no cartella)');
+      }
       return 'game-layout';
     }
 

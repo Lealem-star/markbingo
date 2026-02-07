@@ -530,8 +530,8 @@ export default function GameLayout({
                             })()}
                         </div>
 
-                        {/* Single Cartela - Render in Right Column if only one */}
-                        {yourCards.length === 1 && (
+                        {/* Single Cartela or Watch Mode - Render in Right Column */}
+                        {yourCards.length === 1 ? (
                             <div className="user-cartelas-single">
                                 {yourCards.map(({ cardNumber, card }) => (
                                     <CartellaCard
@@ -543,30 +543,34 @@ export default function GameLayout({
                                     />
                                 ))}
                             </div>
-                        )}
+                        ) : yourCards.length === 0 ? (
+                            <div className="user-cartelas-single">
+                                <div className="watch-mode-indicator">
+                                    <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <p className="waiting-message-text font-semibold">Watch Mode</p>
+                                    <p className="waiting-message-text text-sm mt-1 opacity-90">You're watching this game. Join the next round to play!</p>
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
                 </div>
 
-                {/* User Cartelas - Below Both Columns (only for multiple cartelas or no cartelas) */}
-                {(yourCards.length === 0 || yourCards.length > 1) && (
+                {/* User Cartelas - Below Both Columns (only for multiple cartelas) */}
+                {yourCards.length > 1 && (
                     <div className="user-cartelas-container-full">
-                        {yourCards.length === 0 ? (
-                            <div className="waiting-message-box">
-                                <p className="waiting-message-text">Please wait for this game to be completed</p>
-                            </div>
-                        ) : (
-                            <div className="user-cartelas-list">
-                                {yourCards.map(({ cardNumber, card }) => (
-                                    <CartellaCard
-                                        key={cardNumber}
-                                        id={cardNumber}
-                                        card={card}
-                                        called={calledNumbers}
-                                        isPreview={false}
-                                    />
-                                ))}
-                            </div>
-                        )}
+                        <div className="user-cartelas-list">
+                            {yourCards.map(({ cardNumber, card }) => (
+                                <CartellaCard
+                                    key={cardNumber}
+                                    id={cardNumber}
+                                    card={card}
+                                    called={calledNumbers}
+                                    isPreview={false}
+                                />
+                            ))}
+                        </div>
                     </div>
                 )}
 
