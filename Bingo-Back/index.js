@@ -230,16 +230,20 @@ function makeRoom(stake) {
                     : 0
             };
 
-            // If user is rejoining a running game, include their cards
+            // If room is running and user has cards, include the cards array in snapshot
             if (room.phase === 'running') {
                 const userSelections = getUserSelections(ws.userId);
                 if (userSelections.length > 0) {
-                    const cards = userSelections.map(cardNumber => ({
+                    snapshot.cards = userSelections.map(cardNumber => ({
                         cardNumber,
                         card: getPredefinedCartella(cardNumber)
                     }));
-                    snapshot.cards = cards;
-                    console.log('Including cards in snapshot for running game:', { userId: ws.userId, cardNumbers: userSelections, cardsCount: cards.length });
+                    console.log('Including cards in snapshot for running game:', {
+                        userId: ws.userId,
+                        gameId: room.currentGameId,
+                        cardsCount: snapshot.cards.length,
+                        cardNumbers: userSelections
+                    });
                 }
             }
 
