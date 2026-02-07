@@ -32,6 +32,7 @@ export function WebSocketProvider({ children }) {
     const [pendingGameStart, setPendingGameStart] = useState(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const rejoinScheduledRef = useRef(false);
+    const connectionAttemptRef = useRef(false);
 
     const send = useCallback((type, payload) => {
         const ws = wsRef.current;
@@ -102,10 +103,13 @@ export function WebSocketProvider({ children }) {
         }
 
         // Prevent multiple simultaneous connections
-        if (isConnecting) {
+        if (isConnecting || connectionAttemptRef.current) {
             console.log('General connection already in progress, skipping');
             return;
         }
+
+        // Mark that we're attempting a connection
+        connectionAttemptRef.current = true;
 
         // Close existing connection
         if (wsRef.current) {
@@ -146,6 +150,7 @@ export function WebSocketProvider({ children }) {
                 setConnected(true);
                 setIsConnecting(false);
                 connecting = false;
+                connectionAttemptRef.current = false;
                 retry = 0;
 
                 // Start heartbeat
@@ -475,6 +480,7 @@ export function WebSocketProvider({ children }) {
                 setConnected(false);
                 setIsConnecting(false);
                 connecting = false;
+                connectionAttemptRef.current = false;
 
                 if (heartbeat) {
                     clearInterval(heartbeat);
@@ -487,6 +493,7 @@ export function WebSocketProvider({ children }) {
                     console.log(`Reconnecting general WebSocket in ${delay}ms (attempt ${retry + 1})`);
                     setTimeout(() => {
                         retry++;
+                        connectionAttemptRef.current = false; // Reset before reconnecting
                         connect();
                     }, delay);
                 }
@@ -502,6 +509,7 @@ export function WebSocketProvider({ children }) {
                 });
                 setIsConnecting(false);
                 connecting = false;
+                connectionAttemptRef.current = false;
 
                 // WebSocket failed - app will show connection error
                 console.log('⚠️ WebSocket connection failed - app requires real connection');
@@ -510,6 +518,7 @@ export function WebSocketProvider({ children }) {
                 setTimeout(() => {
                     if (!stopped && !connected) {
                         console.log('🔄 Retrying WebSocket connection after error...');
+                        connectionAttemptRef.current = false; // Reset before retrying
                         connect();
                     }
                 }, 5000);
@@ -520,6 +529,7 @@ export function WebSocketProvider({ children }) {
 
         return () => {
             stopped = true;
+            connectionAttemptRef.current = false;
             if (heartbeat) {
                 clearInterval(heartbeat);
             }
@@ -594,7 +604,7 @@ export function WebSocketProvider({ children }) {
 
     // Connect immediately when sessionId is available
     useEffect(() => {
-        if (sessionId && !connected && !isConnecting) {
+        if (sessionId && !connected && !isConnecting && !connectionAttemptRef.current) {
             console.log('SessionId available, connecting to general WebSocket');
             connectGeneral();
         }
