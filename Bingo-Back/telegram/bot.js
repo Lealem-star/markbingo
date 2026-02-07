@@ -625,7 +625,13 @@ Thank you for your dedication! 🙏`;
             if (typeof withdrawalStates !== 'undefined' && withdrawalStates instanceof Map) {
                 withdrawalStates.delete(userId);
             }
-            ctx.reply('💰 Enter the amount you want to deposit, starting from 50 Birr.\n እባክዎ ማስገባት የሚፈልጉትን የተቀማጭ መጠን ያስገቡ? ከ 50 ብር ጀምሮ!');
+            ctx.reply('Please select the bank option you wish to use for the top-up.\n\nእባክዎ ለማስገባት የሚፈልጉትን የባንክ አማራጭ ይምረጡ:', {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '📱 Telebirr', callback_data: 'deposit_telebirr' }]
+                    ]
+                }
+            });
         });
 
         // Add /withdraw command to initiate withdrawal flow
@@ -1001,8 +1007,14 @@ Thank you for your dedication! 🙏`;
 
         bot.action('deposit', async (ctx) => {
             if (!(await requireRegistration(ctx))) return;
-            ctx.answerCbQuery('💰 Deposit amount...');
-            ctx.reply('💰 Enter the amount you want to deposit, starting from 50 Birr. \n እባክዎ ማስገባት የሚፈልጉትን የተቀማጭ መጠን ያስገቡ? ከ 50 ብር ጀምሮ!');
+            ctx.answerCbQuery('💰 Deposit...');
+            ctx.reply('Please select the bank option you wish to use for the top-up.\n\nእባክዎ ለማስገባት የሚፈልጉትን የባንክ አማራጭ ይምረጡ:', {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '📱 Telebirr', callback_data: 'deposit_telebirr' }]
+                    ]
+                }
+            });
         });
 
         bot.action('support', (ctx) => {
@@ -1416,10 +1428,45 @@ Thank you for your dedication! 🙏`;
             return ctx.editMessageText(welcomeText, keyboard);
         });
 
+        // Handle Telebirr selection (without amount - amount will be parsed from receipt)
+        bot.action('deposit_telebirr', (ctx) => {
+            ctx.answerCbQuery('📱 Telebirr deposit...');
+            // Using code block formatting to create a styled box effect
+            const telebirrMessage = `የ Telebirr አካውንት
+0994237676 - 
+
+መመሪያ
+
+\`\`\`
+1. ከላይ ባለው የ Telebirr አካውንት ገንዘቡን ያስገቡ
+2. ብሩን ስትልኩ የከፈላችሁበትን መረጃ የያዝ አጭር የጹሁፍ መልክት(sms) ከ Telebirr ይደርሳችኋል
+3. የደረሳችሁን አጭር የጹሁፍ መለክት(sms) ሙሉዉን ኮፒ(copy) በማረግ ከታሽ ባለው የቴሌግራም የጹሁፍ ማስገቢአው ላይ ፔስት(paste) በማረግ ይላኩት
+\`\`\`
+
+የሚያጋጥማቹ የክፍያ ችግር ካለ @Funbingosupport1  በዚ ሳፖርት ማዉራት ይችላሉ`;
+            
+            ctx.reply(telebirrMessage, { parse_mode: 'Markdown' });
+        });
+
+        // Keep the old handler for backward compatibility (if amount is provided in callback)
         bot.action(/^deposit_telebirr_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
             const amount = ctx.match[1];
             ctx.answerCbQuery('📱 Telebirr deposit...');
-            ctx.reply(`📱 Telebirr Deposit ቅደም ተከተል:\n\n📋 Agent Details:\n👤 Agent Name: Mengistu beyene worku\n📱 Telebirr: \`0994237676\`\n\n💡 Steps:\n1️⃣ የቴሌብር  አፖን ይክፈቱ \n2️⃣ "Send Money" የሚለውን ይምረጡ\n3️⃣ ከዛም ይህን ቁጥር ያስገቡ: \`0994237676\`\n4️⃣ ከዛ ቦቱ ላይ ለማስቀመጥ የላኩትን መጠን እዚህ ያስገቡ እኩል መሆኑን አረጋግጡ!: ETB ${amount}\n5️⃣ ከቴሌብር የሚደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n✅ ሂሳብዎም ወዲያውኑ ይሞላል።\nYour wallet will be credited automatically!`, { reply_markup: { inline_keyboard: [[{ text: '📋 Copy Number', callback_data: 'copy_telebirr' }], [{ text: '📱 ደረሰኝ ላክ', callback_data: 'send_receipt_telebirr' }], [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]] } });
+            // Using code block formatting to create a styled box effect
+            const telebirrMessage = `የ Telebirr አካውንት
+0994237676 - 
+
+መመሪያ
+
+\`\`\`
+1. ከላይ ባለው የ Telebirr አካውንት ገንዘቡን ያስገቡ
+2. ብሩን ስትልኩ የከፈላችሁበትን መረጃ የያዝ አጭር የጹሁፍ መልክት(sms) ከ Telebirr ይደርሳችኋል
+3. የደረሳችሁን አጭር የጹሁፍ መለክት(sms) ሙሉዉን ኮፒ(copy) በማረግ ከታሽ ባለው የቴሌግራም የጹሁፍ ማስገቢአው ላይ ፔስት(paste) በማረግ ይላኩት
+\`\`\`
+
+የሚያጋጥማቹ የክፍያ ችግር ካለ @Funbingosupport1  በዚ ሳፖርት ማዉራት ይችላሉ`;
+            
+            ctx.reply(telebirrMessage, { parse_mode: 'Markdown' });
         });
         // Temporarily disabled - Commercial Bank payment method
         // bot.action(/^deposit_commercial_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
@@ -1798,11 +1845,20 @@ Thank you for your dedication! 🙏`;
                     return;
                 }
 
+                // Check if user is trying to enter amount (old flow - redirect to bank selection)
                 const amountMatch = messageText.match(/^(\d+(?:\.\d{1,2})?)$/);
                 if (amountMatch) {
                     const amount = Number(amountMatch[1]);
                     if (amount >= 50) {
-                        ctx.reply('💡 You can only deposit money using the options below. \n ብር ማስገባት የምትችሉት ከታች ባለው አማራጮች ብቻ ይሆናል። \n\n📋 Transfer Methods:\n1️⃣ From Telebirr to Agent Telebirr only\n1.  ከቴሌብር ወደ ኤጀንት ቴሌብር ብቻ።\n\n\n🏦 Choose your preferred payment option:', { reply_markup: { inline_keyboard: [[{ text: '📱 Telebirr', callback_data: `deposit_telebirr_${amount}` }], /* Temporarily disabled: [{ text: '🏦 Commercial Bank', callback_data: `deposit_commercial_${amount}` }], [{ text: '💳 CBE Birr', callback_data: `deposit_cbe_${amount}` }] */ [{ text: '❌ Cancel', callback_data: 'back_to_menu' }]] } });
+                        // Redirect to bank selection (new flow)
+                        ctx.reply('Please select the bank option you wish to use for the top-up.\n\nእባክዎ ለማስገባት የሚፈልጉትን የባንክ አማራጭ ይምረጡ:', {
+                            reply_markup: {
+                                inline_keyboard: [
+                                    [{ text: '📱 Telebirr', callback_data: 'deposit_telebirr' }],
+                                    [{ text: '❌ Cancel', callback_data: 'back_to_menu' }]
+                                ]
+                            }
+                        });
                         return;
                     } else {
                         return ctx.reply('❌ Minimum deposit amount is 50 Birr. Please enter a valid amount.');
