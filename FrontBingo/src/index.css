@@ -2820,6 +2820,21 @@ body {
     font-weight: 700;
 }
 
+.cartela-clickable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.cartela-clickable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    border: 2px solid rgba(139, 92, 246, 0.5);
+}
+
+.cartela-clickable:active {
+    transform: scale(0.98);
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
     .cartela-preview {

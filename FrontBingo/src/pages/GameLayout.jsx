@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import CartellaCard from '../components/CartellaCard';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import { useAuth } from '../lib/auth/AuthProvider';
@@ -66,6 +66,21 @@ export default function GameLayout({
     
     // Auto-mark control (green or light purple)
     const [isAutoMarkOn, setIsAutoMarkOn] = useState(true);
+    
+    // Track manually marked numbers per cartela when auto-mark is OFF
+    // Structure: { cardNumber: Set<number> }
+    const [manuallyMarkedNumbers, setManuallyMarkedNumbers] = useState({});
+    
+    // Reset manually marked numbers when auto-mark is turned back ON
+    useEffect(() => {
+        if (isAutoMarkOn && Object.keys(manuallyMarkedNumbers).length > 0) {
+            setManuallyMarkedNumbers({});
+        }
+    }, [isAutoMarkOn]);
+    
+    // Track if we've already claimed bingo for this game to prevent duplicate claims
+    const claimedBingoRef = useRef(false);
+    const lastGameIdRef = useRef(null);
 
     // Connect to WebSocket when component mounts with stake
     useEffect(() => {
@@ -106,6 +121,90 @@ export default function GameLayout({
             playNumberSound(currentNumber).catch(() => { });
         }
     }, [currentNumber, isSoundOn]);
+
+    // Reset bingo claim tracking when game changes
+    useEffect(() => {
+        if (currentGameId !== lastGameIdRef.current) {
+            claimedBingoRef.current = false;
+            lastGameIdRef.current = currentGameId;
+            // Keep manually marked numbers when new game starts (don't clear them)
+        }
+    }, [currentGameId]);
+
+    // Handle manual number marking/unmarking
+    const handleNumberToggle = useCallback((cardNumber, number) => {
+        if (isAutoMarkOn) return; // Don't allow manual marking when auto-mark is ON
+        
+        setManuallyMarkedNumbers(prev => {
+            const cardMarks = prev[cardNumber] || new Set();
+            const newCardMarks = new Set(cardMarks);
+            
+            if (newCardMarks.has(number)) {
+                newCardMarks.delete(number); // Unmark
+            } else {
+                newCardMarks.add(number); // Mark
+            }
+            
+            return {
+                ...prev,
+                [cardNumber]: newCardMarks
+            };
+        });
+    }, [isAutoMarkOn]);
+
+    // Automatic winning pattern detection and auto-claim
+    useEffect(() => {
+        // Only check during running phase and if we have cards
+        if (gameState.phase !== 'running' || !currentGameId || yourCards.length === 0) {
+            return;
+        }
+
+        // Don't claim if we've already claimed for this game
+        if (claimedBingoRef.current) {
+            return;
+        }
+
+        // Determine which numbers to use for winning detection
+        // If auto-mark is ON: use calledNumbers
+        // If auto-mark is OFF: use manuallyMarkedNumbers (or calledNumbers if no manual marks)
+        const getNumbersForDetection = (cardNumber) => {
+            if (isAutoMarkOn) {
+                return calledNumbers;
+            } else {
+                const manualMarks = manuallyMarkedNumbers[cardNumber];
+                // If user has manually marked numbers, use those; otherwise use calledNumbers
+                if (manualMarks && manualMarks.size > 0) {
+                    return Array.from(manualMarks);
+                } else {
+                    return calledNumbers; // Fallback to calledNumbers if no manual marks
+                }
+            }
+        };
+
+        // Check each cartela for winning pattern
+        let hasWinningPattern = false;
+        for (const { card, cardNumber } of yourCards) {
+            const numbersToCheck = getNumbersForDetection(cardNumber);
+            if (checkBingoPattern(card, numbersToCheck)) {
+                hasWinningPattern = true;
+                break;
+            }
+        }
+
+        // Auto-claim bingo if winning pattern detected
+        if (hasWinningPattern && connected) {
+            console.log('🎉 Automatic BINGO detected! Auto-claiming...', {
+                isAutoMarkOn,
+                hasManualMarks: Object.keys(manuallyMarkedNumbers).length > 0
+            });
+            claimedBingoRef.current = true;
+            claimBingo().catch((error) => {
+                console.error('Error auto-claiming bingo:', error);
+                // Reset on error so we can retry
+                claimedBingoRef.current = false;
+            });
+        }
+    }, [calledNumbers, yourCards, gameState.phase, currentGameId, connected, claimBingo, isAutoMarkOn, manuallyMarkedNumbers]);
 
     // Handle refresh button click - refresh game data without full page reload
     const handleRefresh = async () => {
@@ -186,6 +285,8 @@ export default function GameLayout({
             // Clear any local state that might interfere with new game
             setShowTimeout(false);
             setIsRefreshing(false);
+            // Reset bingo claim tracking for new game
+            claimedBingoRef.current = false;
         }
     }, [gameState.phase]);
 
@@ -533,15 +634,24 @@ export default function GameLayout({
                         {/* Single Cartela or Watch Mode - Render in Right Column */}
                         {yourCards.length === 1 ? (
                             <div className="user-cartelas-single">
-                                {yourCards.map(({ cardNumber, card }) => (
-                                    <CartellaCard
-                                        key={cardNumber}
-                                        id={cardNumber}
-                                        card={card}
-                                        called={calledNumbers}
-                                        isPreview={false}
-                                    />
-                                ))}
+                                {yourCards.map(({ cardNumber, card }) => {
+                                    // Determine which numbers to show as marked
+                                    const markedNumbers = isAutoMarkOn 
+                                        ? calledNumbers 
+                                        : (manuallyMarkedNumbers[cardNumber] ? Array.from(manuallyMarkedNumbers[cardNumber]) : []);
+                                    
+                                    return (
+                                        <CartellaCard
+                                            key={cardNumber}
+                                            id={cardNumber}
+                                            card={card}
+                                            called={isAutoMarkOn ? calledNumbers : markedNumbers}
+                                            isPreview={false}
+                                            isAutoMarkOn={isAutoMarkOn}
+                                            onNumberToggle={!isAutoMarkOn ? (number) => handleNumberToggle(cardNumber, number) : undefined}
+                                        />
+                                    );
+                                })}
                             </div>
                         ) : yourCards.length === 0 ? (
                             <div className="user-cartelas-single">
@@ -561,15 +671,24 @@ export default function GameLayout({
                 {yourCards.length > 1 && (
                     <div className="user-cartelas-container-full">
                         <div className="user-cartelas-list">
-                            {yourCards.map(({ cardNumber, card }) => (
-                                <CartellaCard
-                                    key={cardNumber}
-                                    id={cardNumber}
-                                    card={card}
-                                    called={calledNumbers}
-                                    isPreview={false}
-                                />
-                            ))}
+                            {yourCards.map(({ cardNumber, card }) => {
+                                // Determine which numbers to show as marked
+                                const markedNumbers = isAutoMarkOn 
+                                    ? calledNumbers 
+                                    : (manuallyMarkedNumbers[cardNumber] ? Array.from(manuallyMarkedNumbers[cardNumber]) : []);
+                                
+                                return (
+                                    <CartellaCard
+                                        key={cardNumber}
+                                        id={cardNumber}
+                                        card={card}
+                                        called={isAutoMarkOn ? calledNumbers : markedNumbers}
+                                        isPreview={false}
+                                        isAutoMarkOn={isAutoMarkOn}
+                                        onNumberToggle={!isAutoMarkOn ? (number) => handleNumberToggle(cardNumber, number) : undefined}
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
                 )}

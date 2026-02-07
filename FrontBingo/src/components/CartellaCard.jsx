@@ -82,7 +82,16 @@ function detectWinningPattern(card, called) {
     return winningCells;
 }
 
-export default function CartellaCard({ id, card, called = [], selectedNumber = null, isPreview = false, showWinningPattern = false }) {
+export default function CartellaCard({ 
+    id, 
+    card, 
+    called = [], 
+    selectedNumber = null, 
+    isPreview = false, 
+    showWinningPattern = false,
+    isAutoMarkOn = true,
+    onNumberToggle = null
+}) {
     // Use card prop if provided, otherwise fallback to null
     const grid = card || null;
     if (!grid) return <div className="text-xs opacity-60">Loading...</div>;
@@ -92,6 +101,13 @@ export default function CartellaCard({ id, card, called = [], selectedNumber = n
     
     // Detect winning pattern if needed
     const winningPattern = showWinningPattern ? detectWinningPattern(grid, called) : new Set();
+    
+    // Handle cell click for manual marking
+    const handleCellClick = (number) => {
+        if (!isAutoMarkOn && onNumberToggle && number !== 0) {
+            onNumberToggle(number);
+        }
+    };
 
     return (
         <div className={`cartela-card ${isPreview ? 'cartela-preview' : 'cartela-full'}`}>
@@ -134,10 +150,16 @@ export default function CartellaCard({ id, card, called = [], selectedNumber = n
                                     cellClass = 'cartela-called';
                                 }
 
+                                // Make cell clickable if auto-mark is OFF and it's not a free space
+                                const isClickable = !isAutoMarkOn && onNumberToggle && !isFree;
+                                
                                 return (
                                     <div
                                         key={`${rowIndex}-${colIndex}`}
-                                        className={`cartela-cell ${cellClass}`}
+                                        className={`cartela-cell ${cellClass} ${isClickable ? 'cartela-clickable' : ''}`}
+                                        onClick={() => handleCellClick(number)}
+                                        style={isClickable ? { cursor: 'pointer' } : {}}
+                                        title={isClickable ? 'Click to mark/unmark' : ''}
                                     >
                                         {isFree ? (
                                             <span className="cartela-star">★</span>
