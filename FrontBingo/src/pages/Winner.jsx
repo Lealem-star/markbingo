@@ -129,29 +129,29 @@ export default function Winner({ onNavigate, onResetToGame }) {
     const winnerInitial = winnerName.charAt(0).toUpperCase();
 
     // Try to get card data
-    let cardData = null;
-    try {
-        if (main.card && Array.isArray(main.card) && main.card.length === 5) {
-            cardData = main.card;
-        } else if (main.cardNumbers && Array.isArray(main.cardNumbers) && main.cardNumbers.length === 25) {
-            cardData = [
-                main.cardNumbers.slice(0, 5),
-                main.cardNumbers.slice(5, 10),
-                main.cardNumbers.slice(10, 15),
-                main.cardNumbers.slice(15, 20),
-                main.cardNumbers.slice(20, 25)
-            ];
-        } else if (main.card && Array.isArray(main.card)) {
-            cardData = main.card;
-        }
-    } catch (error) {
-        console.error('Error processing card data:', error);
-    }
+                            let cardData = null;
+                            try {
+                                if (main.card && Array.isArray(main.card) && main.card.length === 5) {
+                                    cardData = main.card;
+                                } else if (main.cardNumbers && Array.isArray(main.cardNumbers) && main.cardNumbers.length === 25) {
+                                    cardData = [
+                                        main.cardNumbers.slice(0, 5),
+                                        main.cardNumbers.slice(5, 10),
+                                        main.cardNumbers.slice(10, 15),
+                                        main.cardNumbers.slice(15, 20),
+                                        main.cardNumbers.slice(20, 25)
+                                    ];
+                                } else if (main.card && Array.isArray(main.card)) {
+                                    cardData = main.card;
+                                }
+                            } catch (error) {
+                                console.error('Error processing card data:', error);
+                            }
 
     const calledNumbers = main.called || gameState.calledNumbers || [];
     const boardNumber = main.cartelaNumber || main.cardId || 'N/A';
 
-    return (
+                                    return (
         <div className="app-container flex items-center justify-center min-h-screen py-4 px-4" style={{ background: '#e9d5ff' }}>
             <div className="w-full max-w-md">
                 {/* Main Card Container with Light Purple Background */}
@@ -178,11 +178,11 @@ export default function Winner({ onNavigate, onResetToGame }) {
                         {/* Cartella Card */}
                         <div className="flex justify-center mb-4">
                             {cardData ? (
-                                <CartellaCard
+                                        <CartellaCard
                                     id={boardNumber}
-                                    card={cardData}
+                                            card={cardData}
                                     called={calledNumbers}
-                                    isPreview={false}
+                                            isPreview={false}
                                     showWinningPattern={true}
                                 />
                             ) : (
@@ -194,9 +194,9 @@ export default function Winner({ onNavigate, onResetToGame }) {
                                     <div className="text-gray-600 text-xs mt-2">
                                         Card preview not available
                                     </div>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
 
                         {/* Board Number */}
                         <div className="text-center mt-4">
@@ -212,7 +212,7 @@ export default function Winner({ onNavigate, onResetToGame }) {
                             <div className="text-white font-extrabold text-6xl md:text-7xl tracking-wider drop-shadow-lg">
                                 {countdown > 0 ? countdown : '0'}
                             </div>
-                        </div>
+                    </div>
                     </div>
                 </div>
             </div>

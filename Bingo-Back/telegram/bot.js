@@ -1449,7 +1449,10 @@ Thank you for your dedication! 🙏`;
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using code block formatting to create a styled box effect
             const telebirrMessage = `የ Telebirr አካውንት
-\`\'\'0994237676\`\'\'- 
+
+\`\`\`
+0994237676
+\`\`\`
 
 መመሪያ
 
@@ -1470,7 +1473,10 @@ Thank you for your dedication! 🙏`;
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using code block formatting to create a styled box effect
             const telebirrMessage = `የ Telebirr አካውንት
-\`\'\'0994237676\`\'\' - 
+
+\`\`\`
+0994237676
+\`\`\`
 
 መመሪያ
 
@@ -1521,7 +1527,7 @@ Thank you for your dedication! 🙏`;
         // Copy button handlers
         bot.action('copy_telebirr', (ctx) => {
             ctx.answerCbQuery('📋 Telebirr number copied!');
-            ctx.reply('📱 Telebirr Number:\n\n`0994237676`\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
+            ctx.reply('📱 Telebirr Number:\n\n```\n0994237676\n```\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
         });
         // Temporarily disabled - Commercial Bank copy handler
         // bot.action('copy_commercial', (ctx) => {

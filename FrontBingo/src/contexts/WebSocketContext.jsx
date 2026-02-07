@@ -308,13 +308,13 @@ export function WebSocketProvider({ children }) {
                                 }
                                 
                                 const newState = {
-                                    ...prev,
+                                ...prev,
                                     phase: 'running', // Keep 'running' to match App.jsx and CartelaSelection.jsx
-                                    gameId: event.payload.gameId,
-                                    playersCount: event.payload.playersCount,
-                                    prizePool: event.payload.prizePool,
-                                    calledNumbers: event.payload.calledNumbers || event.payload.called || [],
-                                    yourCards: event.payload.cards || [],
+                                gameId: event.payload.gameId,
+                                playersCount: event.payload.playersCount,
+                                prizePool: event.payload.prizePool,
+                                calledNumbers: event.payload.calledNumbers || event.payload.called || [],
+                                yourCards: event.payload.cards || [],
                                 };
                                 console.log('🎮 Game state updated to running:', {
                                     gameId: newState.gameId,
@@ -338,9 +338,9 @@ export function WebSocketProvider({ children }) {
                                     return prev; // Don't update state
                                 }
                                 return {
-                                    ...prev,
-                                    currentNumber: event.payload.number,
-                                    calledNumbers: event.payload.calledNumbers || event.payload.called || []
+                                ...prev,
+                                currentNumber: event.payload.number,
+                                calledNumbers: event.payload.calledNumbers || event.payload.called || []
                                 };
                             });
                             break;
@@ -356,9 +356,9 @@ export function WebSocketProvider({ children }) {
                                     return prev; // Don't update state
                                 }
                                 return {
-                                    ...prev,
-                                    playersCount: event.payload.playersCount,
-                                    prizePool: event.payload.prizePool
+                                ...prev,
+                                playersCount: event.payload.playersCount,
+                                prizePool: event.payload.prizePool
                                 };
                             });
                             break;
@@ -374,9 +374,9 @@ export function WebSocketProvider({ children }) {
                                     return prev; // Don't update state
                                 }
                                 return {
-                                    ...prev,
-                                    takenCards: event.payload.takenCards || [],
-                                    prizePool: event.payload.prizePool
+                                ...prev,
+                                takenCards: event.payload.takenCards || [],
+                                prizePool: event.payload.prizePool
                                 };
                             });
                             break;
@@ -392,10 +392,10 @@ export function WebSocketProvider({ children }) {
                                     return prev; // Don't update state
                                 }
                                 return {
-                                    ...prev,
-                                    yourSelections: event.payload.selections || prev.yourSelections || [],
-                                    playersCount: event.payload.playersCount,
-                                    prizePool: event.payload.prizePool
+                                ...prev,
+                                yourSelections: event.payload.selections || prev.yourSelections || [],
+                                playersCount: event.payload.playersCount,
+                                prizePool: event.payload.prizePool
                                 };
                             });
                             break;
@@ -439,14 +439,14 @@ export function WebSocketProvider({ children }) {
                                     return prev; // Don't update state
                                 }
                                 return {
-                                    ...prev,
-                                    phase: 'announce',
-                                    winners: (event.payload && (event.payload.winners || event.payload.winner || [])) || prev.winners || [],
-                                    calledNumbers: (event.payload && (event.payload.calledNumbers || event.payload.called)) || prev.calledNumbers,
-                                    currentNumber: null,
-                                    yourCards: [],
-                                    yourSelections: [],
-                                    nextRegistrationStart: event.payload?.nextStartAt || null // Store when next registration will start
+                                ...prev,
+                                phase: 'announce',
+                                winners: (event.payload && (event.payload.winners || event.payload.winner || [])) || prev.winners || [],
+                                calledNumbers: (event.payload && (event.payload.calledNumbers || event.payload.called)) || prev.calledNumbers,
+                                currentNumber: null,
+                                yourCards: [],
+                                yourSelections: [],
+                                nextRegistrationStart: event.payload?.nextStartAt || null // Store when next registration will start
                                 };
                             });
                             // Do not auto-rejoin immediately here. We'll rejoin when:

@@ -389,18 +389,18 @@ export function AuthProvider({ children }) {
             try {
                 const out = await verifyTelegram(initData);
                 if (out && out.sessionId) {
-                    setSessionId(out.sessionId);
-                    localStorage.setItem('sessionId', out.sessionId);
-                    // Hydrate profile to ensure phone/isRegistered available
-                    let mergedUser = out.user;
-                    try {
-                        const prof = await fetchProfileWithSession(out.sessionId);
-                        if (prof?.user) {
-                            mergedUser = { ...mergedUser, ...{ firstName: prof.user.firstName, lastName: prof.user.lastName, phone: prof.user.phone, isRegistered: prof.user.isRegistered } };
-                        }
-                    } catch { }
-                    setUser(mergedUser);
-                    localStorage.setItem('user', JSON.stringify(mergedUser));
+                setSessionId(out.sessionId);
+                localStorage.setItem('sessionId', out.sessionId);
+                // Hydrate profile to ensure phone/isRegistered available
+                let mergedUser = out.user;
+                try {
+                    const prof = await fetchProfileWithSession(out.sessionId);
+                    if (prof?.user) {
+                        mergedUser = { ...mergedUser, ...{ firstName: prof.user.firstName, lastName: prof.user.lastName, phone: prof.user.phone, isRegistered: prof.user.isRegistered } };
+                    }
+                } catch { }
+                setUser(mergedUser);
+                localStorage.setItem('user', JSON.stringify(mergedUser));
                 } else {
                     console.error('Telegram authentication returned invalid response:', out);
                     throw new Error('Invalid authentication response');
