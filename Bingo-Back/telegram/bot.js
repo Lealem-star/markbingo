@@ -1449,7 +1449,7 @@ Thank you for your dedication! 🙏`;
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using code block formatting to create a styled box effect
             const telebirrMessage = `የ Telebirr አካውንት
-\`0994237676\` - 
+\`\'\'0994237676\`\'\'- 
 
 መመሪያ
 
@@ -1470,7 +1470,7 @@ Thank you for your dedication! 🙏`;
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using code block formatting to create a styled box effect
             const telebirrMessage = `የ Telebirr አካውንት
-\`0994237676\` - 
+\`\'\'0994237676\`\'\' - 
 
 መመሪያ
 
