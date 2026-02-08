@@ -307,6 +307,10 @@ export function WebSocketProvider({ children }) {
                                     return prev;
                                 }
                                 
+                                // Extract card numbers from cards array for yourSelections
+                                const cards = event.payload.cards || [];
+                                const cardNumbers = cards.map(card => card.cardNumber || card).filter(num => num != null);
+                                
                                 const newState = {
                                 ...prev,
                                     phase: 'running', // Keep 'running' to match App.jsx and CartelaSelection.jsx
@@ -314,12 +318,15 @@ export function WebSocketProvider({ children }) {
                                 playersCount: event.payload.playersCount,
                                 prizePool: event.payload.prizePool,
                                 calledNumbers: event.payload.calledNumbers || event.payload.called || [],
-                                yourCards: event.payload.cards || [],
+                                yourCards: cards,
+                                yourSelections: cardNumbers,
                                 };
                                 console.log('🎮 Game state updated to running:', {
                                     gameId: newState.gameId,
                                     phase: newState.phase,
-                                    cardsCount: newState.yourCards?.length || 0
+                                    cardsCount: newState.yourCards?.length || 0,
+                                    selectionsCount: newState.yourSelections?.length || 0,
+                                    selections: newState.yourSelections
                                 });
                                 return newState;
                             });
