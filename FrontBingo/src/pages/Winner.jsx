@@ -157,13 +157,13 @@ export default function Winner({ onNavigate, onResetToGame }) {
                 {/* Main Card Container with Light Purple Background */}
                 <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#e9d5ff' }}>
                     {/* Large Orange BINGO! Banner */}
-                    <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8">
+                    <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
                         <div className="text-center">
                             <h1 className="text-white font-extrabold text-5xl md:text-6xl tracking-wider mb-4 drop-shadow-lg">
                                 BINGO!
                             </h1>
                             <div className="flex items-center justify-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                <div className="px-4 py-2 rounded-lg bg-green-500 border-2 border-green-600 flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{ backgroundColor: '#22c55e', borderColor: '#16a34a', padding: '0.5rem 1rem' }}>
                                     {winnerInitial}
                                 </div>
                                 <p className="text-white text-lg md:text-xl font-semibold">
@@ -207,7 +207,7 @@ export default function Winner({ onNavigate, onResetToGame }) {
                     </div>
 
                     {/* Countdown Section - Orange Background with Large Number */}
-                    <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8">
+                    <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
                         <div className="text-center">
                             <div className="text-white font-extrabold text-6xl md:text-7xl tracking-wider drop-shadow-lg">
                                 {countdown > 0 ? countdown : '0'}

@@ -806,7 +806,10 @@ async function toAnnounce(room) {
 
     // Process winnings
     if (room.winners.length > 0) {
-        const pot = room.selectedPlayers.size * room.stake;
+        // Calculate pot based on total cartelas selected (not player count)
+        // This accounts for players who selected 2 cartelas
+        const selectedCount = countSelectedCartelas(room);
+        const pot = selectedCount * room.stake;
         const systemCut = Math.floor(pot * 0.2); // 20% system cut
         const prizePool = pot - systemCut;
         const prizePerWinner = Math.floor(prizePool / room.winners.length);
@@ -1161,7 +1164,8 @@ wss.on('connection', async (ws, request) => {
                     room.takenCards.add(cardNumber);
                     room.selectedPlayers.add(ws.userId);
 
-                    // Calculate current prize pool (80% of stake × players)
+                    // Calculate current prize pool (80% of stake × total cartelas)
+                    // This accounts for players who selected multiple cartelas
                     const selectedCount = countSelectedCartelas(room);
                     const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
 
