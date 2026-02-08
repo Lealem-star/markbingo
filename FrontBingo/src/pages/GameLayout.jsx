@@ -59,6 +59,7 @@ export default function GameLayout({
     const calledNumbers = gameState.calledNumbers || [];
     const currentNumber = gameState.currentNumber;
     const currentGameId = gameState.gameId;
+    const yourCards = Array.isArray(gameState.yourCards) ? gameState.yourCards : [];
 
 
     // Sound control
@@ -263,7 +264,6 @@ export default function GameLayout({
             setShowTimeout(false);
         }
     }, [currentGameId]);
-    const yourCards = Array.isArray(gameState.yourCards) ? gameState.yourCards : [];
     
     // Debug logging
     useEffect(() => {
