@@ -713,6 +713,7 @@ router.get('/stats/games', adminMiddleware, async (req, res) => {
             gameId: game.gameId,
             stake: game.stake,
             playersCount: game.players ? game.players.length : 0,
+            players: game.players ? game.players.map(p => p.userId?.toString()) : [],
             systemCut: game.systemCut || 0,
             totalPrizes: game.totalPrizes || 0,
             finishedAt: game.finishedAt,

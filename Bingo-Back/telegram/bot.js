@@ -1446,6 +1446,9 @@ Thank you for your dedication! 🙏`;
 
         // Handle Telebirr selection (without amount - amount will be parsed from receipt)
         bot.action('deposit_telebirr', (ctx) => {
+            const userId = String(ctx.from.id);
+            // Automatically set deposit state to await receipt - no need for extra button click
+            depositStates.set(userId, 'awaiting_receipt');
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using code block formatting to create a styled box effect
             const telebirrMessage = `የ Telebirr አካውንት
@@ -1469,7 +1472,10 @@ Thank you for your dedication! 🙏`;
 
         // Keep the old handler for backward compatibility (if amount is provided in callback)
         bot.action(/^deposit_telebirr_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
+            const userId = String(ctx.from.id);
             const amount = ctx.match[1];
+            // Automatically set deposit state to await receipt - no need for extra button click
+            depositStates.set(userId, 'awaiting_receipt');
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using code block formatting to create a styled box effect
             const telebirrMessage = `የ Telebirr አካውንት

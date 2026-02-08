@@ -15,6 +15,8 @@ export default function AdminStats() {
         topInviters: []
     });
     const [totalMainWallet, setTotalMainWallet] = useState(0);
+    const [totalUniquePlayers, setTotalUniquePlayers] = useState(0);
+    const [totalSystemRevenue, setTotalSystemRevenue] = useState(0);
 
     useEffect(() => {
         (async () => {
@@ -46,8 +48,22 @@ export default function AdminStats() {
                 const dailyStatsList = Object.values(statsByDay)
                     .map(dayData => {
                         const dayGames = dayData.games;
+                        
+                        // Calculate total system revenue for this day (sum of all 20% cuts)
                         const totalRevenue = dayGames.reduce((sum, g) => sum + (g.systemCut || 0), 0);
-                        const totalPlayers = dayGames.reduce((sum, g) => sum + (g.playersCount || 0), 0);
+                        
+                        // Calculate unique players for this day
+                        const uniquePlayerIds = new Set();
+                        dayGames.forEach(game => {
+                            if (game.players && Array.isArray(game.players)) {
+                                game.players.forEach(playerId => {
+                                    if (playerId) {
+                                        uniquePlayerIds.add(playerId.toString());
+                                    }
+                                });
+                            }
+                        });
+                        const totalUniquePlayers = uniquePlayerIds.size;
 
                         // Collect all unique stakes for this day
                         const uniqueStakes = [...new Set(dayGames.map(g => g.stake || 0).filter(s => s > 0))];
@@ -62,7 +78,7 @@ export default function AdminStats() {
                             day: dayData.day,
                             stakes: uniqueStakes,
                             stakesDisplay: stakesDisplay,
-                            noPlayed: totalPlayers,
+                            noPlayed: totalUniquePlayers,
                             systemRevenue: totalRevenue,
                             totalGames: dayGames.length
                         };
@@ -70,7 +86,25 @@ export default function AdminStats() {
                     .sort((a, b) => a.day.localeCompare(b.day))
                     .reverse(); // Most recent first
 
+                // Calculate total unique players across all games
+                const uniquePlayerIds = new Set();
+                games.forEach(game => {
+                    if (game.players && Array.isArray(game.players)) {
+                        game.players.forEach(playerId => {
+                            if (playerId) {
+                                uniquePlayerIds.add(playerId.toString());
+                            }
+                        });
+                    }
+                });
+                const totalUnique = uniquePlayerIds.size;
+
+                // Calculate total system revenue (sum of all 20% cuts)
+                const totalRevenue = games.reduce((sum, game) => sum + (game.systemCut || 0), 0);
+
                 setDailyStats(dailyStatsList);
+                setTotalUniquePlayers(totalUnique);
+                setTotalSystemRevenue(totalRevenue);
             } catch (error) {
                 console.error('Error fetching daily game stats:', error);
                 setDailyStats([]);
@@ -236,6 +270,22 @@ export default function AdminStats() {
                     </div>
                 ))}
 
+            {/* Daily Statistics Summary */}
+            <div className="admin-stats-grid">
+                <div className="admin-stats-card">
+                    <div>
+                        <div className="admin-stats-label">Total Unique Players (All Days)</div>
+                        <div className="admin-stats-value admin-stats-value-green">{totalUniquePlayers}</div>
+                    </div>
+                </div>
+                <div className="admin-stats-card">
+                    <div>
+                        <div className="admin-stats-label">Total System Revenue (All Days)</div>
+                        <div className="admin-stats-value admin-stats-value-amber">ETB {totalSystemRevenue.toFixed(2)}</div>
+                    </div>
+                </div>
+            </div>
+
             {/* Daily Statistics Table */}
             <div
                 className="admin-stats-table-container"
@@ -260,8 +310,8 @@ export default function AdminStats() {
                                 <div className="admin-stats-table-cell">{new Date(stat.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                                 <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.totalGames || 0}</div>
                                 <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.stakesDisplay}</div>
-                                <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.noPlayed}</div>
-                                <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {stat.systemRevenue.toFixed(2)}</div>
+                                <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.noPlayed || 0}</div>
+                                <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {(stat.systemRevenue || 0).toFixed(2)}</div>
                             </div>
                         ))
                     ) : (
