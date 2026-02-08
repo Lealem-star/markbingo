@@ -339,7 +339,8 @@ export default function GameLayout({
     }
 
     // If we're connected but don't have gameId yet, wait a bit longer for the snapshot
-    if (!currentGameId && connected && gameState.phase === 'waiting') {
+    // This handles both 'waiting' phase and 'running' phase where gameId hasn't arrived yet
+    if (!currentGameId && connected && (gameState.phase === 'waiting' || gameState.phase === 'running')) {
         return (
             <div className="app-container flex items-center justify-center">
                 <div className="text-center text-white">
@@ -353,6 +354,9 @@ export default function GameLayout({
                         <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
                         <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                         <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <div className="text-sm text-gray-300 mt-4">
+                        {gameState.phase === 'running' ? 'Game started, loading...' : 'Waiting for game...'}
                     </div>
                 </div>
             </div>

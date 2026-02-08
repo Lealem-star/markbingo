@@ -182,8 +182,8 @@ function AppContent() {
       currentPage
     });
     
-    // Always navigate to game-layout when game is running
-    // Simplified condition: if phase is running and we have a gameId, navigate (unless already there)
+    // CRITICAL: Navigate immediately when game is running - don't wait for cards
+    // This matches the working version behavior where GameLayout handles loading states
     const isGameRunning = gameState.phase === 'running' && gameState.gameId;
     const isGameFinished = gameState.phase === 'announce' && gameState.gameId;
     
@@ -197,7 +197,8 @@ function AppContent() {
       targetPage,
       currentPage,
       isGameRunning,
-      isGameFinished
+      isGameFinished,
+      hasCards: Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0
     });
     
     if (shouldNavigate) {
@@ -210,13 +211,21 @@ function AppContent() {
         yourSelections: gameState.yourSelections
       });
       
-      // Update selectedCartelas if we have cards from gameState
-      if (isGameRunning && Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) {
-        const cardNumbers = gameState.yourCards.map(card => card.cardNumber || card).filter(num => num != null);
-        if (cardNumbers.length > 0) {
-          console.log('📋 Setting selectedCartelas from gameState:', cardNumbers);
-          setSelectedCartelas(cardNumbers);
+      // Update selectedCartelas if we have cards from gameState (for display purposes)
+      // But don't block navigation if cards aren't loaded yet - GameLayout will handle loading
+      if (isGameRunning) {
+        if (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) {
+          const cardNumbers = gameState.yourCards.map(card => card.cardNumber || card).filter(num => num != null);
+          if (cardNumbers.length > 0) {
+            console.log('📋 Setting selectedCartelas from gameState:', cardNumbers);
+            setSelectedCartelas(cardNumbers);
+          }
+        } else if (Array.isArray(gameState.yourSelections) && gameState.yourSelections.length > 0) {
+          // Fallback to yourSelections if yourCards not loaded yet
+          console.log('📋 Setting selectedCartelas from yourSelections:', gameState.yourSelections);
+          setSelectedCartelas(gameState.yourSelections);
         }
+        // If no cards/selections, that's fine - GameLayout will show watch mode
       }
       
       setCurrentPage(isGameRunning ? 'game-layout' : 'winner');

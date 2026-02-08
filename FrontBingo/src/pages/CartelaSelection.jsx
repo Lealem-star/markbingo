@@ -260,39 +260,46 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     // Handle game state changes and navigation
     useEffect(() => {
         const selectedNumbers = Array.isArray(gameState.yourSelections) ? gameState.yourSelections : [];
-        console.log('Game state changed:', {
+        const hasCards = Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0;
+        
+        console.log('🎮 CartelaSelection - Game state changed:', {
             phase: gameState.phase,
             gameId: gameState.gameId,
             selectedNumbers,
             hasSelectedCard: selectedNumbers.length > 0,
-            yourCards: Array.isArray(gameState.yourCards) ? gameState.yourCards.length : 0,
+            yourCardsCount: gameState.yourCards?.length || 0,
+            hasCards
         });
 
-        // If game is running and we have selected cartela(s), navigate to game layout
-        if (gameState.phase === 'running' && gameState.gameId && selectedNumbers.length > 0) {
-            console.log('🎮 NAVIGATION TRIGGERED - Game started with our cartella, navigating to game layout', {
+        // CRITICAL: Navigate immediately when game starts (phase === 'running')
+        // Don't wait for yourSelections - let GameLayout handle loading state
+        // This matches the working version behavior
+        if (gameState.phase === 'running' && gameState.gameId) {
+            console.log('🎮 NAVIGATION TRIGGERED - Game started, navigating to game layout', {
                 gameId: gameState.gameId,
-                selectedNumbers,
                 phase: gameState.phase,
-                hasCard: (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0)
+                hasCards,
+                hasSelections: selectedNumbers.length > 0
             });
 
             // Ensure gameId is updated in parent before navigation
             onGameIdUpdate?.(gameState.gameId);
-            console.log('Calling onCartelaSelected with:', selectedNumbers);
-            onCartelaSelected?.(selectedNumbers);
-        }
-        // Watch mode: If game is running but user has no selection, allow watching the game
-        else if (gameState.phase === 'running' && gameState.gameId && selectedNumbers.length === 0) {
-            console.log('👀 WATCH MODE - Game is running, navigating to watch mode', {
-                gameId: gameState.gameId,
-                phase: gameState.phase,
-            });
-
-            // Ensure gameId is updated in parent before navigation
-            onGameIdUpdate?.(gameState.gameId);
-            // Navigate with empty array to indicate watch mode
-            onCartelaSelected?.([]);
+            
+            // Extract card numbers from yourCards if available, otherwise use yourSelections
+            let cardNumbersToPass = selectedNumbers;
+            if (hasCards) {
+                cardNumbersToPass = gameState.yourCards.map(card => card.cardNumber || card).filter(num => num != null);
+                console.log('📋 Using card numbers from yourCards:', cardNumbersToPass);
+            } else if (selectedNumbers.length > 0) {
+                cardNumbersToPass = selectedNumbers;
+                console.log('📋 Using card numbers from yourSelections:', cardNumbersToPass);
+            } else {
+                cardNumbersToPass = []; // Watch mode
+                console.log('👀 Watch mode - no cards available');
+            }
+            
+            console.log('Calling onCartelaSelected with:', cardNumbersToPass);
+            onCartelaSelected?.(cardNumbersToPass);
         }
     }, [gameState.phase, gameState.gameId, gameState.yourSelections, gameState.yourCards, onCartelaSelected, onGameIdUpdate]);
 
