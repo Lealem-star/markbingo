@@ -199,11 +199,18 @@ export default function GameLayout({
                 hasManualMarks: Object.keys(manuallyMarkedNumbers).length > 0
             });
             claimedBingoRef.current = true;
-            claimBingo().catch((error) => {
+            try {
+                const result = claimBingo();
+                if (!result) {
+                    // If send failed, reset so we can retry
+                    console.warn('Failed to send bingo claim, will retry on next check');
+                    claimedBingoRef.current = false;
+                }
+            } catch (error) {
                 console.error('Error auto-claiming bingo:', error);
                 // Reset on error so we can retry
                 claimedBingoRef.current = false;
-            });
+            }
         }
     }, [calledNumbers, yourCards, gameState.phase, currentGameId, connected, claimBingo, isAutoMarkOn, manuallyMarkedNumbers]);
 
