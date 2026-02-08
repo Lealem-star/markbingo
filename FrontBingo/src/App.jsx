@@ -136,21 +136,74 @@ function AppContent() {
     return 'game';
   };
 
+  // Listen for custom gameStarted event as backup navigation trigger
+  useEffect(() => {
+    const handleGameStarted = (event) => {
+      console.log('🎯 gameStarted custom event received:', event.detail);
+      if (!selectedStake) return;
+      
+      if (event.detail.phase === 'running' && event.detail.gameId && currentPage !== 'game-layout') {
+        console.log('🚀 FORCE NAVIGATING via custom event to game-layout');
+        // Update selectedCartelas from gameState if available
+        if (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) {
+          const cardNumbers = gameState.yourCards.map(card => card.cardNumber || card).filter(num => num != null);
+          if (cardNumbers.length > 0) {
+            setSelectedCartelas(cardNumbers);
+          }
+        }
+        setCurrentPage('game-layout');
+      }
+    };
+    
+    window.addEventListener('gameStarted', handleGameStarted);
+    return () => window.removeEventListener('gameStarted', handleGameStarted);
+  }, [selectedStake, currentPage, gameState.yourCards]);
+
   // Auto-navigate based on game state changes
   useEffect(() => {
-    if (!selectedStake) return; // Only auto-navigate if we have a stake selected
+    console.log('🔄 Auto-navigation useEffect triggered:', {
+      selectedStake,
+      phase: gameState.phase,
+      gameId: gameState.gameId,
+      currentPage,
+      hasCards: Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0,
+      yourSelections: gameState.yourSelections
+    });
+    
+    if (!selectedStake) {
+      console.log('⏭️ Skipping auto-navigation: no stake selected');
+      return; // Only auto-navigate if we have a stake selected
+    }
     
     const targetPage = determineGamePage();
+    console.log('🎯 Determined target page:', targetPage, {
+      phase: gameState.phase,
+      gameId: gameState.gameId,
+      currentPage
+    });
     
-    // Always navigate to game-layout when game is running, or to winner when game finishes
+    // Always navigate to game-layout when game is running
+    // Simplified condition: if phase is running and we have a gameId, navigate (unless already there)
+    const isGameRunning = gameState.phase === 'running' && gameState.gameId;
+    const isGameFinished = gameState.phase === 'announce' && gameState.gameId;
+    
     const shouldNavigate = 
-      (gameState.phase === 'running' && gameState.gameId && targetPage === 'game-layout' && currentPage !== 'game-layout') ||
-      (gameState.phase === 'announce' && gameState.gameId && targetPage === 'winner' && currentPage !== 'winner');
+      (isGameRunning && currentPage !== 'game-layout') ||
+      (isGameFinished && currentPage !== 'winner');
+    
+    console.log('🤔 Should navigate?', shouldNavigate, {
+      phase: gameState.phase,
+      hasGameId: !!gameState.gameId,
+      targetPage,
+      currentPage,
+      isGameRunning,
+      isGameFinished
+    });
     
     if (shouldNavigate) {
-      console.log('🔄 Auto-navigating based on game state:', {
+      console.log('✅ NAVIGATING! Auto-navigating based on game state:', {
         from: currentPage,
-        to: targetPage,
+        to: isGameRunning ? 'game-layout' : 'winner',
         phase: gameState.phase,
         gameId: gameState.gameId,
         hasCards: Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0,
@@ -158,7 +211,7 @@ function AppContent() {
       });
       
       // Update selectedCartelas if we have cards from gameState
-      if (targetPage === 'game-layout' && Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) {
+      if (isGameRunning && Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) {
         const cardNumbers = gameState.yourCards.map(card => card.cardNumber || card).filter(num => num != null);
         if (cardNumbers.length > 0) {
           console.log('📋 Setting selectedCartelas from gameState:', cardNumbers);
@@ -166,7 +219,9 @@ function AppContent() {
         }
       }
       
-      setCurrentPage(targetPage);
+      setCurrentPage(isGameRunning ? 'game-layout' : 'winner');
+    } else {
+      console.log('⏸️ Not navigating - conditions not met');
     }
   }, [gameState.phase, gameState.gameId, gameState.yourCards, gameState.yourSelections, selectedStake, currentPage]);
 
