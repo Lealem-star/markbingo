@@ -246,7 +246,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                         setCards([]);
                     } else {
                         console.log('Cartellas loaded successfully:', response.cards.length, 'cards');
-                        setCards(response.cards);
+                    setCards(response.cards);
                         setError(null);
                     }
                 } else {
@@ -440,7 +440,16 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         // Check if we're in the right phase
         if (gameState.phase !== 'registration') {
             // Friendly message when user tries to pick while a game is already running
-            showError('Please wait until the current game finishes. You can select cartela when registration starts again.');
+            const waitMsg = 'Please wait until the current game finishes. You can select cartela when registration starts again.';
+            
+            // Add to alert banners (same style as "Insufficient fund" and "Not enough players")
+            setAlertBanners(prev => {
+                // Avoid duplicate messages
+                if (prev.includes(waitMsg)) return prev;
+                return [...prev, waitMsg];
+            });
+            
+            showError(waitMsg);
             return;
         }
 
@@ -801,7 +810,16 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                             {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
                                 // Ensure type consistency for comparison (convert to number)
                                 const cartelaNum = Number(cartelaNumber);
-                                const isTaken = gameState.takenCards.some(taken => Number(taken) === cartelaNum);
+                                
+                                // For newcomers during running game: hide taken cards (show all as available)
+                                // Only show taken cards during registration phase or if user has cards
+                                const hasCards = Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0;
+                                const shouldShowTakenCards = gameState.phase === 'registration' || hasCards;
+                                
+                                const isTaken = shouldShowTakenCards 
+                                    ? gameState.takenCards.some(taken => Number(taken) === cartelaNum)
+                                    : false; // Hide taken cards for newcomers during running game
+                                    
                                 const isSelected = selectedNumbers.includes(cartelaNum);
                                 const takenByMe = selectedNumbers.includes(cartelaNum);
 
@@ -809,7 +827,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                                     <button
                                         key={cartelaNumber}
                                         onClick={() => handleCardSelect(cartelaNum)}
-                                        disabled={isTaken}
+                                        disabled={false} // Don't disable based on taken - click handler will show wait message
                                         className={`cartela-number-btn-light ${isTaken
                                             ? (takenByMe
                                                 ? 'cartela-selected-light'
@@ -830,7 +848,8 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
 
                 {/* Selected Cartella Preview (up to 2 cartelas, side-by-side) */}
-                {selectedCards.length > 0 && (
+                {/* Only show preview during registration phase or if user has cards in running game */}
+                {selectedCards.length > 0 && (gameState.phase === 'registration' || (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0)) && (
                     <div className="mt-6">
                         {/* <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">Your Selected Cartella</h3> */}
                         <div className="bg-purple-200 rounded-lg p-4" style={{ background: '#e9d5ff' }}>
