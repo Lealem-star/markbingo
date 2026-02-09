@@ -224,18 +224,30 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     // Fetch all cards from server
     useEffect(() => {
         const fetchCards = async () => {
+            if (!sessionId) {
+                // Keep the loading animation until sessionId exists, then fetch.
+                console.log('Skipping cartellas fetch - missing sessionId (will retry when available)');
+                return;
+            }
+
             try {
                 console.log('Fetching cartellas from /api/cartellas...');
                 console.log('API Base URL:', import.meta.env.VITE_API_URL || 'https://fikirbingo.com');
                 console.log('Session ID:', sessionId ? 'present' : 'missing');
                 setLoading(true);
 
-
                 const response = await apiFetch('/api/cartellas', { sessionId });
                 console.log('Cartellas API response:', response);
-                if (response.success) {
-                    console.log('Cartellas loaded successfully:', response.cards?.length, 'cards');
-                    setCards(response.cards);
+                if (response.success && Array.isArray(response.cards)) {
+                    if (response.cards.length === 0) {
+                        console.error('Cartellas API returned empty cards array');
+                        setError('No cards available right now. Please refresh.');
+                        setCards([]);
+                    } else {
+                        console.log('Cartellas loaded successfully:', response.cards.length, 'cards');
+                        setCards(response.cards);
+                        setError(null);
+                    }
                 } else {
                     console.error('Cartellas API returned error:', response);
                     setError('Failed to load cards');
@@ -255,7 +267,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         };
 
         fetchCards();
-    }, []);
+    }, [sessionId]);
 
     // Handle game state changes and navigation
     useEffect(() => {
@@ -537,7 +549,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         .map(n => ({ number: n, card: cards[n - 1] }))
         .filter(x => x.card);
 
-    if (loading) {
+    // If we aren't ready to render the grid yet, show the loading animation instead of a blank screen.
+    const cardsReady = Array.isArray(cards) && cards.length > 0;
+    if (loading || !cardsReady) {
         console.log('Showing loading screen');
         return (
             <div className="app-container">

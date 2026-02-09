@@ -394,12 +394,17 @@ export default function GameLayout({
 
     // Determine game phase display
     const gamePhaseDisplay = (gameState.phase === 'running' || gameState.phase === 'playing') ? 'STARTED' : gameState.phase === 'registration' ? 'REGISTRATION' : 'WAITING';
+    const hasTwoCartelas = yourCards.length === 2;
+    const mainContentHeight = hasTwoCartelas ? 'calc(100vh - 260px)' : 'calc(100vh - 180px)';
 
     return (
         <div className="app-container relative overflow-hidden joy-bingo-bg">
             <div className="max-w-md mx-auto px-3 py-3 relative z-10">
                 {/* Top Information Bar - Light Purple Style */}
-                <div className="game-info-bar-light flex items-stretch rounded-lg flex-nowrap mobile-info-bar" style={{ marginBottom: '1rem' }}>
+                <div
+                    className="game-info-bar-light flex items-stretch rounded-lg flex-nowrap mobile-info-bar"
+                    style={{ marginBottom: hasTwoCartelas ? '0.4rem' : '1rem' }}
+                >
                     <div className="info-box flex-1">
                         <div className="info-label">Derash</div>
                         <div className="info-value">{currentPrizePool || 0}</div>
@@ -425,17 +430,20 @@ export default function GameLayout({
 
 
                 {/* Main Content Area - Mobile-First 2 Column Layout */}
-                <div className="main-content-area mobile-first-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '0.3rem',
-                    padding: '0.25rem',
-                    marginTop: '0.75rem',
-                    marginBottom: '0.75rem',
-                    marginRight: '0.15rem',
-                    height: 'calc(100vh - 180px)',
-                    maxHeight: '500px'
-                }}>
+                <div
+                    className="main-content-area mobile-first-grid"
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: hasTwoCartelas ? '0.2rem' : '0.3rem',
+                        padding: hasTwoCartelas ? '0.15rem' : '0.25rem',
+                        marginTop: hasTwoCartelas ? '0.4rem' : '0.75rem',
+                        marginBottom: hasTwoCartelas ? '0.4rem' : '0.75rem',
+                        marginRight: '0.15rem',
+                        height: mainContentHeight,
+                        maxHeight: '500px'
+                    }}
+                >
                     {/* Left Card - BINGO Grid with Square Letters */}
                     <div className="bingo-grid-container" style={{ height: '100%', overflow: 'hidden' }}>
                         <div className="grid grid-cols-5 gap-1" style={{ height: '100%' }}>
@@ -569,12 +577,15 @@ export default function GameLayout({
                     </div>
 
                     {/* Right Side - Joy Bingo Style */}
-                    <div className="right-side-container" style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.5rem',
-                        marginLeft: '0.25rem'
-                    }}>
+                    <div
+                        className="right-side-container"
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: hasTwoCartelas ? '0.3rem' : '0.5rem',
+                            marginLeft: '0.25rem'
+                        }}
+                    >
                         {/* Control Bar - Status, Auto-Mark, Sound Toggle in One Line */}
                         <div className="game-controls-bar">
                             {/* Reduced Size Status Box */}
@@ -680,27 +691,66 @@ export default function GameLayout({
 
                 {/* User Cartelas - Below Both Columns (only for multiple cartelas) */}
                 {yourCards.length > 1 && (
-                    <div className="user-cartelas-container-full">
-                        <div className="user-cartelas-list">
-                            {yourCards.map(({ cardNumber, card }) => {
-                                // Determine which numbers to show as marked
-                                const markedNumbers = isAutoMarkOn 
-                                    ? calledNumbers 
-                                    : (manuallyMarkedNumbers[cardNumber] ? Array.from(manuallyMarkedNumbers[cardNumber]) : []);
-                                
-                                return (
-                                    <CartellaCard
-                                        key={cardNumber}
-                                        id={cardNumber}
-                                        card={card}
-                                        called={isAutoMarkOn ? calledNumbers : markedNumbers}
-                                        isPreview={false}
-                                        isAutoMarkOn={isAutoMarkOn}
-                                        onNumberToggle={!isAutoMarkOn ? (number) => handleNumberToggle(cardNumber, number) : undefined}
-                                    />
-                                );
-                            })}
-                        </div>
+                    <div className={`user-cartelas-container-full ${hasTwoCartelas ? 'two-cartelas' : ''}`}>
+                        {hasTwoCartelas ? (
+                            // Special compact layout for exactly two cartelas (better fit on mobile)
+                            <div
+                                className="user-cartelas-two-grid"
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: '0.4rem',
+                                    alignItems: 'stretch'
+                                }}
+                            >
+                                {yourCards.map(({ cardNumber, card }) => {
+                                    const markedNumbers = isAutoMarkOn 
+                                        ? calledNumbers 
+                                        : (manuallyMarkedNumbers[cardNumber] ? Array.from(manuallyMarkedNumbers[cardNumber]) : []);
+
+                                    return (
+                                        <div
+                                            key={cardNumber}
+                                            className="user-cartela-item-two"
+                                            style={{
+                                                transform: 'scale(0.9)',
+                                                transformOrigin: 'top center'
+                                            }}
+                                        >
+                                            <CartellaCard
+                                                id={cardNumber}
+                                                card={card}
+                                                called={isAutoMarkOn ? calledNumbers : markedNumbers}
+                                                isPreview={true}
+                                                isAutoMarkOn={isAutoMarkOn}
+                                                onNumberToggle={!isAutoMarkOn ? (number) => handleNumberToggle(cardNumber, number) : undefined}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="user-cartelas-list">
+                                {yourCards.map(({ cardNumber, card }) => {
+                                    // Determine which numbers to show as marked
+                                    const markedNumbers = isAutoMarkOn 
+                                        ? calledNumbers 
+                                        : (manuallyMarkedNumbers[cardNumber] ? Array.from(manuallyMarkedNumbers[cardNumber]) : []);
+                                    
+                                    return (
+                                        <CartellaCard
+                                            key={cardNumber}
+                                            id={cardNumber}
+                                            card={card}
+                                            called={isAutoMarkOn ? calledNumbers : markedNumbers}
+                                            isPreview={false}
+                                            isAutoMarkOn={isAutoMarkOn}
+                                            onNumberToggle={!isAutoMarkOn ? (number) => handleNumberToggle(cardNumber, number) : undefined}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 )}
 

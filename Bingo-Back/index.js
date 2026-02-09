@@ -358,17 +358,34 @@ function startGame(room) {
     }
 
     if (selectedCount === 1) {
-        // Not enough players to start a game. Inform clients and restart registration.
-        console.log(`Not enough players (1 selection) for game ${room.currentGameId}. Cancelling and restarting registration.`);
-        broadcast('game_cancelled', {
+        // Not enough players yet to start a game – extend registration instead of cancelling
+        console.log(`Only 1 selection for game ${room.currentGameId}. Extending registration by 30 seconds instead of cancelling.`);
+
+        // Keep existing selections/takenCards and just extend the timer
+        room.phase = 'registration';
+        room.registrationEndTime = Date.now() + 30000; // extend by 30 seconds
+        room.startTime = Date.now();
+
+        const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
+
+        // Notify clients that registration has been extended for this game
+        broadcast('registration_extended', {
             gameId: room.currentGameId,
-            reason: 'NOT_ENOUGH_PLAYERS',
-            minimumPlayers: 2,
-            playersCount: selectedCount
+            stake: room.stake,
+            playersCount: selectedCount,
+            duration: 30000,
+            endsAt: room.registrationEndTime,
+            takenCards: Array.from(room.takenCards),
+            prizePool: currentPrizePool
         }, room);
 
-        // Small delay so clients can show the message, then reopen registration
-        setTimeout(() => startRegistration(room), 2000);
+        // Schedule another check after the extended period.
+        // This will keep extending every 30s until there are 0 or 2+ selections.
+        setTimeout(() => {
+            if (room.phase === 'registration' && room.currentGameId) {
+                startGame(room);
+            }
+        }, 30000);
         return;
     }
 

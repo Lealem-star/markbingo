@@ -338,6 +338,24 @@ export function WebSocketProvider({ children }) {
                             break;
                         }
 
+                        case 'registration_extended': {
+                            const registrationEndTime = event.payload.endsAt;
+                            const remainingSeconds = registrationEndTime ? Math.max(0, Math.ceil((registrationEndTime - Date.now()) / 1000)) : 0;
+                            setGameState(prev => ({
+                                ...prev,
+                                // Stay in / return to registration for the same game
+                                phase: 'registration',
+                                gameId: event.payload.gameId || prev.gameId,
+                                playersCount: event.payload.playersCount ?? prev.playersCount ?? 0,
+                                countdown: remainingSeconds,
+                                registrationEndTime,
+                                // Preserve existing selections/cards/takenCards, but allow backend to update prize pool
+                                takenCards: event.payload.takenCards || prev.takenCards || [],
+                                prizePool: event.payload.prizePool ?? prev.prizePool ?? 0
+                            }));
+                            break;
+                        }
+
                         case 'game_started':
                             console.log('🎮 game_started received:', {
                                 gameId: event.payload.gameId,
