@@ -439,7 +439,8 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
         // Check if we're in the right phase
         if (gameState.phase !== 'registration') {
-            showError(`Cannot select cartella - current phase is ${gameState.phase}, not registration!`);
+            // Friendly message when user tries to pick while a game is already running
+            showError('Please wait until the current game finishes. You can select cartela when registration starts again.');
             return;
         }
 
@@ -807,8 +808,8 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                                 return (
                                     <button
                                         key={cartelaNumber}
-                                        onClick={() => !isTaken && handleCardSelect(cartelaNum)}
-                                        disabled={isTaken || gameState.phase === 'running'}
+                                        onClick={() => handleCardSelect(cartelaNum)}
+                                        disabled={isTaken}
                                         className={`cartela-number-btn-light ${isTaken
                                             ? (takenByMe
                                                 ? 'cartela-selected-light'
