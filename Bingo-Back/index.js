@@ -254,16 +254,31 @@ function makeRoom(stake) {
             }
         },
         onLeave: (ws) => {
+            // Always remove from live connection list
             room.players.delete(ws.userId);
-            room.selectedPlayers.delete(ws.userId);
-            room.cartellas.delete(ws.userId);
-            const prevSelections = room.userCardSelections.get(ws.userId) || [];
-            prevSelections.forEach((n) => room.takenCards.delete(n));
-            room.userCardSelections.delete(ws.userId);
 
-            const selectedCount = countSelectedCartelas(room);
-            broadcast('players_update', { playersCount: selectedCount, prizePool: Math.floor(selectedCount * room.stake * 0.8) }, room);
-            broadcast('registration_update', { takenCards: Array.from(room.takenCards) }, room);
+            if (room.phase === 'registration') {
+                // During registration, free up their selections so others can take the cards
+                room.selectedPlayers.delete(ws.userId);
+                room.cartellas.delete(ws.userId);
+                const prevSelections = room.userCardSelections.get(ws.userId) || [];
+                prevSelections.forEach((n) => room.takenCards.delete(n));
+                room.userCardSelections.delete(ws.userId);
+
+                const selectedCount = countSelectedCartelas(room);
+                const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
+                broadcast('players_update', { playersCount: selectedCount, prizePool: currentPrizePool }, room);
+                broadcast('registration_update', { takenCards: Array.from(room.takenCards) }, room);
+            } else {
+                // During running/announce: DO NOT change selections, takenCards, or prize math.
+                // This ensures pot and prizePool stay based on the original number of cartelas,
+                // and leaving players do not affect the jackpot or get refunded.
+                console.log('Player left during non-registration phase; keeping selections and prize pool intact:', {
+                    userId: ws.userId,
+                    phase: room.phase,
+                    gameId: room.currentGameId
+                });
+            }
         }
     };
     return room;

@@ -284,10 +284,10 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             hasCards
         });
 
-        // CRITICAL: Navigate immediately when game starts (phase === 'running')
-        // Don't wait for yourSelections - let GameLayout handle loading state
-        // This matches the working version behavior
-        if (gameState.phase === 'running' && gameState.gameId) {
+        // Navigate to GameLayout ONLY for players who actually have cards in this running game.
+        // Newcomers / users without cards stay on CartelaSelection in watch/wait mode
+        // until the current game finishes and registration opens again.
+        if (gameState.phase === 'running' && gameState.gameId && hasCards) {
             console.log('🎮 NAVIGATION TRIGGERED - Game started, navigating to game layout', {
                 gameId: gameState.gameId,
                 phase: gameState.phase,
