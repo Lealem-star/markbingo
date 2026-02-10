@@ -395,7 +395,8 @@ export default function GameLayout({
     // Determine game phase display
     const gamePhaseDisplay = (gameState.phase === 'running' || gameState.phase === 'playing') ? 'STARTED' : gameState.phase === 'registration' ? 'REGISTRATION' : 'WAITING';
     const hasTwoCartelas = yourCards.length === 2;
-    const mainContentHeight = hasTwoCartelas ? 'calc(100vh - 260px)' : 'calc(100vh - 180px)';
+    // When showing two cartelas, avoid forcing a tall left grid; it creates empty space due to maxHeight on cells.
+    const mainContentHeight = hasTwoCartelas ? 'auto' : 'calc(100vh - 180px)';
 
     return (
         <div className="app-container relative overflow-hidden joy-bingo-bg">
@@ -445,10 +446,10 @@ export default function GameLayout({
                     }}
                 >
                     {/* Left Card - BINGO Grid with Square Letters */}
-                    <div className="bingo-grid-container" style={{ height: '100%', overflow: 'hidden' }}>
-                        <div className="grid grid-cols-5 gap-1" style={{ height: '100%' }}>
+                    <div className="bingo-grid-container" style={{ height: hasTwoCartelas ? 'auto' : '100%', overflow: 'hidden' }}>
+                        <div className="grid grid-cols-5 gap-1" style={{ height: hasTwoCartelas ? 'auto' : '100%' }}>
                             {/* B Column - Yellow */}
-                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: hasTwoCartelas ? 'auto' : '100%' }}>
                                 <div className="bingo-letter-square bingo-letter-b">
                                     <span>B</span>
                                 </div>
@@ -465,7 +466,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
                                         </button>
@@ -474,7 +475,7 @@ export default function GameLayout({
                             </div>
 
                             {/* I Column - Green */}
-                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: hasTwoCartelas ? 'auto' : '100%' }}>
                                 <div className="bingo-letter-square bingo-letter-i">
                                     <span>I</span>
                                 </div>
@@ -490,7 +491,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
                                         </button>
@@ -499,7 +500,7 @@ export default function GameLayout({
                             </div>
 
                             {/* N Column - Purple */}
-                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: hasTwoCartelas ? 'auto' : '100%' }}>
                                 <div className="bingo-letter-square bingo-letter-n">
                                     <span>N</span>
                                 </div>
@@ -515,7 +516,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
                                         </button>
@@ -524,7 +525,7 @@ export default function GameLayout({
                             </div>
 
                             {/* G Column - Red */}
-                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: hasTwoCartelas ? 'auto' : '100%' }}>
                                 <div className="bingo-letter-square bingo-letter-g">
                                     <span>G</span>
                                 </div>
@@ -540,7 +541,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
                                         </button>
@@ -549,7 +550,7 @@ export default function GameLayout({
                             </div>
 
                             {/* O Column - Pink/Magenta */}
-                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="space-y-0" style={{ display: 'flex', flexDirection: 'column', height: hasTwoCartelas ? 'auto' : '100%' }}>
                                 <div className="bingo-letter-square bingo-letter-o">
                                     <span>O</span>
                                 </div>
@@ -565,7 +566,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
                                         >
                                             {n}
                                         </button>
