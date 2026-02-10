@@ -755,7 +755,7 @@ export default function GameLayout({
                     </div>
                 )}
 
-                <BottomNav current="game" onNavigate={onNavigate} />
+                {/* <BottomNav current="game" onNavigate={onNavigate} /> */}
 
             </div>
         </div>
