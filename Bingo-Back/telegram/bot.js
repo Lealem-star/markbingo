@@ -160,6 +160,61 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             }
         }
 
+        /**
+         * Updates Telegram command menu for a user based on their role.
+         * Uses chat scope to set commands per-user, ensuring role-based command visibility.
+         * 
+         * @param {Object} ctx - Telegraf context
+         * @param {string} role - User role ('admin', 'super_admin', or 'user')
+         */
+        async function updateUserCommands(ctx, role) {
+            try {
+                const telegramId = ctx.from?.id;
+                if (!telegramId) {
+                    console.warn('updateUserCommands: No telegramId in context');
+                    return;
+                }
+
+                // Define command sets based on role
+                const adminCommands = [
+                    { command: 'start', description: 'Start / Admin Panel' },
+                    { command: 'admin', description: 'Open Admin Panel' },
+                    { command: 'promote', description: 'Promote User to Admin' },
+                    { command: 'demote', description: 'Demote Admin to User' },
+                    { command: 'daily_report', description: 'Daily Report' },
+                    { command: 'weekly_report', description: 'Weekly Report' }
+                ];
+
+                const userCommands = [
+                    { command: 'start', description: 'Start' },
+                    { command: 'play', description: 'Play' },
+                    { command: 'deposit', description: 'Deposit' },
+                    { command: 'withdraw', description: 'Withdraw' },
+                    { command: 'balance', description: 'Balance' },
+                    { command: 'support', description: 'Contact Support' },
+                    { command: 'instruction', description: 'How to Play' }
+                ];
+
+                // Select commands based on role
+                const commands = (role === 'admin' || role === 'super_admin') 
+                    ? adminCommands 
+                    : userCommands;
+
+                // Set commands with chat scope (per-user)
+                await bot.telegram.setMyCommands(commands, {
+                    scope: {
+                        type: 'chat',
+                        chat_id: telegramId
+                    }
+                });
+
+                console.log(`✅ Updated commands for user ${telegramId} with role: ${role}`);
+            } catch (e) {
+                console.error('Error updating user commands:', e?.message || e);
+                // Don't throw - command menu update failure shouldn't break the flow
+            }
+        }
+
         bot.start(async (ctx) => {
             try {
                 await UserService.createOrUpdateUser(ctx.from);
@@ -194,6 +249,13 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             } catch { }
 
             const isAdmin = await isAdminByDB(ctx.from.id);
+            
+            // Update command menu based on user role
+            const User = require('../models/User');
+            const user = await User.findOne({ telegramId: String(ctx.from.id) }, { role: 1 });
+            const userRole = user?.role || 'user';
+            await updateUserCommands(ctx, userRole);
+            
             if (isAdmin) {
                 const adminText = '🛠️ Admin Panel';
 
@@ -463,7 +525,11 @@ Thank you for your dedication! 🙏`;
                     { new: true, upsert: true }
                 );
                 console.log('Admin boot result:', user);
-                if (user) return ctx.reply('✅ You are now an admin. Use /admin');
+                if (user) {
+                    // Update command menu for newly promoted admin
+                    await updateUserCommands(ctx, 'admin');
+                    return ctx.reply('✅ You are now an admin. Use /admin');
+                }
                 return ctx.reply('User not found. Start the bot first.');
             } catch (e) {
                 console.error('admin_boot error:', e?.message || e);
@@ -487,6 +553,18 @@ Thank you for your dedication! 🙏`;
 
                 const user = await User.findOneAndUpdate({ telegramId: String(targetId) }, { $set: { role: 'admin' } }, { new: true });
                 if (!user) return ctx.reply('User not found.');
+
+                // Update command menu for promoted user
+                try {
+                    // Create a mock context for the target user to update their commands
+                    const targetCtx = {
+                        from: { id: parseInt(targetId) }
+                    };
+                    await updateUserCommands(targetCtx, 'admin');
+                } catch (cmdError) {
+                    console.error('Error updating commands after promotion:', cmdError);
+                    // Continue even if command update fails
+                }
 
                 // Notify other admins
                 const targetName = `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() || targetUser.phone || targetId;
@@ -518,6 +596,18 @@ Thank you for your dedication! 🙏`;
 
                 const user = await User.findOneAndUpdate({ telegramId: String(targetId) }, { $set: { role: 'user' } }, { new: true });
                 if (!user) return ctx.reply('User not found.');
+
+                // Update command menu for demoted user
+                try {
+                    // Create a mock context for the target user to update their commands
+                    const targetCtx = {
+                        from: { id: parseInt(targetId) }
+                    };
+                    await updateUserCommands(targetCtx, 'user');
+                } catch (cmdError) {
+                    console.error('Error updating commands after demotion:', cmdError);
+                    // Continue even if command update fails
+                }
 
                 // Notify other admins
                 const targetName = `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() || targetUser.phone || targetId;
