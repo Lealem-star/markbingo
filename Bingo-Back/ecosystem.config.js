@@ -63,8 +63,7 @@ module.exports = {
             restart_delay: 4000
         },
         // Player bots - 20 automated game players with Ethiopian nicknames
-        // Bots 1-15: Stake 10 (Yared, Beti, Kalkidan, Dawit, Meaza, Birhanu, Liya, Kidus, Frehiwot, Tewodros, Mulugeta, Sara, Tadesse, Hana, Abebe)
-        // Bots 16-20: Stake 25 (Alemayehu, Habtamu, Mebrat, Elias, Getachew)
+        // All 20 bots: Stake 10 (Yared, Beti, Kalkidan, Dawit, Meaza, Birhanu, Liya, Kidus, Frehiwot, Tewodros, Mulugeta, Sara, Tadesse, Hana, Abebe, Alemayehu, Habtamu, Mebrat, Elias, Getachew)
         {
             name: 'bingo-player-bot-yared',
             script: './bots/playerBot.js',
@@ -75,7 +74,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQwZGUyZGM1MWI0NWQ2Njg1MjMiLCJpYXQiOjE3NjMyODQ1NDAsImV4cCI6MTc2Mzg4OTM0MH0.X7VeMtfCw1Bf3S4SVWXRacWWQnHZtxhpBj3v9rvC60k',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcxNDc5OTFkYTk2MTNlMTlkZTQiLCJpYXQiOjE3NzEyNjM3Njd9.NyLzyXyIsb2G6przstPw3gw1drOLiZaQ0ESAxolfTYo',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -99,7 +98,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQwZWUyZGM1MWI0NWQ2Njg1MzYiLCJpYXQiOjE3NjMyODQ1NDAsImV4cCI6MTc2Mzg4OTM0MH0.FKMqv6RDKYOFuFfT-MZfQ8BuH-q19n_NB3VzVV5PwYg',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcxODc5OTFkYTk2MTNlMTlkZjciLCJpYXQiOjE3NzEyNjM3Njl9.xPBsfKWzCqvzokv5E-B55ty695HL52WZqvgCiPQyrro',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -123,7 +122,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQwZmUyZGM1MWI0NWQ2Njg1M2UiLCJpYXQiOjE3NjMyODQ1NDAsImV4cCI6MTc2Mzg4OTM0MH0.6BoktzmdrakDNjmTm0ggl1HRbcPLbGR_LdX9nxQgKKQ',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcxOTc5OTFkYTk2MTNlMTlkZmYiLCJpYXQiOjE3NzEyNjM3NzB9.tnA-eyfGHHZ2Hio95UOU49n-QnEj8_AeZCVFPDzclAI',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -147,7 +146,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxMGUyZGM1MWI0NWQ2Njg1NDYiLCJpYXQiOjE3NjMyODQ1NDEsImV4cCI6MTc2Mzg4OTM0MX0.eh9oFGw2ZerTMcpvTcsv--Dfz8bDU15OydW9f_5vFQo',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcxYTc5OTFkYTk2MTNlMTllMDciLCJpYXQiOjE3NzEyNjM3NzJ9.gtMhOUJ2n6m-VVz1g2T3G2hNMuhSbc5r5R2zYNMpOHQ',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -171,7 +170,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxMGUyZGM1MWI0NWQ2Njg1NGUiLCJpYXQiOjE3NjMyODQ1NDEsImV4cCI6MTc2Mzg4OTM0MX0.NlMEsrCZVBfCt_06vziyswhbBZTmFZhnDCCHqbu8bAA',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcxYzc5OTFkYTk2MTNlMTllMGYiLCJpYXQiOjE3NzEyNjM3NzN9.LeNgZE1fammpQvWzAgEN5PgQtovvLkxrfNSZ2OeqZfg',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -195,7 +194,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxMWUyZGM1MWI0NWQ2Njg1NTYiLCJpYXQiOjE3NjMyODQ1NDEsImV4cCI6MTc2Mzg4OTM0MX0.OEPN1bYaQqv0P2XuPZE-8jUHLoSbGrm_4movjHtJRqc',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcxZDc5OTFkYTk2MTNlMTllMTciLCJpYXQiOjE3NzEyNjM3NzR9.rBWf3SIdrt8UWVbkLNzyIfi1K6HQ33LeqIpxv43cNCE',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -219,7 +218,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxMmUyZGM1MWI0NWQ2Njg1NWUiLCJpYXQiOjE3NjMyODQ1NDEsImV4cCI6MTc2Mzg4OTM0MX0.NoLiPrVOH7Gyy6EPoaXMTdbKVcJD2avWyTjsl7JAHeI',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcxZTc5OTFkYTk2MTNlMTllMWYiLCJpYXQiOjE3NzEyNjM3NzZ9.XolJnL97_JvYkC3sViRVbl7Pzd534ilFQL37wZBIwPI',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -243,7 +242,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxMmUyZGM1MWI0NWQ2Njg1NjYiLCJpYXQiOjE3NjMyODQ1NDEsImV4cCI6MTc2Mzg4OTM0MX0.WR-yO84y3k-ruNX5nIB656XJ9KoEZnXurvuoFcRav9I',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyMDc5OTFkYTk2MTNlMTllMjciLCJpYXQiOjE3NzEyNjM3Nzd9.8O6DoqceikMJO6Qs8pZyic5PZN9fpWzDZk13JKDHTjc',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -267,7 +266,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxM2UyZGM1MWI0NWQ2Njg1NmUiLCJpYXQiOjE3NjMyODQ1NDIsImV4cCI6MTc2Mzg4OTM0Mn0._k44ryH0F140JrFb0ZuurRLbfc2AVvGP7gSvisDNxXA',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyMTc5OTFkYTk2MTNlMTllMmYiLCJpYXQiOjE3NzEyNjM3Nzl9._OesLzbPvqMUPyL8c-8aGWGsutG0a8OZLZ01qOn_ODU',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -291,7 +290,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxNGUyZGM1MWI0NWQ2Njg1NzYiLCJpYXQiOjE3NjMyODQ1NDIsImV4cCI6MTc2Mzg4OTM0Mn0.Ef8pt_e-oNTzBDPC1QQyZi1oUcORiGuTwjoeDwTJCmg',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyMzc5OTFkYTk2MTNlMTllMzciLCJpYXQiOjE3NzEyNjM3ODB9.cEQPhaqAfl8K6jNR9VQqtbF762uo3Bwsbmwidp2DiVo',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -315,7 +314,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxNWUyZGM1MWI0NWQ2Njg1N2UiLCJpYXQiOjE3NjMyODQ1NDIsImV4cCI6MTc2Mzg4OTM0Mn0.wiUEJMukJskTtsPLVWKsk5agQVUVGjoYEU1UQJLqr64',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyNTc5OTFkYTk2MTNlMTllM2YiLCJpYXQiOjE3NzEyNjM3ODJ9.8F6eJmmUjKhqCP6mlj2aZti3-7cHk3KuWx-UXqx6Bw8',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -339,7 +338,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxNmUyZGM1MWI0NWQ2Njg1ODYiLCJpYXQiOjE3NjMyODQ1NDIsImV4cCI6MTc2Mzg4OTM0Mn0.d7eJGzZupb8SHLOM7ZK1jdeRByH53jookN9ve-HVChU',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyNjc5OTFkYTk2MTNlMTllNDciLCJpYXQiOjE3NzEyNjM3ODN9.yUozX6IaUifrQC360EWH6s7mUOxdpxis3vjCon6xwWY',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -363,7 +362,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxNmUyZGM1MWI0NWQ2Njg1OGUiLCJpYXQiOjE3NjMyODQ1NDMsImV4cCI6MTc2Mzg4OTM0M30.-LOb-fZpZ0i1okAc74e-7fTFAVLvkdaNsoXZXC-cm_4',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyODc5OTFkYTk2MTNlMTllNGYiLCJpYXQiOjE3NzEyNjM3ODV9.yvId5lumLJwR5u-wOFYNWN83VWa7JQIzCPO04XcV8LQ',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -387,7 +386,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxN2UyZGM1MWI0NWQ2Njg1OTYiLCJpYXQiOjE3NjMyODQ1NDMsImV4cCI6MTc2Mzg4OTM0M30.UzRCROOaodtSWcjIzO310RQ_14ZCIrwWtWgzKomDQv0',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyOTc5OTFkYTk2MTNlMTllNTciLCJpYXQiOjE3NzEyNjM3ODZ9.JGLiuXqa60GLJpSFiFoY6bmj5qzCXF-_EUiReyD3P_k',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -411,7 +410,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTQxOGUyZGM1MWI0NWQ2Njg1OWUiLCJpYXQiOjE3NjMyODQ1NDMsImV4cCI6MTc2Mzg4OTM0M30.LUkyBu59Z5CRULifLfqTrB3AlTWhzEgOXN7NsrPFpVk',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyYTc5OTFkYTk2MTNlMTllNWYiLCJpYXQiOjE3NzEyNjM3ODh9.RfhOqLxvBL18rpH6mE4YDD4V793-lv1tSkCyl_TupT4',
                 STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
@@ -425,7 +424,7 @@ module.exports = {
             min_uptime: '10s',
             restart_delay: 4000
         },
-        // Bots 16-20: Stake 25
+        // Bots 16-20: Stake 10
         {
             name: 'bingo-player-bot-alemayehu',
             script: './bots/playerBot.js',
@@ -436,8 +435,8 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTYzZjQ1ZDY1NDllNGFiYjQ0ODEiLCJpYXQiOjE3NjMyODQ1NDQsImV4cCI6MTc2Mzg4OTM0NH0._VXHtM_yqZgqtNMxD6CCgmzlTGf7NU1n8eOqGVe5xQ4',
-                STAKE: '25',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyYzc5OTFkYTk2MTNlMTllNjciLCJpYXQiOjE3NzEyNjM3ODl9.NekkWZQdG5DbnCgeXslyKod94tbM7KBehB5Q3AqpHNA',
+                STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
@@ -460,8 +459,8 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTY0MDQ1ZDY1NDllNGFiYjQ0ODkiLCJpYXQiOjE3NjMyODQ1NDQsImV4cCI6MTc2Mzg4OTM0NH0.KH02VBrFamRcHloZsNOTnk8pAbriUu4h58lwR_ojNVY',
-                STAKE: '25',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyZDc5OTFkYTk2MTNlMTllNmYiLCJpYXQiOjE3NzEyNjM3OTB9.Z8f0D2tMd_KHnamLCm-eB6XB3UUKahidk7nIJlnBy2U',
+                STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
@@ -484,8 +483,8 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTY0MTQ1ZDY1NDllNGFiYjQ0OTEiLCJpYXQiOjE3NjMyODQ1NDUsImV4cCI6MTc2Mzg4OTM0NX0.C6IrPrtfMn3e-3IRDYLyNmtd0oAr6GbcbPuEjPwa-SE',
-                STAKE: '25',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTcyZjc5OTFkYTk2MTNlMTllNzciLCJpYXQiOjE3NzEyNjM3OTJ9.YsoWcptc8Z4xkkwNOfkWyMbPFI6r9CAJ5xqeHQ9aJTI',
+                STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
@@ -508,8 +507,8 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTY0MTQ1ZDY1NDllNGFiYjQ0OTkiLCJpYXQiOjE3NjMyODQ1NDYsImV4cCI6MTc2Mzg4OTM0Nn0.0JLqXF0v4NVlpHmkoKjbfcR_ZK32c-JvVBn-eMTaZss',
-                STAKE: '25',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTczMDc5OTFkYTk2MTNlMTllN2YiLCJpYXQiOjE3NzEyNjM3OTN9.db_ETAxGyGXa1dRury-Rk9OJxJ7nHUe4UQTUpzlwfpM',
+                STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'
@@ -532,8 +531,8 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTE5OTY0MjQ1ZDY1NDllNGFiYjQ0YTEiLCJpYXQiOjE3NjMyODQ1NDYsImV4cCI6MTc2Mzg4OTM0Nn0.NMMFc7C0SAzwsDOXFZEQfaobIf6nFFZzeK9MKORNgtY',
-                STAKE: '25',
+                JWT_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OTkzNTczMTc5OTFkYTk2MTNlMTllODciLCJpYXQiOjE3NzEyNjM3OTR9.Z_3eSj5eq_YU6FS_jbNofTjDkAVNj-jlXM3cQQU_aVE',
+                STAKE: '10',
                 API_BASE: 'http://localhost:3001',
                 WS_BASE: 'ws://localhost:3001',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'

@@ -1,16 +1,16 @@
 /**
  * Generate JWT Tokens for Player Bots
  * 
- * This script AUTOMATICALLY creates 15 test users and generates JWT tokens for them.
+ * This script AUTOMATICALLY creates 20 test users and generates JWT tokens for them.
  * You don't need any existing users - this script creates everything!
  * 
  * Usage:
  *   node scripts/generateBotTokens.js
  * 
  * What it does:
- *   1. Creates 15 test user accounts in your database
+ *   1. Creates 20 test user accounts in your database
  *   2. Creates wallets for each user
- *   3. Generates JWT tokens for each user
+ *   3. Generates JWT tokens for each user (tokens never expire)
  *   4. Displays tokens formatted for ecosystem.config.js
  * 
  * Prerequisites:
@@ -54,11 +54,11 @@ async function generateTokensForBots() {
             'Yared', 'Beti', 'Kalkidan', 'Dawit', 'Meaza',      // 1-5 (Stake 10)
             'Birhanu', 'Liya', 'Kidus', 'Frehiwot', 'Tewodros', // 6-10 (Stake 10)
             'Mulugeta', 'Sara', 'Tadesse', 'Hana', 'Abebe',     // 11-15 (Stake 10)
-            'Alemayehu', 'Habtamu', 'Mebrat', 'Elias', 'Getachew' // 16-20 (Stake 25)
+            'Alemayehu', 'Habtamu', 'Mebrat', 'Elias', 'Getachew' // 16-20 (Stake 10)
         ];
 
         console.log(`🤖 Generating tokens for ${numBots} bots...\n`);
-        console.log('📋 Bot distribution: 15 bots (Stake 10) + 5 bots (Stake 25)\n');
+        console.log('📋 Bot distribution: All 20 bots at Stake 10\n');
 
         for (let i = 1; i <= numBots; i++) {
             // Create unique Telegram ID for each bot
@@ -126,14 +126,14 @@ async function generateTokensForBots() {
                 }
             }
 
-            // Generate JWT token
+            // Generate JWT token (no expiration)
             const token = jwt.sign(
                 {
                     sub: user._id.toString(),
                     iat: Math.floor(Date.now() / 1000)
                 },
-                JWT_SECRET,
-                { expiresIn: '7d' }
+                JWT_SECRET
+                // No expiresIn - tokens never expire
             );
 
             const stake = getStakeForBot(i);
@@ -186,10 +186,8 @@ async function generateTokensForBots() {
 }
 
 function getStakeForBot(botNumber) {
-    // 15 bots at stake 10 (bots 1-15)
-    // 5 bots at stake 25 (bots 16-20)
-    if (botNumber <= 15) return 10;
-    return 25;
+    // All 20 bots at stake 10
+    return 10;
 }
 
 // Run if executed directly

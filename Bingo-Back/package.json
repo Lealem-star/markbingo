@@ -7,6 +7,7 @@
     "dev": "nodemon index.js",
     "bot:start": "node bots/playerBot.js",
     "bot:dev": "nodemon bots/playerBot.js",
+    "bot:generate-tokens": "node scripts/generateBotTokens.js",
     "pm2:start": "pm2 start ecosystem.config.js",
     "pm2:start:bots": "pm2 start ecosystem.config.js --only bingo-player-bot-yared,bingo-player-bot-beti,bingo-player-bot-kalkidan,bingo-player-bot-dawit,bingo-player-bot-meaza,bingo-player-bot-birhanu,bingo-player-bot-liya,bingo-player-bot-kidus,bingo-player-bot-frehiwot,bingo-player-bot-tewodros,bingo-player-bot-mulugeta,bingo-player-bot-sara,bingo-player-bot-tadesse,bingo-player-bot-hana,bingo-player-bot-abebe,bingo-player-bot-alemayehu,bingo-player-bot-habtamu,bingo-player-bot-mebrat,bingo-player-bot-elias,bingo-player-bot-getachew",
     "pm2:stop": "pm2 stop fun-bingo-bot",
