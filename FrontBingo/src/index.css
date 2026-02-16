@@ -698,7 +698,7 @@ body {
     max-height: calc(100vh - 180px);
     /* Account for header and bottom nav - mobile optimized */
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     /* Smooth scrolling on iOS */
 }
@@ -707,7 +707,7 @@ body {
     max-height: 35vh;
     /* Limit table content height - mobile optimized */
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: visible;
 }
 
 /* Tablet and up - more space */
@@ -1467,28 +1467,31 @@ body {
 
 .admin-stats-table-header {
     display: grid;
-    grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(80px, 1fr));
+    grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(100px, 1fr));
     gap: 0.5rem;
     margin-bottom: 0.75rem;
     padding: 0.75rem;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 0.5rem;
+    min-width: 500px;
 }
 
 /* Responsive column widths */
 @media (min-width: 768px) {
     .admin-stats-table-header {
-        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(90px, 1fr));
+        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(110px, 1fr));
         gap: 0.75rem;
         padding: 0.875rem;
+        min-width: 550px;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-header {
-        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(100px, 1fr));
+        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(120px, 1fr));
         gap: 1rem;
         padding: 1rem;
+        min-width: 600px;
     }
 }
 
@@ -1499,21 +1502,21 @@ body {
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
-    min-width: 80px;
+    min-width: 100px;
     hyphens: auto;
 }
 
 @media (min-width: 768px) {
     .admin-stats-table-header-item {
         font-size: 0.8125rem;
-        min-width: 90px;
+        min-width: 110px;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-header-item {
         font-size: 0.875rem;
-        min-width: 100px;
+        min-width: 120px;
     }
 }
 
@@ -1538,7 +1541,7 @@ body {
 
 .admin-stats-table-row {
     display: grid;
-    grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(80px, 1fr));
+    grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(100px, 1fr));
     gap: 0.5rem;
     padding: 0.75rem;
     background: rgba(255, 255, 255, 0.05);
@@ -1546,23 +1549,26 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 0.75rem;
     align-items: center;
+    min-width: 500px;
 }
 
 @media (min-width: 768px) {
     .admin-stats-table-row {
-        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(90px, 1fr));
+        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(110px, 1fr));
         gap: 0.75rem;
         padding: 0.875rem;
         font-size: 0.8125rem;
+        min-width: 550px;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-row {
-        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(100px, 1fr));
+        grid-template-columns: repeat(var(--stats-table-cols, 5), minmax(120px, 1fr));
         gap: 1rem;
         padding: 1rem;
         font-size: 0.875rem;
+        min-width: 600px;
     }
 }
 
@@ -1571,19 +1577,19 @@ body {
     overflow-wrap: break-word;
     white-space: normal;
     overflow: visible;
-    min-width: 80px;
+    min-width: 100px;
     line-height: 1.4;
 }
 
 @media (min-width: 768px) {
     .admin-stats-table-cell {
-        min-width: 90px;
+        min-width: 110px;
     }
 }
 
 @media (min-width: 1024px) {
     .admin-stats-table-cell {
-        min-width: 100px;
+        min-width: 120px;
     }
 }
 
@@ -4293,41 +4299,53 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Auto-Mark Toggle Button */
-.auto-mark-toggle {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+/* Auto-Mark Toggle Switch (Toggle Switch Style) */
+.auto-mark-toggle-switch {
+    width: 48px;
+    height: 24px;
+    border-radius: 12px;
     border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     flex-shrink: 0;
+    padding: 2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.auto-mark-on {
-    background: #10b981; /* Green when ON */
-    color: white;
+.auto-mark-toggle-switch.auto-mark-on {
+    background: linear-gradient(to right, #e9d5ff, #10b981); /* Light purple on left, green on right when ON */
 }
 
-.auto-mark-on:hover {
-    background: #059669;
+.auto-mark-toggle-switch.auto-mark-off {
+    background: linear-gradient(to right, #e9d5ff, #ddd6fe); /* Light purple gradient when OFF */
+}
+
+.auto-mark-toggle-switch:hover {
     transform: scale(1.05);
 }
 
-.auto-mark-off {
-    background: #e9d5ff; /* Light purple when OFF */
-    color: #6b21a8;
+.toggle-switch-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.auto-mark-off:hover {
-    background: #d8b4fe;
-    transform: scale(1.05);
+.auto-mark-toggle-switch.auto-mark-on .toggle-switch-thumb {
+    left: calc(100% - 22px); /* Move to right when ON */
 }
 
-/* Sound Toggle Button (Microphone) */
+.auto-mark-toggle-switch.auto-mark-off .toggle-switch-thumb {
+    left: 2px; /* Stay on left when OFF */
+}
+
+/* Sound Toggle Button (Loudspeaker) */
 .sound-toggle {
     width: 28px;
     height: 28px;
@@ -4339,6 +4357,7 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    position: relative;
 }
 
 .sound-on {
@@ -4360,6 +4379,7 @@ body {
     background: #d1d5db;
     transform: scale(1.05);
 }
+
 
 /* Current Call Bar */
 .current-call-bar {

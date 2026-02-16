@@ -780,8 +780,30 @@ router.get('/stats/invites', adminMiddleware, async (req, res) => {
 // --- Admin Wallet Statistics ---
 router.get('/stats/wallets/total-main', adminMiddleware, async (req, res) => {
     try {
-        const wallets = await Wallet.find({}).lean();
-        const totalMain = wallets.reduce((sum, wallet) => sum + (wallet.main || 0), 0);
+        // Get all wallets with populated user data to check for bots
+        const wallets = await Wallet.find({})
+            .populate('userId', 'telegramId')
+            .lean();
+        
+        // Filter out bot wallets and sum only real user wallets
+        const totalMain = wallets.reduce((sum, wallet) => {
+            // Skip if wallet has no user data
+            if (!wallet.userId || !wallet.userId.telegramId) {
+                return sum;
+            }
+            
+            const telegramId = String(wallet.userId.telegramId);
+            // Check if this is a bot user (telegramId starts with 9000000000 or contains bot_user_)
+            const isBot = telegramId.startsWith('9000000000') || telegramId.includes('bot_user_');
+            
+            // Only include non-bot wallets
+            if (!isBot) {
+                return sum + (wallet.main || 0);
+            }
+            
+            return sum;
+        }, 0);
+        
         res.json({ totalMain });
     } catch (error) {
         console.error('Total main wallet stats error:', error);

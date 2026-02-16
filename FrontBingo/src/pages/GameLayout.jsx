@@ -594,32 +594,27 @@ export default function GameLayout({
                                 <span className="game-status-text-small">{gamePhaseDisplay}</span>
                             </div>
                             
-                            {/* Auto-Mark Toggle (Green or Light Purple) */}
+                            {/* Auto-Mark Toggle (Toggle Switch Style) */}
                             <button
                                 onClick={() => setIsAutoMarkOn(!isAutoMarkOn)}
-                                className={`auto-mark-toggle ${isAutoMarkOn ? 'auto-mark-on' : 'auto-mark-off'}`}
-                                title={isAutoMarkOn ? 'Auto-mark ON (Green)' : 'Auto-mark OFF (Light Purple)'}
+                                className={`auto-mark-toggle-switch ${isAutoMarkOn ? 'auto-mark-on' : 'auto-mark-off'}`}
+                                title={isAutoMarkOn ? 'Auto-mark ON' : 'Auto-mark OFF'}
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <div className="toggle-switch-thumb"></div>
                             </button>
                             
-                            {/* Sound Toggle (Microphone) */}
+                            {/* Sound Toggle (Loudspeaker Icon) */}
                             <button
                                 onClick={() => setIsSoundOn(!isSoundOn)}
                                 className={`sound-toggle ${isSoundOn ? 'sound-on' : 'sound-off'}`}
                                 title={isSoundOn ? 'Sound ON' : 'Sound OFF'}
                             >
-                                {isSoundOn ? (
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L4.383 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.383l4-4.707a1 1 0 011.617.793zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
-                                    </svg>
-                                ) : (
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
-                                    </svg>
-                                )}
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ position: 'relative' }}>
+                                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                                    {!isSoundOn && (
+                                        <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                    )}
+                                </svg>
                             </button>
                         </div>
 
