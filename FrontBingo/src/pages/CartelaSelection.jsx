@@ -893,7 +893,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                                         id={number}
                                         card={card}
                                         called={gameState.calledNumbers || []}
-                                        selectedNumber={number}
+                                        selectedNumber={null}
                                         isPreview={true}
                                     />
                                 ))}
