@@ -211,7 +211,7 @@ function AppContent() {
       gameId: gameState.gameId,
       targetPage,
       currentPage,
-      isGameRunning,
+      isGameStartingOrRunning,
       isGameFinished,
       hasCards: Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0,
       winnersCount: gameState.winners?.length || 0
