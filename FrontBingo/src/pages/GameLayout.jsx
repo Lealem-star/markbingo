@@ -485,11 +485,16 @@ export default function GameLayout({
     const hasTwoCartelas = yourCards.length === 2;
     const hasSingleCartela = yourCards.length === 1;
     const statusText = startCountdown > 0 ? startCountdown : gamePhaseDisplay;
-    // When showing user cartelas, avoid forcing a tall left grid; it creates empty space due to maxHeight on cells.
-    const mainContentHeight = (hasTwoCartelas || hasSingleCartela) ? 'auto' : 'calc(100vh - 180px)';
-    // Make left BINGO columns noticeably narrower and right side larger when showing single cartela,
+    // For a single cartela, keep a fixed main content height so the left BINGO grid can stretch
+    // and distribute numbers vertically (fills the empty space).
+    const mainContentHeight = hasTwoCartelas
+        ? 'auto'
+        : hasSingleCartela
+            ? '500px'
+            : 'calc(100vh - 180px)';
+    // Make left BINGO columns narrower and right side larger when showing single cartela,
     // otherwise keep 1:1 split.
-    const gridTemplateColumns = hasSingleCartela ? '0.6fr 1.4fr' : '1fr 1fr';
+    const gridTemplateColumns = hasSingleCartela ? '0.9fr 1.1fr' : '1fr 1fr';
 
     return (
         <div className="app-container relative overflow-hidden joy-bingo-bg">
@@ -542,14 +547,14 @@ export default function GameLayout({
                     <div
                         className="bingo-grid-container"
                         style={{
-                            height: hasTwoCartelas || hasSingleCartela ? 'auto' : '100%',
+                            height: hasTwoCartelas ? 'auto' : '100%',
                             overflow: 'hidden'
                         }}
                     >
                         <div
                             className="grid grid-cols-5 gap-1"
                             style={{
-                                height: hasTwoCartelas || hasSingleCartela ? 'auto' : '100%'
+                                height: hasTwoCartelas ? 'auto' : '100%'
                             }}
                         >
                             {/* B Column - Yellow */}
