@@ -712,9 +712,7 @@ Thank you for your dedication! 🙏`;
                     `Withdrawable Balance: ${mainValue.toFixed(1)}\n` +
                     `Non-Withdrawable Balance: ${playValue.toFixed(1)}</i>`;
 
-                const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
-                if (isHttpsWebApp) keyboard.inline_keyboard.unshift([{ text: '🌐 Open Web App', web_app: { url: webAppUrl + '?stake=10' } }]);
-                ctx.reply(message, { parse_mode: 'HTML', reply_markup: keyboard });
+                ctx.reply(message, { parse_mode: 'HTML' });
             } catch (error) {
                 console.error('Balance check error:', error);
                 ctx.reply('❌ Error checking balance. Please try again.');
@@ -1111,9 +1109,7 @@ Thank you for your dedication! 🙏`;
                     `Non-Withdrawable Balance: ${playValue.toFixed(1)}</i>`;
 
                 ctx.answerCbQuery('💵 Balance checked');
-                const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
-                if (isHttpsWebApp) keyboard.inline_keyboard.unshift([{ text: '🌐 Open Web App', web_app: { url: webAppUrl + '?stake=10' } }]);
-                ctx.reply(message, { parse_mode: 'HTML', reply_markup: keyboard });
+                ctx.reply(message, { parse_mode: 'HTML' });
             } catch (error) {
                 console.error('Balance check error:', error);
                 ctx.reply('❌ Error checking balance. Please try again.');
