@@ -494,7 +494,7 @@ export default function GameLayout({
             : 'calc(100vh - 180px)';
     // Make left BINGO columns narrower and right side larger when showing single cartela,
     // otherwise keep 1:1 split.
-    const gridTemplateColumns = hasSingleCartela ? '0.9fr 1.1fr' : '1fr 1fr';
+    const gridTemplateColumns = hasSingleCartela ? '0.8fr 1.2fr' : '1fr 1fr';
 
     return (
         <div className="app-container relative overflow-hidden joy-bingo-bg">
@@ -575,7 +575,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
                                         >
                                             {n}
                                         </button>
@@ -600,7 +600,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
                                         >
                                             {n}
                                         </button>
@@ -625,7 +625,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
                                         >
                                             {n}
                                         </button>
@@ -650,7 +650,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
                                         >
                                             {n}
                                         </button>
@@ -675,7 +675,7 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', maxHeight: '24px' }}
+                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
                                         >
                                             {n}
                                         </button>
