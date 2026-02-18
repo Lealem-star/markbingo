@@ -2711,6 +2711,15 @@ body {
 .cartela-preview {
     max-width: 300px;
     margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* When two cartelas are displayed side by side, make them fit evenly */
+.user-cartelas-two-grid .cartela-preview,
+.user-cartelas-two-grid .cartela-full {
+    max-width: 100%;
+    margin: 0;
 }
 
 .cartela-full {
@@ -4493,7 +4502,21 @@ body {
 
 /* Reduced padding when user has exactly 2 cartelas */
 .user-cartelas-container-full.two-cartelas {
-    padding: 6px;
+    padding: 8px;
+    overflow-x: hidden;
+}
+
+/* Ensure two-cartelas grid fits within container */
+.user-cartelas-two-grid {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.user-cartela-item-two {
+    min-width: 0; /* Allow flex items to shrink below content size */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* User Cartelas Container - Inside Right Column (kept for backward compatibility) */

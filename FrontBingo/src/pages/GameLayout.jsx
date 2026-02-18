@@ -834,8 +834,10 @@ export default function GameLayout({
                                 style={{
                                     display: 'grid',
                                     gridTemplateColumns: '1fr 1fr',
-                                    gap: '0.1rem',
-                                    alignItems: 'stretch'
+                                    gap: '0.5rem',
+                                    alignItems: 'stretch',
+                                    width: '100%',
+                                    boxSizing: 'border-box'
                                 }}
                             >
                                 {yourCards.map(({ cardNumber, card }) => {

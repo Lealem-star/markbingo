@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import BottomNav from '../components/BottomNav';
+// import BottomNav from '../components/BottomNav';
 import CartellaCard from '../components/CartellaCard';
 import { apiFetch } from '../lib/api/client';
 import { useAuth } from '../lib/auth/AuthProvider';
@@ -894,7 +894,17 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                     <div className="mt-6">
                         {/* <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">Your Selected Cartella</h3> */}
                         <div className="bg-purple-200 rounded-lg p-4" style={{ background: '#e9d5ff' }}>
-                            <div className="flex justify-center gap-4 flex-wrap">
+                            <div 
+                                style={{
+                                    display: selectedCards.length === 2 ? 'grid' : 'flex',
+                                    gridTemplateColumns: selectedCards.length === 2 ? '1fr 1fr' : 'none',
+                                    justifyContent: selectedCards.length === 2 ? 'stretch' : 'center',
+                                    gap: selectedCards.length === 2 ? '0.5rem' : '1rem',
+                                    flexWrap: selectedCards.length === 2 ? 'nowrap' : 'wrap',
+                                    width: '100%',
+                                    boxSizing: 'border-box'
+                                }}
+                            >
                                 {selectedCards.map(({ number, card }) => (
                                     <CartellaCard
                                         key={number}
@@ -914,7 +924,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 )}
             </main>
 
-            <BottomNav current="game" onNavigate={onNavigate} />
+            {/* <BottomNav current="game" onNavigate={onNavigate} /> */}
         </div>
     );
 }
