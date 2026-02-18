@@ -474,9 +474,19 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             return;
         }
 
-        // Check if card is already taken
-        if (gameState.takenCards.some(taken => Number(taken) === cardNum)) {
-            showError('This cartella is already taken by another player!');
+        // Check if card is already taken by someone else
+        const isTakenByOthers = gameState.takenCards.some(taken => Number(taken) === cardNum) && !selectedNumbers.includes(cardNum);
+        if (isTakenByOthers) {
+            const takenMsg = 'ተይዟል ሌላ ᭭ምረጡ';
+            
+            // Add to alert banners
+            setAlertBanners(prev => {
+                // Avoid duplicate messages
+                if (prev.includes(takenMsg)) return prev;
+                return [...prev, takenMsg];
+            });
+            
+            showError(takenMsg);
             return;
         }
 

@@ -2660,16 +2660,16 @@ body {
     border-color: rgba(0, 0, 0, 0.2);
 }
 
-/* Selected - orange background with white text */
+/* Selected - green background with white text (own selected cards) */
 .cartela-number-btn-light.cartela-selected-light {
-    background: #f97316;
+    background: #10b981;
     color: white;
-    border-color: #ea580c;
-    box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3);
+    border-color: #059669;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
 }
 
 .cartela-number-btn-light.cartela-selected-light:hover {
-    background: #ea580c;
+    background: #059669;
 }
 
 /* Taken by another player - red/disabled style */
@@ -4516,6 +4516,23 @@ body {
 .user-cartela-item-two {
     min-width: 0; /* Allow flex items to shrink below content size */
     width: 100%;
+    box-sizing: border-box;
+}
+
+/* Single cartela card container - ensure it fits within right column */
+.user-cartelas-single {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* Constrain single cartela card to fit within container */
+.user-cartelas-single .cartela-full,
+.user-cartelas-single .cartela-preview {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
     box-sizing: border-box;
 }
 
