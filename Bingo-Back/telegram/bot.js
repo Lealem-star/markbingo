@@ -705,12 +705,13 @@ Thank you for your dedication! 🙏`;
                 const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || ctx.from.first_name || 'User';
                 const userPhone = user.phone || ctx.from.id || 'N/A';
 
-                // Format message to match image style
+                // Format message to match image style with visual elements
                 const message = `<b>Your Current Account Balance!</b>\n\n` +
-                    `<i>Name: ${userName}\n` +
-                    `Phone Number: ${userPhone}\n` +
-                    `Withdrawable Balance (Main Wallet): ${mainValue.toFixed(1)}\n` +
-                    `Non-Withdrawable Balance (Play Balance): ${playValue.toFixed(1)}</i>`;
+                    `<code>"</code>\n` +
+                    `<pre>│ Name: ${userName}\n` +
+                    `│ Phone Number: ${userPhone}\n` +
+                    `│ Withdrawable Balance (Main Wallet): ${mainValue.toFixed(1)}\n` +
+                    `│ Non-Withdrawable Balance (Play Balance): ${playValue.toFixed(1)}</pre>`;
 
                 ctx.reply(message, { parse_mode: 'HTML' });
             } catch (error) {
@@ -1101,12 +1102,13 @@ Thank you for your dedication! 🙏`;
                 const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || ctx.from.first_name || 'User';
                 const userPhone = user.phone || ctx.from.id || 'N/A';
 
-                // Format message to match image style
+                // Format message to match image style with visual elements
                 const message = `<b>Your Current Account Balance!</b>\n\n` +
-                    `<i>Name: ${userName}\n` +
-                    `Phone Number: ${userPhone}\n` +
-                    `Withdrawable Balance (Main Wallet): ${mainValue.toFixed(1)}\n` +
-                    `Non-Withdrawable Balance (Play Balance): ${playValue.toFixed(1)}</i>`;
+                    `<code>"</code>\n` +
+                    `<pre>│ Name: ${userName}\n` +
+                    `│ Phone Number: ${userPhone}\n` +
+                    `│ Withdrawable Balance (Main Wallet): ${mainValue.toFixed(1)}\n` +
+                    `│ Non-Withdrawable Balance (Play Balance): ${playValue.toFixed(1)}</pre>`;
 
                 ctx.answerCbQuery('💵 Balance checked');
                 ctx.reply(message, { parse_mode: 'HTML' });
