@@ -893,29 +893,57 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 {selectedCards.length > 0 && (gameState.phase === 'registration' || (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0)) && (
                     <div className="mt-6">
                         {/* <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">Your Selected Cartella</h3> */}
-                        <div className="bg-purple-200 rounded-lg p-4" style={{ background: '#e9d5ff' }}>
-                            <div 
-                                style={{
-                                    display: selectedCards.length === 2 ? 'grid' : 'flex',
-                                    gridTemplateColumns: selectedCards.length === 2 ? '1fr 1fr' : 'none',
-                                    justifyContent: selectedCards.length === 2 ? 'stretch' : 'center',
-                                    gap: selectedCards.length === 2 ? '0.5rem' : '1rem',
-                                    flexWrap: selectedCards.length === 2 ? 'nowrap' : 'wrap',
-                                    width: '100%',
-                                    boxSizing: 'border-box'
-                                }}
-                            >
-                                {selectedCards.map(({ number, card }) => (
-                                    <CartellaCard
-                                        key={number}
-                                        id={number}
-                                        card={card}
-                                        called={gameState.calledNumbers || []}
-                                        selectedNumber={null}
-                                        isPreview={true}
-                                    />
-                                ))}
-                            </div>
+                        <div className={`bg-purple-200 rounded-lg p-4 ${selectedCards.length === 2 ? 'two-cartelas' : ''}`} style={{ background: '#e9d5ff' }}>
+                            {selectedCards.length === 2 ? (
+                                <div
+                                    className="user-cartelas-two-grid"
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr',
+                                        gap: '0.5rem',
+                                        alignItems: 'stretch',
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                    }}
+                                >
+                                    {selectedCards.map(({ number, card }) => (
+                                        <div
+                                            key={number}
+                                            className="user-cartela-item-two"
+                                        >
+                                            <CartellaCard
+                                                id={number}
+                                                card={card}
+                                                called={gameState.calledNumbers || []}
+                                                selectedNumber={null}
+                                                isPreview={true}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div 
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        gap: '1rem',
+                                        flexWrap: 'wrap',
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                    }}
+                                >
+                                    {selectedCards.map(({ number, card }) => (
+                                        <CartellaCard
+                                            key={number}
+                                            id={number}
+                                            card={card}
+                                            called={gameState.calledNumbers || []}
+                                            selectedNumber={null}
+                                            isPreview={true}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                             {/* <div className="text-center text-sm text-gray-700 mt-3">
                                 🎫 {selectedNumbers.map(n => `Cartella #${n}`).join('  |  ')}
                             </div> */}
