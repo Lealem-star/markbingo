@@ -70,52 +70,75 @@ export default function Winner({ onNavigate, onResetToGame }) {
     // Show "no winner" state if no winners data
     if (!hasWinners) {
         return (
-            <div className="app-container flex items-center justify-center min-h-screen py-8 px-4">
-                <div className="w-full max-w-md rounded-3xl backdrop-blur-xl border-2 border-purple-300/40 shadow-2xl p-8 text-gray-800 relative bg-gradient-to-br from-white/90 via-purple-50/80 to-pink-50/70" style={{ boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(196, 181, 253, 0.2)' }}>
-
-                    {/* Back Button */}
-                    <div className="flex items-center justify-end mb-4">
-                        <button
-                            onClick={() => onNavigate?.('cartela-selection')}
-                            className="header-button"
-                        >
-                            ← Back
-                        </button>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-4 mb-6">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center shadow-xl" style={{ boxShadow: '0 10px 30px rgba(168, 85, 247, 0.4)' }}>
-                            <span className="text-white text-3xl">🎯</span>
-                        </div>
-                        <div className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-extrabold text-4xl tracking-wide">BINGO!</div>
-                        <div className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300/60 text-purple-700 font-bold text-lg shadow-lg">
-                            No Winner This Game
-                        </div>
-                        <div className="text-lg text-gray-700 text-center font-medium">
-                            The game ended without a winner.<br />
-                            Better luck next time!
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl border-2 border-purple-200/50 p-5 sm:p-6 bg-gradient-to-br from-white/60 to-purple-50/40 backdrop-blur-sm shadow-lg">
-                        <div className="text-center mb-4">
-                            <div className="text-purple-700 text-sm mb-2 font-semibold">
-                                Game Completed
-                            </div>
-                            <div className="text-gray-600 text-xs">
-                                No player achieved a BINGO in this round.
+            <div className="app-container flex items-center justify-center min-h-screen py-4 px-4" style={{ background: '#e9d5ff' }}>
+                <div className="w-full max-w-md">
+                    {/* Main Card Container with Light Purple Background */}
+                    <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#e9d5ff' }}>
+                        {/* Large Orange BINGO! Banner */}
+                        <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
+                            <div className="text-center">
+                                <h1 className="text-white font-extrabold text-5xl md:text-6xl tracking-wider mb-4 drop-shadow-lg">
+                                    BINGO!
+                                </h1>
+                                <div className="flex items-center justify-center gap-3">
+                                    <div className="px-4 py-2 rounded-lg bg-gray-500 border-2 border-gray-600 flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{ backgroundColor: '#6b7280', borderColor: '#4b5563', padding: '0.5rem 1rem' }}>
+                                        🎯
+                                    </div>
+                                    <p className="text-white text-lg md:text-xl font-semibold">
+                                        No Winner This Game
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="w-full h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold flex items-center justify-center shadow-md">
-                            አዲስ ጭዋታ ለመጀመር.....
+                        {/* Content Section with Light Purple Background */}
+                        <div className="p-6" style={{ background: '#e9d5ff' }}>
+                            {/* Icon and Message */}
+                            <div className="flex flex-col items-center gap-4 mb-6">
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center shadow-xl" style={{ boxShadow: '0 10px 30px rgba(107, 114, 128, 0.4)' }}>
+                                    <span className="text-white text-5xl">🎯</span>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-gray-800 text-xl font-bold mb-2">
+                                        Game Completed
+                                    </div>
+                                    <div className="text-gray-700 text-base font-medium">
+                                        The game ended without a winner.<br />
+                                        Better luck next time!
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Info Card */}
+                            <div className="rounded-xl border-2 border-gray-300/50 p-4 bg-white/60 backdrop-blur-sm shadow-md mb-4">
+                                <div className="text-center">
+                                    <div className="text-gray-700 text-sm font-semibold mb-1">
+                                        No BINGO Achieved
+                                    </div>
+                                    <div className="text-gray-600 text-xs">
+                                        No player achieved a winning pattern in this round.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="w-full h-10 rounded-lg bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300/50 text-purple-700 text-xs font-semibold flex items-center justify-center mt-3 shadow-sm">
-                            {countdown > 0 ? (
-                                <>Auto-starting next game in {countdown}s</>
-                            ) : (
-                                <>Navigating to next game...</>
-                            )}
+
+                        {/* Countdown Section - Orange Background with Large Number */}
+                        <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
+                            <div className="text-center">
+                                <div className="text-white text-sm font-semibold mb-2">
+                                    አዲስ ጭዋታ ለመጀመር
+                                </div>
+                                <div className="text-white font-extrabold text-6xl md:text-7xl tracking-wider drop-shadow-lg">
+                                    {countdown > 0 ? countdown : '0'}
+                                </div>
+                                <div className="text-white text-xs font-medium mt-2 opacity-90">
+                                    {countdown > 0 ? (
+                                        <>Auto-starting next game in {countdown} second{countdown !== 1 ? 's' : ''}</>
+                                    ) : (
+                                        <>Navigating to next game...</>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
