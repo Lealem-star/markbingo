@@ -1515,8 +1515,6 @@ Thank you for your dedication! 🙏`;
         // Handle Telebirr selection (without amount - amount will be parsed from receipt)
         bot.action('deposit_telebirr', (ctx) => {
             const userId = String(ctx.from.id);
-            // Automatically set deposit state to await receipt - no need for extra button click
-            depositStates.set(userId, 'awaiting_receipt');
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using inline code for the Telebirr account so it is tap‑to‑copy, and a code block for the instructions
             const telebirrMessage = `የ Telebirr አካውንት: \`0994237676\`
@@ -1531,7 +1529,34 @@ Thank you for your dedication! 🙏`;
 
 የሚያጋጥማቹ የክፍያ ችግር ካለ @Funbingosupport1  በዚ ሳፖርት ማዉራት ይችላሉ`;
             
-            ctx.reply(telebirrMessage, { parse_mode: 'Markdown' });
+            ctx.reply(telebirrMessage, { 
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            { text: '📱 Paste SMS', callback_data: 'deposit_paste_sms' },
+                            { text: '📷 Send Image', callback_data: 'deposit_send_image' }
+                        ],
+                        [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]
+                    ]
+                }
+            });
+        });
+
+        // Handle "Paste SMS" button - sets state to awaiting_receipt
+        bot.action('deposit_paste_sms', (ctx) => {
+            const userId = String(ctx.from.id);
+            depositStates.set(userId, 'awaiting_receipt');
+            ctx.answerCbQuery('📱 Ready for SMS receipt...');
+            ctx.reply('📱 Send your Telebirr transaction receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ Your wallet will be credited automatically!');
+        });
+
+        // Handle "Send Image" button - sets state to awaiting_image
+        bot.action('deposit_send_image', async (ctx) => {
+            const userId = String(ctx.from.id);
+            depositStates.set(userId, 'awaiting_image');
+            ctx.answerCbQuery('📷 Ready for receipt image...');
+            ctx.reply('📷 Send a screenshot of your Telebirr receipt:\n\n💡 የደርስዎትን የአጭር መልዕክት ስክሪንሾት ይላኩ!\n\n⏳ Your deposit will be reviewed manually by admin.');
         });
 
         // Keep the old handler for backward compatibility (if amount is provided in callback)
@@ -1558,7 +1583,18 @@ Thank you for your dedication! 🙏`;
 
 የሚያጋጥማቹ የክፍያ ችግር ካለ @Funbingosupport1  በዚ ሳፖርት ማዉራት ይችላሉ`;
             
-            ctx.reply(telebirrMessage, { parse_mode: 'Markdown' });
+            ctx.reply(telebirrMessage, { 
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            { text: '📱 Paste SMS', callback_data: 'deposit_paste_sms' },
+                            { text: '📷 Send Image', callback_data: 'deposit_send_image' }
+                        ],
+                        [{ text: '🔙 Back to Deposit', callback_data: 'deposit' }]
+                    ]
+                }
+            });
         });
         // Temporarily disabled - Commercial Bank payment method
         // bot.action(/^deposit_commercial_(\d+(?:\.\d{1,2})?)$/, (ctx) => {
@@ -2125,6 +2161,77 @@ Thank you for your dedication! 🙏`;
         });
 
         bot.on(['photo', 'video', 'document', 'audio', 'voice', 'sticker', 'animation'], async (ctx) => {
+            const userId = String(ctx.from.id);
+            
+            // Check if user is in deposit image flow
+            const depositState = depositStates.get(userId);
+            if (depositState === 'awaiting_image') {
+                // User sent image for deposit - forward to admins for manual review
+                try {
+                    let user = await UserService.getUserByTelegramId(userId);
+                    if (!user) {
+                        user = await UserService.createOrUpdateUser(ctx.from);
+                    }
+                    
+                    const userDisplay = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim() || ctx.from.username || 'User';
+                    const userPhone = user.phone || userId;
+                    
+                    // Forward image to all admins
+                    const adminUsers = await require('../models/User').find({ role: 'admin' }, { telegramId: 1 });
+                    let forwardedCount = 0;
+                    
+                    for (const admin of adminUsers) {
+                        if (admin.telegramId) {
+                            try {
+                                // Forward the photo/document to admin
+                                if (ctx.message.photo) {
+                                    const best = ctx.message.photo[ctx.message.photo.length - 1];
+                                    await bot.telegram.sendPhoto(
+                                        admin.telegramId,
+                                        best.file_id,
+                                        {
+                                            caption: `📷 Deposit Receipt Image\n\n👤 User: ${userDisplay}\n📱 Phone: ${userPhone}\n🆔 Telegram ID: ${userId}\n\n⏳ Manual review required.`
+                                        }
+                                    );
+                                } else if (ctx.message.document) {
+                                    await bot.telegram.sendDocument(
+                                        admin.telegramId,
+                                        ctx.message.document.file_id,
+                                        {
+                                            caption: `📷 Deposit Receipt Image\n\n👤 User: ${userDisplay}\n📱 Phone: ${userPhone}\n🆔 Telegram ID: ${userId}\n\n⏳ Manual review required.`
+                                        }
+                                    );
+                                }
+                                forwardedCount++;
+                            } catch (e) {
+                                console.error('Error forwarding deposit image to admin:', e);
+                            }
+                        }
+                    }
+                    
+                    // Close deposit session
+                    depositStates.delete(userId);
+                    
+                    if (forwardedCount > 0) {
+                        await ctx.reply('📷 Receipt image received!\n\n✅ Your deposit receipt has been forwarded to admin for manual review.\n\n⏳ You will be notified when your deposit is processed.', {
+                            reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] }
+                        });
+                    } else {
+                        await ctx.reply('❌ Failed to forward receipt. Please contact support @Funbingosupport1', {
+                            reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error processing deposit image:', error);
+                    depositStates.delete(userId);
+                    await ctx.reply('❌ Failed to process your image. Please try again or contact support.\n\n🔙 Session closed. Use /deposit to try again.', {
+                        reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] }
+                    });
+                }
+                return;
+            }
+            
+            // Original admin broadcast handler
             const adminId = String(ctx.from.id);
             const state = adminStates.get(adminId);
             if (!state || (state.mode !== 'broadcast' && state.mode !== 'await_caption_media')) return;
