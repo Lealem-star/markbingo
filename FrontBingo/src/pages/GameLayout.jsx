@@ -698,11 +698,20 @@ export default function GameLayout({
                     >
                         {/* Control Bar - Status, Auto-Mark, Sound Toggle in One Line */}
                         <div className="game-controls-bar">
-                            {/* Reduced Size Status Box */}
+                            {/* Reduced Size Status Box / Big 3-2-1 Countdown */}
                             <div className="game-status-box-small">
-                                <span className="game-status-text-small">
-                                    {statusText}
-                                </span>
+                                {startCountdown > 0 ? (
+                                    <div className="countdown-circle">
+                                        <div className="countdown-glow"></div>
+                                        <span className="countdown-number">
+                                            {startCountdown}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <span className="game-status-text-small">
+                                        {gamePhaseDisplay}
+                                    </span>
+                                )}
                             </div>
                             
                             {/* Auto-Mark Toggle (Toggle Switch Style) */}

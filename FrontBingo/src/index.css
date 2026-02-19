@@ -4322,6 +4322,58 @@ body {
     text-overflow: ellipsis;
 }
 
+/* Big 3-2-1 countdown inside the status box */
+.countdown-circle {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border-radius: 9999px;
+    background: radial-gradient(circle at 30% 30%, #f9a8d4, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 0 0 3px rgba(255, 255, 255, 0.35),
+        0 10px 20px rgba(15, 23, 42, 0.8);
+    overflow: hidden;
+}
+
+.countdown-glow {
+    position: absolute;
+    inset: -20%;
+    background: conic-gradient(
+        from 0deg,
+        rgba(244, 114, 182, 0.0),
+        rgba(244, 114, 182, 0.6),
+        rgba(129, 140, 248, 0.0),
+        rgba(52, 211, 153, 0.6),
+        rgba(244, 114, 182, 0.0)
+    );
+    opacity: 0.9;
+    mix-blend-mode: screen;
+    animation: countdown-spin 1s linear infinite;
+}
+
+.countdown-number {
+    position: relative;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #fefce8;
+    text-shadow:
+        0 0 8px rgba(248, 250, 252, 0.7),
+        0 2px 4px rgba(15, 23, 42, 0.9);
+}
+
+@keyframes countdown-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Auto-Mark Toggle Switch (Toggle Switch Style) */
 .auto-mark-toggle-switch {
     width: 48px;
