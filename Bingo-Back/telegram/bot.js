@@ -1468,6 +1468,117 @@ Thank you for your dedication! 🙏`;
             }
         });
 
+        // Approve image deposit (amount stored in request)
+        bot.action(/^approve_img_(.+)$/, async (ctx) => {
+            if (!(await ensureAdmin(ctx))) return;
+            const requestId = ctx.match[1];
+            try {
+                // Get request to retrieve amount
+                const ImageDepositRequest = require('../models/ImageDepositRequest');
+                const request = await ImageDepositRequest.findById(requestId);
+                if (!request) {
+                    await ctx.answerCbQuery('❌ Request not found');
+                    return ctx.reply('❌ Deposit request not found.');
+                }
+                if (request.status !== 'pending') {
+                    await ctx.answerCbQuery('❌ Already processed');
+                    return ctx.reply('❌ This deposit request has already been processed.');
+                }
+                const amount = request.amount;
+                if (!amount || amount < 50) {
+                    await ctx.answerCbQuery('❌ Invalid amount');
+                    return ctx.reply('❌ Invalid amount in deposit request.');
+                }
+
+                const apiBase = process.env.API_BASE_URL || 'http://localhost:3001';
+                const response = await fetch(`${apiBase}/sms-forwarder/approve-image-deposit/${requestId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}) // Amount is already stored in request
+                });
+                if (response.ok) {
+                    await ctx.answerCbQuery('✅ Deposit approved');
+                    await ctx.reply(`✅ Image deposit approved. ETB ${amount} credited to user.`);
+
+                    // Notify other admins
+                    try {
+                        const adminTelegramId = String(ctx.from.id);
+                        const adminName = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim() || ctx.from.username || 'Admin';
+                        const populatedRequest = await ImageDepositRequest.findById(requestId).populate('userId', 'firstName lastName phone telegramId');
+                        const user = populatedRequest?.userId;
+                        const userDisplay = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.phone || 'Unknown' : 'Unknown';
+                        await notifyOtherAdmins(
+                            adminTelegramId,
+                            `👤 Admin Action: Image Deposit Approved\n\n` +
+                            `💰 Amount: ETB ${amount.toLocaleString()}\n` +
+                            `👤 User: ${userDisplay}\n` +
+                            `📱 Phone: ${user?.phone || 'N/A'}\n` +
+                            `✅ Approved by: ${adminName}\n` +
+                            `📋 Request ID: ${requestId}\n` +
+                            `🕐 Time: ${new Date().toLocaleString()}`
+                        );
+                    } catch (notifyError) {
+                        console.error('Error notifying other admins:', notifyError);
+                    }
+                } else {
+                    const err = await response.json().catch(() => ({}));
+                    await ctx.answerCbQuery('❌ Failed to approve');
+                    await ctx.reply(`❌ Failed to approve deposit.${err?.error ? ` ${err.error}` : ''}`);
+                }
+            } catch (error) {
+                console.error('Image deposit approve error:', error);
+                await ctx.answerCbQuery('❌ Error occurred');
+                await ctx.reply('❌ Error processing image deposit approval. Please try again.');
+            }
+        });
+
+        // Deny image deposit
+        bot.action(/^deny_img_(.+)$/, async (ctx) => {
+            if (!(await ensureAdmin(ctx))) return;
+            const requestId = ctx.match[1];
+            try {
+                const apiBase = process.env.API_BASE_URL || 'http://localhost:3001';
+                const response = await fetch(`${apiBase}/sms-forwarder/reject-image-deposit/${requestId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: 'Denied via Telegram' })
+                });
+                if (response.ok) {
+                    await ctx.answerCbQuery('❌ Deposit denied');
+                    await ctx.reply('❌ Image deposit has been denied.');
+
+                    // Notify other admins
+                    try {
+                        const adminTelegramId = String(ctx.from.id);
+                        const adminName = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim() || ctx.from.username || 'Admin';
+                        const ImageDepositRequest = require('../models/ImageDepositRequest');
+                        const request = await ImageDepositRequest.findById(requestId).populate('userId', 'firstName lastName phone telegramId');
+                        const user = request?.userId;
+                        const userDisplay = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.phone || 'Unknown' : 'Unknown';
+                        await notifyOtherAdmins(
+                            adminTelegramId,
+                            `👤 Admin Action: Image Deposit Denied\n\n` +
+                            `👤 User: ${userDisplay}\n` +
+                            `📱 Phone: ${user?.phone || 'N/A'}\n` +
+                            `❌ Denied by: ${adminName}\n` +
+                            `📋 Request ID: ${requestId}\n` +
+                            `🕐 Time: ${new Date().toLocaleString()}`
+                        );
+                    } catch (notifyError) {
+                        console.error('Error notifying other admins:', notifyError);
+                    }
+                } else {
+                    const err = await response.json().catch(() => ({}));
+                    await ctx.answerCbQuery('❌ Failed to deny');
+                    await ctx.reply(`❌ Failed to deny deposit.${err?.error ? ` ${err.error}` : ''}`);
+                }
+            } catch (error) {
+                console.error('Image deposit deny error:', error);
+                await ctx.answerCbQuery('❌ Error occurred');
+                await ctx.reply('❌ Error processing image deposit denial. Please try again.');
+            }
+        });
+
         bot.action('invite', async (ctx) => {
             if (!(await requireRegistration(ctx))) return;
             ctx.answerCbQuery('🔗 Invite friends...');
@@ -1551,12 +1662,12 @@ Thank you for your dedication! 🙏`;
             ctx.reply('📱 Send your Telebirr transaction receipt here:\n\n💡 የደርስዎትን የአጭር መልዕክት ኮፒ አድርገው ቦቱ ላይ ላኩ!\n\n✅ Your wallet will be credited automatically!');
         });
 
-        // Handle "Send Image" button - sets state to awaiting_image
+        // Handle "Send Image" button - sets state to awaiting_image_amount
         bot.action('deposit_send_image', async (ctx) => {
             const userId = String(ctx.from.id);
-            depositStates.set(userId, 'awaiting_image');
-            ctx.answerCbQuery('📷 Ready for receipt image...');
-            ctx.reply('📷 Send a screenshot of your Telebirr receipt:\n\n💡 የደርስዎትን የአጭር መልዕክት ስክሪንሾት ይላኩ!\n\n⏳ Your deposit will be reviewed manually by admin.');
+            depositStates.set(userId, 'awaiting_image_amount');
+            ctx.answerCbQuery('💰 Enter deposit amount...');
+            ctx.reply('ማስገባት የሚፈልጉትን መጠን ያስገቡ?\n\n💡 Enter the amount you want to deposit (minimum ETB 50):\n\n📋 Example: 100');
         });
 
         // Keep the old handler for backward compatibility (if amount is provided in callback)
@@ -2020,8 +2131,28 @@ Thank you for your dedication! 🙏`;
                         return ctx.reply('❌ Minimum deposit amount is 50 Birr. Please enter a valid amount.');
                     }
                 }
-                // Check if user is in deposit receipt flow
+                // Check if user is in deposit image amount flow
                 const depositState = depositStates.get(userId);
+                if (depositState === 'awaiting_image_amount') {
+                    const amountMatch = messageText.match(/^(\d+(?:\.\d{1,2})?)$/);
+                    if (amountMatch) {
+                        const amount = Number(amountMatch[1]);
+                        if (amount >= 50) {
+                            // Store amount and ask for image
+                            depositStates.set(userId, { mode: 'awaiting_image', amount });
+                            ctx.reply(`✅ Amount: ETB ${amount}\n\n📷 Now send a screenshot of your Telebirr receipt:\n\n💡 የደርስዎትን የአጭር መልዕክት ስክሪንሾት ይላኩ!\n\n⏳ Your deposit will be reviewed manually by admin.`);
+                            return;
+                        } else {
+                            ctx.reply('❌ Minimum deposit amount is ETB 50. Please enter a valid amount.');
+                            return;
+                        }
+                    } else {
+                        ctx.reply('❌ Please enter a valid amount (numbers only).\n\n💡 Example: 100');
+                        return;
+                    }
+                }
+
+                // Check if user is in deposit receipt flow
                 let parsed = null;
 
                 if (depositState === 'awaiting_receipt') {
@@ -2165,8 +2296,8 @@ Thank you for your dedication! 🙏`;
             
             // Check if user is in deposit image flow
             const depositState = depositStates.get(userId);
-            if (depositState === 'awaiting_image') {
-                // User sent image for deposit - forward to admins for manual review
+            if (depositState && typeof depositState === 'object' && depositState.mode === 'awaiting_image') {
+                // User sent image for deposit - create request and forward to admins with Approve/Deny buttons
                 try {
                     let user = await UserService.getUserByTelegramId(userId);
                     if (!user) {
@@ -2175,22 +2306,65 @@ Thank you for your dedication! 🙏`;
                     
                     const userDisplay = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim() || ctx.from.username || 'User';
                     const userPhone = user.phone || userId;
+                    const amount = depositState.amount;
+                    const imageFileId = ctx.message.photo
+                        ? ctx.message.photo[ctx.message.photo.length - 1].file_id
+                        : ctx.message.document?.file_id;
                     
-                    // Forward image to all admins
+                    if (!imageFileId) {
+                        depositStates.delete(userId);
+                        return ctx.reply('❌ Could not process image. Please send a photo or document.');
+                    }
+                    
+                    if (!amount || amount < 50) {
+                        depositStates.delete(userId);
+                        return ctx.reply('❌ Invalid amount. Please start over with /deposit.');
+                    }
+                    
+                    // Create image deposit request via API (with amount)
+                    const apiBase = process.env.API_BASE_URL || 'http://localhost:3001';
+                    const createRes = await fetch(`${apiBase}/sms-forwarder/image-deposit`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: user._id.toString(),
+                            telegramId: userId,
+                            imageFileId,
+                            userName: userDisplay,
+                            userPhone: userPhone,
+                            amount: amount
+                        })
+                    });
+                    const createData = await createRes.json();
+                    if (!createData.success || !createData.requestId) {
+                        throw new Error(createData.error || 'Failed to create deposit request');
+                    }
+                    
+                    const requestId = createData.requestId;
+                    const approveDenyKeyboard = {
+                        inline_keyboard: [
+                            [
+                                { text: '✅ Approve', callback_data: `approve_img_${requestId}` },
+                                { text: '❌ Deny', callback_data: `deny_img_${requestId}` }
+                            ]
+                        ]
+                    };
+                    
+                    // Forward image to all admins with Approve/Deny buttons
                     const adminUsers = await require('../models/User').find({ role: 'admin' }, { telegramId: 1 });
                     let forwardedCount = 0;
                     
                     for (const admin of adminUsers) {
                         if (admin.telegramId) {
                             try {
-                                // Forward the photo/document to admin
                                 if (ctx.message.photo) {
                                     const best = ctx.message.photo[ctx.message.photo.length - 1];
                                     await bot.telegram.sendPhoto(
                                         admin.telegramId,
                                         best.file_id,
                                         {
-                                            caption: `📷 Deposit Receipt Image\n\n👤 User: ${userDisplay}\n📱 Phone: ${userPhone}\n🆔 Telegram ID: ${userId}\n\n⏳ Manual review required.`
+                                            caption: `📷 Deposit Receipt Image\n\n👤 User: ${userDisplay}\n📱 Phone: ${userPhone}\n🆔 Telegram ID: ${userId}\n💰 Amount: ETB ${amount}\n📋 Request ID: ${requestId}\n\n⏳ Manual review required.`,
+                                            reply_markup: approveDenyKeyboard
                                         }
                                     );
                                 } else if (ctx.message.document) {
@@ -2198,7 +2372,8 @@ Thank you for your dedication! 🙏`;
                                         admin.telegramId,
                                         ctx.message.document.file_id,
                                         {
-                                            caption: `📷 Deposit Receipt Image\n\n👤 User: ${userDisplay}\n📱 Phone: ${userPhone}\n🆔 Telegram ID: ${userId}\n\n⏳ Manual review required.`
+                                            caption: `📷 Deposit Receipt Image\n\n👤 User: ${userDisplay}\n📱 Phone: ${userPhone}\n🆔 Telegram ID: ${userId}\n💰 Amount: ETB ${amount}\n📋 Request ID: ${requestId}\n\n⏳ Manual review required.`,
+                                            reply_markup: approveDenyKeyboard
                                         }
                                     );
                                 }
@@ -2213,7 +2388,7 @@ Thank you for your dedication! 🙏`;
                     depositStates.delete(userId);
                     
                     if (forwardedCount > 0) {
-                        await ctx.reply('📷 Receipt image received!\n\n✅ Your deposit receipt has been forwarded to admin for manual review.\n\n⏳ You will be notified when your deposit is processed.', {
+                        await ctx.reply('📷 Receipt image received!\n\n✅ Your deposit receipt has been forwarded to admin for manual review.\n\n⏳ You will be notified when your deposit is approved or denied.', {
                             reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] }
                         });
                     } else {

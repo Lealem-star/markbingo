@@ -3,6 +3,8 @@ const router = express.Router();
 const SmsForwarderService = require('../services/smsForwarderService');
 const SMSRecord = require('../models/SMSRecord');
 const DepositVerification = require('../models/DepositVerification');
+const ImageDepositRequest = require('../models/ImageDepositRequest');
+const WalletService = require('../services/walletService');
 
 // POST /sms-forwarder/incoming - Receive SMS from forwarder
 router.post('/incoming', async (req, res) => {
@@ -163,6 +165,170 @@ router.post('/reject/:id', async (req, res) => {
         res.status(500).json({
             success: false,
             error: error.message || 'Failed to reject verification'
+        });
+    }
+});
+
+// POST /sms-forwarder/image-deposit - Create image deposit request
+router.post('/image-deposit', async (req, res) => {
+    try {
+        const { userId, telegramId, imageFileId, userName, userPhone, amount } = req.body;
+
+        if (!userId || !telegramId || !imageFileId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: userId, telegramId, imageFileId'
+            });
+        }
+
+        if (!amount || isNaN(amount) || Number(amount) < 50) {
+            return res.status(400).json({
+                success: false,
+                error: 'Valid amount required (minimum 50).'
+            });
+        }
+
+        const request = new ImageDepositRequest({
+            userId,
+            telegramId,
+            imageFileId,
+            userName: userName || null,
+            userPhone: userPhone || null,
+            amount: Number(amount),
+            status: 'pending'
+        });
+        await request.save();
+
+        res.json({
+            success: true,
+            requestId: request._id.toString()
+        });
+    } catch (error) {
+        console.error('Create image deposit error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to create image deposit request'
+        });
+    }
+});
+
+// POST /sms-forwarder/approve-image-deposit/:id - Approve image deposit (amount stored in request)
+router.post('/approve-image-deposit/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { amount } = req.body; // Optional - will use request's amount if not provided
+
+        const request = await ImageDepositRequest.findById(id).populate('userId');
+        if (!request) {
+            return res.status(404).json({ success: false, error: 'Request not found' });
+        }
+        if (request.status !== 'pending') {
+            return res.status(400).json({ success: false, error: 'Request already processed' });
+        }
+
+        // Use amount from request (user-entered) or from body (if provided for backward compatibility)
+        const depositAmount = amount ? Number(amount) : (request.amount || 0);
+        if (!depositAmount || depositAmount < 50) {
+            return res.status(400).json({
+                success: false,
+                error: 'Valid amount required (minimum 50). Amount should be stored in request.'
+            });
+        }
+
+        const result = await WalletService.processDeposit(request.userId._id, depositAmount, {
+            type: 'image_deposit',
+            requestId: id
+        });
+
+        request.status = 'approved';
+        // Amount is already set when request was created, but ensure it's set
+        if (!request.amount) {
+            request.amount = depositAmount;
+        }
+        request.approvedAt = new Date();
+        request.transactionId = result.transaction._id;
+        await request.save();
+
+        // Notify user via Telegram
+        const BOT_TOKEN = process.env.BOT_TOKEN;
+        const WEBAPP_URL = process.env.WEBAPP_URL || 'https://fikirbingo.com';
+        const userTelegramId = request.userId?.telegramId || request.telegramId;
+        if (BOT_TOKEN && userTelegramId) {
+            const text = `✅ Deposit Approved!\n\n💰 Amount: ETB ${depositAmount.toFixed(2)}\n✅ Credited to: Play Wallet\n\nYour balance has been updated. Good luck!`;
+            const reply_markup = {
+                inline_keyboard: [
+                    [{ text: '🎮 Play Now', web_app: { url: WEBAPP_URL + '?stake=10' } }],
+                    [{ text: '💼 Check Balance', callback_data: 'balance' }]
+                ]
+            };
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: String(userTelegramId), text, reply_markup })
+            }).catch(() => { });
+        }
+
+        res.json({
+            success: true,
+            message: 'Image deposit approved and credited',
+            wallet: result.wallet
+        });
+    } catch (error) {
+        console.error('Approve image deposit error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to approve image deposit'
+        });
+    }
+});
+
+// POST /sms-forwarder/reject-image-deposit/:id - Reject image deposit
+router.post('/reject-image-deposit/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        const request = await ImageDepositRequest.findById(id).populate('userId');
+        if (!request) {
+            return res.status(404).json({ success: false, error: 'Request not found' });
+        }
+        if (request.status !== 'pending') {
+            return res.status(400).json({ success: false, error: 'Request already processed' });
+        }
+
+        request.status = 'rejected';
+        request.rejectedAt = new Date();
+        request.rejectionReason = reason || null;
+        await request.save();
+
+        // Notify user via Telegram
+        const BOT_TOKEN = process.env.BOT_TOKEN;
+        const WEBAPP_URL = process.env.WEBAPP_URL || 'https://fikirbingo.com';
+        const userTelegramId = request.userId?.telegramId || request.telegramId;
+        if (BOT_TOKEN && userTelegramId) {
+            const text = `❌ Deposit Denied\n\n📷 Your receipt image was reviewed.\n${reason ? `📄 Reason: ${reason}\n\n` : '\n'}If you believe this is a mistake, please contact support.`;
+            const reply_markup = {
+                inline_keyboard: [
+                    [{ text: '💬 Contact Support', url: 'https://t.me/Funbingosupport1' }],
+                    [{ text: '🎮 Play Now', web_app: { url: WEBAPP_URL + '?stake=10' } }]
+                ]
+            };
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: String(userTelegramId), text, reply_markup })
+            }).catch(() => { });
+        }
+
+        res.json({
+            success: true,
+            message: 'Image deposit rejected'
+        });
+    } catch (error) {
+        console.error('Reject image deposit error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to reject image deposit'
         });
     }
 });
