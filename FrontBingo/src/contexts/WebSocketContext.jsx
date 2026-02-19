@@ -529,6 +529,11 @@ export function WebSocketProvider({ children }) {
                             }));
                             break;
 
+                        case 'bingo_rejected':
+                            // Invalid BINGO claim: dispatch so GameLayout can clear manual marks and show error
+                            window.dispatchEvent(new CustomEvent('bingoRejected', { detail: event.payload || {} }));
+                            break;
+
                         case 'game_finished':
                         case 'game_ended':
                             // Process game_finished message

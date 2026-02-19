@@ -669,7 +669,7 @@ function startGame(room) {
     });
 
     // Start calling numbers after a short delay so the UI can show a 3-2-1 countdown
-    console.log('⏳ Scheduling first number call in 3 seconds for game:', room.currentGameId);
+    console.log('⏳ Scheduling first number call in 4 seconds for game:', room.currentGameId);
     setTimeout(() => {
         // Only start calling numbers if the game is still running
         if (room.phase === 'running') {
@@ -680,7 +680,7 @@ function startGame(room) {
                 phase: room.phase
             });
         }
-    }, 3000);
+    }, 4000);
 }
 
 function callNextNumber(room) {
@@ -1029,6 +1029,20 @@ function checkBingo(cartella, calledNumbers) {
         return true;
     }
 
+    // Check four corners
+    const topLeft = cartella[0]?.[0];
+    const topRight = cartella[0]?.[4];
+    const bottomLeft = cartella[4]?.[0];
+    const bottomRight = cartella[4]?.[4];
+    if (
+        (topLeft === 0 || calledNumbers.includes(topLeft)) &&
+        (topRight === 0 || calledNumbers.includes(topRight)) &&
+        (bottomLeft === 0 || calledNumbers.includes(bottomLeft)) &&
+        (bottomRight === 0 || calledNumbers.includes(bottomRight))
+    ) {
+        return true;
+    }
+
     return false;
 }
 
@@ -1335,7 +1349,7 @@ wss.on('connection', async (ws, request) => {
                         ? Array.from(cartellasByNumber.entries()).map(([cartelaNumber, cartella]) => ({ cartelaNumber, cartella }))
                         : [];
 
-                    // Accept if any of the user's cartellas has bingo
+                    // Accept if any of the user's cartellas has bingo (based on called numbers only)
                     const winning = entries.find(e => e.cartella && checkBingo(e.cartella, room.calledNumbers));
                     if (winning) {
                         room.winners.push({ userId: ws.userId, cartelaNumber: winning.cartelaNumber, cartella: winning.cartella });
@@ -1349,6 +1363,17 @@ wss.on('connection', async (ws, request) => {
                         // Schedule announce after short delay so clients have time
                         // to show \"Bingo accepted\" before moving to results.
                         scheduleAnnounce(room, 'bingo_claim_accepted');
+                    } else {
+                        // Invalid claim: user does not have a valid winning pattern. Punish by notifying client to clear manual marks.
+                        if (ws.readyState === 1) {
+                            ws.send(JSON.stringify({
+                                type: 'bingo_rejected',
+                                payload: {
+                                    gameId: room.currentGameId,
+                                    reason: 'invalid_claim'
+                                }
+                            }));
+                        }
                     }
                 }
             }
