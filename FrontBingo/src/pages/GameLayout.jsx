@@ -279,17 +279,17 @@ export default function GameLayout({
 
     // Local 3-2-1 countdown before showing "STARTED" in status box
     useEffect(() => {
-        // Reset countdown when a new game registration starts
-        if (gameState.phase === 'registration') {
+        // Reset countdown when game changes or leaves running phase
+        if (gameState.phase !== 'running') {
             setStartCountdown(0);
             return;
         }
 
-        // When game enters running phase for a gameId and we have no active countdown yet, start 3-2-1
-        if (gameState.phase === 'running' && startCountdown === 0) {
+        // Only trigger countdown at the very beginning of a running game (no numbers called yet)
+        if (gameState.phase === 'running' && calledNumbers.length === 0) {
             setStartCountdown(3);
         }
-    }, [gameState.phase, currentGameId, startCountdown]);
+    }, [gameState.phase, calledNumbers.length, currentGameId]);
 
     // Tick the countdown down each second
     useEffect(() => {

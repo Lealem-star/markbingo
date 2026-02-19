@@ -668,8 +668,19 @@ function startGame(room) {
         }
     });
 
-    // Start calling numbers
-    callNextNumber(room);
+    // Start calling numbers after a short delay so the UI can show a 3-2-1 countdown
+    console.log('⏳ Scheduling first number call in 3 seconds for game:', room.currentGameId);
+    setTimeout(() => {
+        // Only start calling numbers if the game is still running
+        if (room.phase === 'running') {
+            callNextNumber(room);
+        } else {
+            console.log('⏹️ Skipping first number call because phase is no longer running:', {
+                gameId: room.currentGameId,
+                phase: room.phase
+            });
+        }
+    }, 3000);
 }
 
 function callNextNumber(room) {
