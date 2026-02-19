@@ -1811,19 +1811,19 @@ Thank you for your dedication! 🙏`;
                                 }
 
                                 // Balance is sufficient - proceed to transfer method selection
-                                withdrawalStates.set(userId, { stage: 'awaiting_method', amount });
-                                ctx.reply(`💰 Withdrawal Amount: ETB ${amount}\n\n🏦 Choose your preferred transfer method:`, {
-                                    reply_markup: {
-                                        inline_keyboard: [
-                                            [{ text: '📱 Telebirr', callback_data: 'withdraw_telebirr' }],
-                                            [{ text: '🏦 Commercial Bank', callback_data: 'withdraw_commercial' }],
-                                            [{ text: '💳 CBE Birr', callback_data: 'withdraw_cbe' }],
-                                            [{ text: '🏛️ Other Bank', callback_data: 'withdraw_other' }],
-                                            [{ text: '❌ Cancel', callback_data: 'back_to_menu' }]
-                                        ]
-                                    }
-                                });
-                                return;
+                            withdrawalStates.set(userId, { stage: 'awaiting_method', amount });
+                            ctx.reply(`💰 Withdrawal Amount: ETB ${amount}\n\n🏦 Choose your preferred transfer method:`, {
+                                reply_markup: {
+                                    inline_keyboard: [
+                                        [{ text: '📱 Telebirr', callback_data: 'withdraw_telebirr' }],
+                                        [{ text: '🏦 Commercial Bank', callback_data: 'withdraw_commercial' }],
+                                        [{ text: '💳 CBE Birr', callback_data: 'withdraw_cbe' }],
+                                        [{ text: '🏛️ Other Bank', callback_data: 'withdraw_other' }],
+                                        [{ text: '❌ Cancel', callback_data: 'back_to_menu' }]
+                                    ]
+                                }
+                            });
+                            return;
                             } catch (error) {
                                 console.error('Balance check error during withdrawal:', error);
                                 withdrawalStates.delete(userId);

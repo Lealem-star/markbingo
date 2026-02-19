@@ -88,7 +88,7 @@ export default function Winner({ onNavigate, onResetToGame }) {
                                         No Winner This Game
                                     </p>
                                 </div>
-                            </div>
+                    </div>
                         </div>
 
                         {/* Content Section with Light Purple Background */}
@@ -101,12 +101,12 @@ export default function Winner({ onNavigate, onResetToGame }) {
                                 <div className="text-center">
                                     <div className="text-gray-800 text-xl font-bold mb-2">
                                         Game Completed
-                                    </div>
+                        </div>
                                     <div className="text-gray-700 text-base font-medium">
-                                        The game ended without a winner.<br />
-                                        Better luck next time!
-                                    </div>
-                                </div>
+                            The game ended without a winner.<br />
+                            Better luck next time!
+                        </div>
+                    </div>
                             </div>
 
                             {/* Info Card */}
@@ -114,8 +114,8 @@ export default function Winner({ onNavigate, onResetToGame }) {
                                 <div className="text-center">
                                     <div className="text-gray-700 text-sm font-semibold mb-1">
                                         No BINGO Achieved
-                                    </div>
-                                    <div className="text-gray-600 text-xs">
+                            </div>
+                            <div className="text-gray-600 text-xs">
                                         No player achieved a winning pattern in this round.
                                     </div>
                                 </div>
@@ -130,13 +130,13 @@ export default function Winner({ onNavigate, onResetToGame }) {
                                 </div>
                                 <div className="text-white font-extrabold text-6xl md:text-7xl tracking-wider drop-shadow-lg">
                                     {countdown > 0 ? countdown : '0'}
-                                </div>
+                        </div>
                                 <div className="text-white text-xs font-medium mt-2 opacity-90">
-                                    {countdown > 0 ? (
+                            {countdown > 0 ? (
                                         <>Auto-starting next game in {countdown} second{countdown !== 1 ? 's' : ''}</>
-                                    ) : (
-                                        <>Navigating to next game...</>
-                                    )}
+                            ) : (
+                                <>Navigating to next game...</>
+                            )}
                                 </div>
                             </div>
                         </div>

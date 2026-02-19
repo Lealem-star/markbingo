@@ -924,17 +924,17 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                                         boxSizing: 'border-box'
                                     }}
                                 >
-                                    {selectedCards.map(({ number, card }) => (
-                                        <CartellaCard
-                                            key={number}
-                                            id={number}
-                                            card={card}
-                                            called={gameState.calledNumbers || []}
-                                            selectedNumber={null}
-                                            isPreview={true}
-                                        />
-                                    ))}
-                                </div>
+                                {selectedCards.map(({ number, card }) => (
+                                    <CartellaCard
+                                        key={number}
+                                        id={number}
+                                        card={card}
+                                        called={gameState.calledNumbers || []}
+                                        selectedNumber={null}
+                                        isPreview={true}
+                                    />
+                                ))}
+                            </div>
                             )}
                             {/* <div className="text-center text-sm text-gray-700 mt-3">
                                 🎫 {selectedNumbers.map(n => `Cartella #${n}`).join('  |  ')}
