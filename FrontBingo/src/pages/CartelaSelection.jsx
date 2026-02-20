@@ -335,23 +335,24 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         }
     }, [lastEvent, showWarning, showError]);
 
-    // Handle registration expired - add to alert banners
+    // Handle registration expired - add to alert banners only when it's truly "no players"
+    // Don't show when user has a selection: server may extend (1 player) or start (2+ players)
     useEffect(() => {
-        const registrationExpired = gameState?.phase === 'registration' && typeof gameState?.countdown === 'number' && gameState.countdown <= 0;
+        const hasSelection = Array.isArray(gameState?.yourSelections) && gameState.yourSelections.length > 0;
+        const countdownZero = typeof gameState?.countdown === 'number' && gameState.countdown <= 0;
+        const registrationExpired = gameState?.phase === 'registration' && countdownZero && !hasSelection;
         const msg = 'Registration time has ended due to low number of players. Please wait for the next game to start.';
-        
+
         setAlertBanners(prev => {
             const hasExpiredMsg = prev.includes(msg);
             if (registrationExpired && !hasExpiredMsg) {
-                // Add expired message if registration is expired and message not already present
                 return [...prev, msg];
             } else if (!registrationExpired && hasExpiredMsg) {
-                // Remove expired message if registration is active again
                 return prev.filter(m => m !== msg);
             }
             return prev;
         });
-    }, [gameState?.phase, gameState?.countdown]);
+    }, [gameState?.phase, gameState?.countdown, gameState?.yourSelections]);
 
     // Auto-dismiss alerts after 3 seconds
     useEffect(() => {
