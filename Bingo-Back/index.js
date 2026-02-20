@@ -673,7 +673,7 @@ function startGame(room) {
     setTimeout(() => {
         // Only start calling numbers if the game is still running
         if (room.phase === 'running') {
-            callNextNumber(room);
+    callNextNumber(room);
         } else {
             console.log('⏹️ Skipping first number call because phase is no longer running:', {
                 gameId: room.currentGameId,

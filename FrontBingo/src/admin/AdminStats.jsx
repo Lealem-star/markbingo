@@ -5,17 +5,8 @@ export default function AdminStats() {
     const [today, setToday] = useState({ totalPlayers: 0, systemCut: 0 });
     const [dailyStats, setDailyStats] = useState([]);
     const [todayFinance, setTodayFinance] = useState({ totalGames: 0, totalDeposit: 0, totalWithdraw: 0 });
-    const [inviteStats, setInviteStats] = useState({
-        global: {
-            totalUsers: 0,
-            totalInvites: 0,
-            totalInviteRewards: 0,
-            avgInvitesPerUser: 0
-        },
-        topInviters: []
-    });
     const [totalMainWallet, setTotalMainWallet] = useState(0);
-    const [totalUniquePlayers, setTotalUniquePlayers] = useState(0);
+    const [totalPlayWallet, setTotalPlayWallet] = useState(0);
     const [totalSystemRevenue, setTotalSystemRevenue] = useState(0);
 
     useEffect(() => {
@@ -86,24 +77,10 @@ export default function AdminStats() {
                     .sort((a, b) => a.day.localeCompare(b.day))
                     .reverse(); // Most recent first
 
-                // Calculate total unique players across all games
-                const uniquePlayerIds = new Set();
-                games.forEach(game => {
-                    if (game.players && Array.isArray(game.players)) {
-                        game.players.forEach(playerId => {
-                            if (playerId) {
-                                uniquePlayerIds.add(playerId.toString());
-                            }
-                        });
-                    }
-                });
-                const totalUnique = uniquePlayerIds.size;
-
                 // Calculate total system revenue (sum of all 20% cuts)
                 const totalRevenue = games.reduce((sum, game) => sum + (game.systemCut || 0), 0);
 
                 setDailyStats(dailyStatsList);
-                setTotalUniquePlayers(totalUnique);
                 setTotalSystemRevenue(totalRevenue);
             } catch (error) {
                 console.error('Error fetching daily game stats:', error);
@@ -111,10 +88,21 @@ export default function AdminStats() {
             }
             try {
                 // Today's totals: games played, deposits, withdrawals
-                const start = new Date(); start.setHours(0, 0, 0, 0);
-                const end = new Date(); end.setHours(23, 59, 59, 999);
-                const from = start.toISOString();
-                const to = end.toISOString();
+                // Use UTC+3 (Africa/Addis_Ababa) timezone to match server
+                const now = new Date();
+                const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+                const addisAbabaTime = new Date(utcTime + (3 * 3600000)); // UTC+3
+                
+                const start = new Date(addisAbabaTime);
+                start.setHours(0, 0, 0, 0);
+                const startUTC = new Date(start.getTime() - (3 * 3600000)); // Convert back to UTC
+                
+                const end = new Date(addisAbabaTime);
+                end.setHours(23, 59, 59, 999);
+                const endUTC = new Date(end.getTime() - (3 * 3600000)); // Convert back to UTC
+                
+                const from = startUTC.toISOString();
+                const to = endUTC.toISOString();
 
                 const [overview, depositsRes, withdrawalsCompletedRes] = await Promise.all([
                     apiFetch('/admin/stats/overview'),
@@ -126,7 +114,7 @@ export default function AdminStats() {
 
                 const deposits = depositsRes?.deposits || [];
                 const totalDeposit = deposits
-                    .filter(d => (d.status || 'completed') === 'completed' && d.createdAt && new Date(d.createdAt) >= start && new Date(d.createdAt) <= end)
+                    .filter(d => (d.status || 'completed') === 'completed' && d.createdAt && new Date(d.createdAt) >= startUTC && new Date(d.createdAt) <= endUTC)
                     .reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
 
                 const withdrawalsCompleted = withdrawalsCompletedRes?.withdrawals || [];
@@ -134,54 +122,23 @@ export default function AdminStats() {
                     .filter(w => {
                         // Check processedBy.processedAt (where bot stores the approval date)
                         const processedDate = w.processedBy?.processedAt || w.processedAt;
-                        return processedDate && new Date(processedDate) >= start && new Date(processedDate) <= end;
+                        return processedDate && new Date(processedDate) >= startUTC && new Date(processedDate) <= endUTC;
                     })
                     .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
 
                 setTodayFinance({ totalGames, totalDeposit, totalWithdraw });
             } catch { }
             try {
-                const inviteData = await apiFetch('/admin/stats/invites');
-                setInviteStats(inviteData);
-            } catch { }
-            try {
                 const walletData = await apiFetch('/admin/stats/wallets/total-main');
                 setTotalMainWallet(walletData?.totalMain || 0);
+            } catch { }
+            try {
+                const playWalletData = await apiFetch('/admin/stats/wallets/total-play');
+                setTotalPlayWallet(playWalletData?.totalPlay || 0);
             } catch { }
         })();
     }, []);
 
-    const topInviterSections = [
-        {
-            key: 'daily',
-            label: 'Daily Top Inviters',
-            rows: (inviteStats.topInviters?.daily || []).slice(0, 10)
-        },
-        {
-            key: 'weekly',
-            label: 'Weekly Top Inviters',
-            rows: (inviteStats.topInviters?.weekly || []).slice(0, 10)
-        },
-        {
-            key: 'monthly',
-            label: 'Monthly Top Inviters',
-            rows: (inviteStats.topInviters?.monthly || []).slice(0, 10)
-        }
-    ];
-
-    const fallbackTopInviters = Array.isArray(inviteStats.topInviters)
-        ? inviteStats.topInviters.slice(0, 10)
-        : [];
-
-    const sectionsToRender = topInviterSections.filter(section => section.rows.length > 0);
-
-    if (sectionsToRender.length === 0 && fallbackTopInviters.length > 0) {
-        sectionsToRender.push({
-            key: 'all-time',
-            label: 'Top Inviters',
-            rows: fallbackTopInviters
-        });
-    }
     const weeklyStats = dailyStats.slice(0, 7);
 
     return (
@@ -220,68 +177,18 @@ export default function AdminStats() {
                 </div>
             </div>
 
-            {/* Invite Statistics Section */}
+            {/* Finance Section */}
             <div className="admin-stats-grid">
-                <div className="admin-stats-card">
-                    <div>
-                        <div className="admin-stats-label">Total Invites</div>
-                        <div className="admin-stats-value admin-stats-value-blue">{inviteStats.global.totalInvites}</div>
-                    </div>
-                </div>
                 <div className="admin-stats-card">
                     <div>
                         <div className="admin-stats-label">Total Sum of All User Main Wallet</div>
                         <div className="admin-stats-value admin-stats-value-purple">ETB {totalMainWallet.toFixed(2)}</div>
                     </div>
                 </div>
-            </div>
-
-            {/* Top Inviters Tables by Range */}
-            {sectionsToRender.length > 0 &&
-                sectionsToRender.map(section => (
-                    <div
-                        key={section.key}
-                        className="admin-stats-table-container"
-                        style={{ '--stats-table-cols': 3, minHeight: '280px' }}
-                    >
-                        <h3 className="admin-stats-table-title">{section.label}</h3>
-
-                        <div className="admin-stats-table-header">
-                            <div className="admin-stats-table-header-item">User</div>
-                            <div className="admin-stats-table-header-item">Invites</div>
-                            <div className="admin-stats-table-header-item">Rewards (Play Wallet)</div>
-                        </div>
-
-                        <div className="admin-stats-table-content">
-                            {section.rows.map((inviter, index) => (
-                                <div key={`${section.key}-${index}`} className="admin-stats-table-row">
-                                    <div className="admin-stats-table-cell">
-                                        {inviter.firstName} {inviter.lastName}
-                                    </div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">
-                                        {inviter.totalInvites}
-                                    </div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-right">
-                                        ETB {inviter.inviteRewards || 0}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-
-            {/* Daily Statistics Summary */}
-            <div className="admin-stats-grid">
                 <div className="admin-stats-card">
                     <div>
-                        <div className="admin-stats-label">Total Unique Players (All Days)</div>
-                        <div className="admin-stats-value admin-stats-value-green">{totalUniquePlayers}</div>
-                    </div>
-                </div>
-                <div className="admin-stats-card">
-                    <div>
-                        <div className="admin-stats-label">Total System Revenue (All Days)</div>
-                        <div className="admin-stats-value admin-stats-value-amber">ETB {totalSystemRevenue.toFixed(2)}</div>
+                        <div className="admin-stats-label">Total Sum of All User play Wallet</div>
+                        <div className="admin-stats-value admin-stats-value-purple">ETB {totalPlayWallet.toFixed(2)}</div>
                     </div>
                 </div>
             </div>
@@ -293,30 +200,32 @@ export default function AdminStats() {
             >
                 <h3 className="admin-stats-table-title">Daily Statistics</h3>
 
-                {/* Table Header */}
-                <div className="admin-stats-table-header">
-                    <div className="admin-stats-table-header-item">Day</div>
-                    <div className="admin-stats-table-header-item">Games</div>
-                    <div className="admin-stats-table-header-item">Stake</div>
-                    <div className="admin-stats-table-header-item">Total Players</div>
-                    <div className="admin-stats-table-header-item">System Revenue</div>
-                </div>
+                <div className="admin-stats-table-wrapper">
+                    {/* Table Header */}
+                    <div className="admin-stats-table-header">
+                        <div className="admin-stats-table-header-item">Day</div>
+                        <div className="admin-stats-table-header-item">Games</div>
+                        <div className="admin-stats-table-header-item">Stake</div>
+                        <div className="admin-stats-table-header-item">Total Players</div>
+                        <div className="admin-stats-table-header-item">System Revenue</div>
+                    </div>
 
-                {/* Table Content */}
-                <div className="admin-stats-table-content">
-                    {weeklyStats.length > 0 ? (
-                        weeklyStats.map((stat, index) => (
-                            <div key={index} className="admin-stats-table-row">
-                                <div className="admin-stats-table-cell">{new Date(stat.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                                <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.totalGames || 0}</div>
-                                <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.stakesDisplay}</div>
-                                <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.noPlayed || 0}</div>
-                                <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {(stat.systemRevenue || 0).toFixed(2)}</div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="admin-stats-empty">No data available</div>
-                    )}
+                    {/* Table Content */}
+                    <div className="admin-stats-table-content">
+                        {weeklyStats.length > 0 ? (
+                            weeklyStats.map((stat, index) => (
+                                <div key={index} className="admin-stats-table-row">
+                                    <div className="admin-stats-table-cell">{new Date(stat.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.totalGames || 0}</div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.stakesDisplay}</div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.noPlayed || 0}</div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {(stat.systemRevenue || 0).toFixed(2)}</div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="admin-stats-empty">No data available</div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

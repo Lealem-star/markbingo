@@ -672,10 +672,30 @@ router.post('/balances/deposits/:id/deny', adminMiddleware, async (req, res) => 
 // --- Admin Statistics ---
 router.get('/stats/today', adminMiddleware, async (req, res) => {
     try {
-        const start = new Date(); start.setHours(0, 0, 0, 0);
-        const end = new Date(); end.setHours(23, 59, 59, 999);
+        // Use server timezone (Africa/Addis_Ababa) for consistent "today" calculation
+        // Server TZ is set in ecosystem.config.js, so new Date() uses local timezone
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        const end = new Date();
+        end.setHours(23, 59, 59, 999);
+        
         const games = await Game.find({ finishedAt: { $gte: start, $lte: end } }, { systemCut: 1, players: 1 }).lean();
-        const totalPlayers = games.reduce((s, g) => s + (Array.isArray(g.players) ? g.players.length : 0), 0);
+        
+        // Calculate total players (unique players across all games) - matching bot logic
+        const uniquePlayerIds = new Set();
+        games.forEach(game => {
+            if (game.players && Array.isArray(game.players)) {
+                game.players.forEach(player => {
+                    // Handle both cases: player object with userId, or direct playerId
+                    const playerId = player?.userId ? player.userId : player;
+                    if (playerId) {
+                        uniquePlayerIds.add(playerId.toString());
+                    }
+                });
+            }
+        });
+        const totalPlayers = uniquePlayerIds.size;
+        
         const systemCut = games.reduce((s, g) => s + (g.systemCut || 0), 0);
         res.json({ totalPlayers, systemCut });
     } catch { res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' }); }
@@ -826,6 +846,58 @@ router.get('/stats/wallets/total-main', adminMiddleware, async (req, res) => {
         res.json({ totalMain });
     } catch (error) {
         console.error('Total main wallet stats error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
+router.get('/stats/wallets/total-play', adminMiddleware, async (req, res) => {
+    try {
+        // Get all wallets with populated user data to check for bots
+        const wallets = await Wallet.find({})
+            .populate('userId', 'telegramId')
+            .lean();
+        
+        let totalPlay = 0;
+        let botCount = 0;
+        let botTotal = 0;
+        let userCount = 0;
+        
+        // Filter out bot wallets and sum only real user wallets
+        wallets.forEach((wallet) => {
+            // Skip if wallet has no user data
+            if (!wallet.userId || !wallet.userId.telegramId) {
+                return;
+            }
+            
+            const telegramId = String(wallet.userId.telegramId);
+            // Check if this is a bot user
+            // Bots have telegramId in range 9000000000-9000000020 (9 billion range, 20 bots)
+            // or contain "bot_user_" pattern
+            const telegramIdNum = parseInt(telegramId, 10);
+            const isBot = (!isNaN(telegramIdNum) && telegramIdNum >= 9000000000 && telegramIdNum <= 9000000020) 
+                || telegramId.includes('bot_user_');
+            
+            if (isBot) {
+                botCount++;
+                botTotal += (wallet.play || 0);
+            } else {
+                userCount++;
+                totalPlay += (wallet.play || 0);
+            }
+        });
+        
+        // Debug logging
+        console.log('Total Play Wallet Stats:', {
+            totalWallets: wallets.length,
+            botWallets: botCount,
+            botTotal: botTotal.toFixed(2),
+            userWallets: userCount,
+            userTotal: totalPlay.toFixed(2)
+        });
+        
+        res.json({ totalPlay });
+    } catch (error) {
+        console.error('Error calculating total play wallet:', error);
         res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
     }
 });

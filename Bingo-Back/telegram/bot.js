@@ -329,16 +329,16 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             }
         }
 
-        // Helper: generate report message for a given local-day (start inclusive, end exclusive)
+        // Helper: generate report message for a given local-day (start inclusive, end inclusive)
         async function generateDailyReportMessage(start, end) {
             // Fetch stats
             const gamesByFinished = await Game.find({
-                finishedAt: { $gte: start, $lt: end },
+                finishedAt: { $gte: start, $lte: end },
                 status: 'finished'
             }).lean();
             const gamesByCreated = await Game.find({
                 finishedAt: { $exists: false },
-                createdAt: { $gte: start, $lt: end },
+                createdAt: { $gte: start, $lte: end },
                 status: 'finished'
             }).lean();
             const gameMap = new Map();
@@ -366,7 +366,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
 
             const deposits = await Transaction.find({
                 type: 'deposit',
-                createdAt: { $gte: start, $lt: end },
+                createdAt: { $gte: start, $lte: end },
                 status: { $ne: 'failed' }
             }).lean();
             const totalDeposits = deposits.reduce((s, t) => s + (t.amount || 0), 0);
@@ -374,7 +374,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             // Get new users registered
             const User = require('../models/User');
             const newUsers = await User.find({
-                registrationDate: { $gte: start, $lt: end },
+                registrationDate: { $gte: start, $lte: end },
                 isRegistered: true
             }).lean();
             const totalNewUsers = newUsers.length;
@@ -383,7 +383,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             const pendingWithdrawals = await Transaction.find({
                 type: 'withdrawal',
                 status: 'pending',
-                createdAt: { $gte: start, $lt: end }
+                createdAt: { $gte: start, $lte: end }
             }).lean();
             const totalPendingWithdrawals = pendingWithdrawals.length;
             const totalPendingWithdrawalAmount = pendingWithdrawals.reduce((sum, t) => sum + (t.amount || 0), 0);
@@ -392,8 +392,8 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 type: 'withdrawal',
                 status: 'completed',
                 $or: [
-                    { 'processedBy.processedAt': { $gte: start, $lt: end } },
-                    { 'processedBy.processedAt': null, updatedAt: { $gte: start, $lt: end } }
+                    { 'processedBy.processedAt': { $gte: start, $lte: end } },
+                    { 'processedBy.processedAt': null, updatedAt: { $gte: start, $lte: end } }
                 ],
                 'processedBy.adminId': { $exists: true, $ne: null }
             }).lean();
@@ -450,21 +450,11 @@ ${displayDate}
 🎮 *Total Games:* ${totalGames.toLocaleString()}
 👥 *Total Players:* ${totalPlayers.toLocaleString()}
 💰 *System Revenue:* ${totalRevenue.toLocaleString()} ETB
-🏆 *Total Prizes:* ${totalPrizes.toLocaleString()} ETB
 💳 *Total Deposits:* ${totalDeposits.toLocaleString()} ETB
 👤 *New Users:* ${totalNewUsers.toLocaleString()}
 ⏳ *Pending Withdrawals:* ${totalPendingWithdrawals} (${totalPendingWithdrawalAmount.toLocaleString()} ETB)
 ${adminWithdrawalsSection}━━━━━━━━━━━━━━━━━━━━
 ${randomAppreciation}
-
-📊 *Breakdown:*
-• Games Played: ${totalGames}
-• Unique Players: ${totalPlayers}
-• Revenue Generated: ${totalRevenue.toLocaleString()} ETB
-• Prizes Distributed: ${totalPrizes.toLocaleString()} ETB
-• Deposits Received: ${totalDeposits.toLocaleString()} ETB
-• New Registrations: ${totalNewUsers}
-• Pending Withdrawals: ${totalPendingWithdrawals} (${totalPendingWithdrawalAmount.toLocaleString()} ETB)
 
 Thank you for your dedication! 🙏`;
 
@@ -771,18 +761,16 @@ Thank you for your dedication! 🙏`;
                     const d = new Date(parts[1]);
                     if (!isNaN(d.getTime())) target = d;
                 }
-                // Build window [start, end) for target date; default yesterday
+                // Build window [start, end] for target date; default today
                 const todayMidnight = new Date();
                 todayMidnight.setHours(0, 0, 0, 0);
                 let start = new Date(todayMidnight);
                 if (target) {
                     start = new Date(target);
                     start.setHours(0, 0, 0, 0);
-                } else {
-                    start.setDate(start.getDate() - 1);
                 }
                 const end = new Date(start);
-                end.setDate(end.getDate() + 1);
+                end.setHours(23, 59, 59, 999);
 
                 const message = await generateDailyReportMessage(start, end);
                 await ctx.reply(message, { parse_mode: 'Markdown' });
@@ -847,21 +835,11 @@ ${formattedStartDate} - ${formattedEndDate}
 🎮 *Total Games:* ${stats.totalGames.toLocaleString()}
 👥 *Total Players:* ${stats.totalPlayers.toLocaleString()}
 💰 *System Revenue:* ${stats.totalRevenue.toLocaleString()} ETB
-🏆 *Total Prizes:* ${stats.totalPrizes.toLocaleString()} ETB
 💳 *Total Deposits:* ${stats.totalDeposits.toLocaleString()} ETB
 👤 *New Users:* ${stats.totalNewUsers.toLocaleString()}
 ⏳ *Pending Withdrawals:* ${stats.totalPendingWithdrawals} (${stats.totalPendingWithdrawalAmount.toLocaleString()} ETB)
 ${adminWithdrawalsSection}━━━━━━━━━━━━━━━━━━━━
 ${randomAppreciation}
-
-📊 *Weekly Breakdown:*
-• Games Played: ${stats.totalGames}
-• Unique Players: ${stats.totalPlayers}
-• Revenue Generated: ${stats.totalRevenue.toLocaleString()} ETB
-• Prizes Distributed: ${stats.totalPrizes.toLocaleString()} ETB
-• Deposits Received: ${stats.totalDeposits.toLocaleString()} ETB
-• New Registrations: ${stats.totalNewUsers}
-• Pending Withdrawals: ${stats.totalPendingWithdrawals} (${stats.totalPendingWithdrawalAmount.toLocaleString()} ETB)
 
 Thank you for your dedication! 🙏`;
 
@@ -893,13 +871,12 @@ Thank you for your dedication! 🙏`;
         bot.action('admin_daily_report', async (ctx) => {
             if (!(await ensureAdmin(ctx))) return;
             try {
-                // Yesterday window
+                // Today window (matching API endpoint)
                 const todayMidnight = new Date();
                 todayMidnight.setHours(0, 0, 0, 0);
                 const start = new Date(todayMidnight);
-                start.setDate(start.getDate() - 1);
-                const end = new Date(start);
-                end.setDate(end.getDate() + 1);
+                const end = new Date(todayMidnight);
+                end.setHours(23, 59, 59, 999);
                 const message = await generateDailyReportMessage(start, end);
                 await ctx.answerCbQuery().catch(() => { });
                 await ctx.reply(message, { parse_mode: 'Markdown' });
@@ -969,21 +946,11 @@ ${formattedStartDate} - ${formattedEndDate}
 🎮 *Total Games:* ${stats.totalGames.toLocaleString()}
 👥 *Total Players:* ${stats.totalPlayers.toLocaleString()}
 💰 *System Revenue:* ${stats.totalRevenue.toLocaleString()} ETB
-🏆 *Total Prizes:* ${stats.totalPrizes.toLocaleString()} ETB
 💳 *Total Deposits:* ${stats.totalDeposits.toLocaleString()} ETB
 👤 *New Users:* ${stats.totalNewUsers.toLocaleString()}
 ⏳ *Pending Withdrawals:* ${stats.totalPendingWithdrawals} (${stats.totalPendingWithdrawalAmount.toLocaleString()} ETB)
 ${adminWithdrawalsSection}━━━━━━━━━━━━━━━━━━━━
 ${randomAppreciation}
-
-📊 *Weekly Breakdown:*
-• Games Played: ${stats.totalGames}
-• Unique Players: ${stats.totalPlayers}
-• Revenue Generated: ${stats.totalRevenue.toLocaleString()} ETB
-• Prizes Distributed: ${stats.totalPrizes.toLocaleString()} ETB
-• Deposits Received: ${stats.totalDeposits.toLocaleString()} ETB
-• New Registrations: ${stats.totalNewUsers}
-• Pending Withdrawals: ${stats.totalPendingWithdrawals} (${stats.totalPendingWithdrawalAmount.toLocaleString()} ETB)
 
 Thank you for your dedication! 🙏`;
 
@@ -2812,12 +2779,12 @@ function setupDailyAdminNotifications(bot) {
     // Function to get daily statistics
     async function getDailyStats() {
         try {
-            // Build yesterday's local-day window (assumes TZ is set to Africa/Addis_Ababa in env)
+            // Build today's local-day window (assumes TZ is set to Africa/Addis_Ababa in env)
             const todayLocalMidnight = new Date();
             todayLocalMidnight.setHours(0, 0, 0, 0);
             const start = new Date(todayLocalMidnight); // start of local "today"
-            start.setDate(start.getDate() - 1); // move to start of "yesterday"
-            const end = new Date(todayLocalMidnight); // end is start of "today"
+            const end = new Date(todayLocalMidnight);
+            end.setHours(23, 59, 59, 999); // end of local "today"
 
             console.log('📊 Fetching daily stats for:', {
                 start: start.toISOString(),
@@ -2827,14 +2794,14 @@ function setupDailyAdminNotifications(bot) {
             // Get today's games - check finishedAt first, fallback to createdAt
             // Games should have finishedAt set when they finish, but check both for reliability
             const todayGamesByFinished = await Game.find({
-                finishedAt: { $gte: start, $lt: end },
+                finishedAt: { $gte: start, $lte: end },
                 status: 'finished'
             }).lean();
 
             // Also check games that finished today but might use createdAt
             const todayGamesByCreated = await Game.find({
                 finishedAt: { $exists: false },
-                createdAt: { $gte: start, $lt: end },
+                createdAt: { $gte: start, $lte: end },
                 status: 'finished'
             }).lean();
 
@@ -2881,7 +2848,7 @@ function setupDailyAdminNotifications(bot) {
             // Status defaults to 'completed' but we'll include all deposits created today
             const todayDeposits = await Transaction.find({
                 type: 'deposit',
-                createdAt: { $gte: start, $lt: end },
+                createdAt: { $gte: start, $lte: end },
                 status: { $ne: 'failed' } // Exclude failed deposits
             }).lean();
 
@@ -2903,7 +2870,7 @@ function setupDailyAdminNotifications(bot) {
 
             // Get new users registered
             const newUsers = await User.find({
-                registrationDate: { $gte: start, $lt: end },
+                registrationDate: { $gte: start, $lte: end },
                 isRegistered: true
             }).lean();
             const totalNewUsers = newUsers.length;
@@ -2916,9 +2883,9 @@ function setupDailyAdminNotifications(bot) {
                 type: 'withdrawal',
                 status: 'completed',
                 $or: [
-                    { 'processedBy.processedAt': { $gte: start, $lt: end } },
+                    { 'processedBy.processedAt': { $gte: start, $lte: end } },
                     // Fallback in case processedAt was not saved properly; use updatedAt window
-                    { 'processedBy.processedAt': null, updatedAt: { $gte: start, $lt: end } }
+                    { 'processedBy.processedAt': null, updatedAt: { $gte: start, $lte: end } }
                 ],
                 'processedBy.adminId': { $exists: true, $ne: null }
             }).lean();
@@ -2955,7 +2922,7 @@ function setupDailyAdminNotifications(bot) {
                 totalPendingWithdrawals,
                 totalPendingWithdrawalAmount,
                 adminWithdrawals,
-                // Display the local date for the day being reported (yesterday)
+                // Display the local date for the day being reported (today)
                 date: start.toISOString().split('T')[0] // Format: YYYY-MM-DD
             };
         } catch (error) {
@@ -3033,23 +3000,12 @@ ${formattedDate}
 🎮 *Total Games:* ${stats.totalGames.toLocaleString()}
 👥 *Total Players:* ${stats.totalPlayers.toLocaleString()}
 💰 *System Revenue:* ${stats.totalRevenue.toLocaleString()} ETB
-🏆 *Total Prizes:* ${stats.totalPrizes.toLocaleString()} ETB
 💳 *Total Deposits:* ${stats.totalDeposits.toLocaleString()} ETB
 👤 *New Users:* ${stats.totalNewUsers.toLocaleString()}
 🔄 *Active Users:* ${stats.activeUsers.toLocaleString()}
 ⏳ *Pending Withdrawals:* ${stats.totalPendingWithdrawals} (${stats.totalPendingWithdrawalAmount.toLocaleString()} ETB)
 ${adminWithdrawalsSection}━━━━━━━━━━━━━━━━━━━━
 ${randomAppreciation}
-
-📊 *Breakdown:*
-• Games Played: ${stats.totalGames}
-• Unique Players: ${stats.totalPlayers}
-• Revenue Generated: ${stats.totalRevenue.toLocaleString()} ETB
-• Prizes Distributed: ${stats.totalPrizes.toLocaleString()} ETB
-• Deposits Received: ${stats.totalDeposits.toLocaleString()} ETB
-• New Registrations: ${stats.totalNewUsers}
-• Active Players: ${stats.activeUsers}
-• Pending Withdrawals: ${stats.totalPendingWithdrawals} (${stats.totalPendingWithdrawalAmount.toLocaleString()} ETB)
 
 Thank you for your dedication! 🙏`;
 
@@ -3150,21 +3106,11 @@ ${formattedStartDate} - ${formattedEndDate}
 🎮 *Total Games:* ${stats.totalGames.toLocaleString()}
 👥 *Total Players:* ${stats.totalPlayers.toLocaleString()}
 💰 *System Revenue:* ${stats.totalRevenue.toLocaleString()} ETB
-🏆 *Total Prizes:* ${stats.totalPrizes.toLocaleString()} ETB
 💳 *Total Deposits:* ${stats.totalDeposits.toLocaleString()} ETB
 👤 *New Users:* ${stats.totalNewUsers.toLocaleString()}
 ⏳ *Pending Withdrawals:* ${stats.totalPendingWithdrawals} (${stats.totalPendingWithdrawalAmount.toLocaleString()} ETB)
 ${adminWithdrawalsSection}━━━━━━━━━━━━━━━━━━━━
 ${randomAppreciation}
-
-📊 *Weekly Breakdown:*
-• Games Played: ${stats.totalGames}
-• Unique Players: ${stats.totalPlayers}
-• Revenue Generated: ${stats.totalRevenue.toLocaleString()} ETB
-• Prizes Distributed: ${stats.totalPrizes.toLocaleString()} ETB
-• Deposits Received: ${stats.totalDeposits.toLocaleString()} ETB
-• New Registrations: ${stats.totalNewUsers}
-• Pending Withdrawals: ${stats.totalPendingWithdrawals} (${stats.totalPendingWithdrawalAmount.toLocaleString()} ETB)
 
 Thank you for your dedication! 🙏`;
 
