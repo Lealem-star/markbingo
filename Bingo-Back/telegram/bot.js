@@ -2229,29 +2229,18 @@ Thank you for your dedication! 🙏`;
                     console.log('📥 API response:', { success: result.success, verificationId: result.verificationId, isVerified: result.isVerified });
 
                     if (result.success) {
-                        // Notify admins if auto-verification created
-                        if (result.verificationId) {
+                        // Admin notification with Approve/Deny is sent by smsForwarderService.notifyAdminsNewVerification
+                        // when verification is created. If verificationId exists, service already sent. If null, send fallback with buttons if we have ID.
+                        if (!result.verificationId) {
+                            // Fallback: no verification created (e.g. createPendingVerificationFromUserSMS failed)
+                            // Try to notify admins - but without verificationId we cannot add Approve/Deny
                             try {
                                 const adminUsers = await require('../models/User').find({ role: 'admin' }, { telegramId: 1 });
                                 for (const admin of adminUsers) {
                                     try {
                                         await bot.telegram.sendMessage(
                                             admin.telegramId,
-                                            `🆕 New Deposit Verification\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${user.phone || user.telegramId || ctx.from.id}\n💰 Amount: ETB ${parsed.amount?.toFixed(2) || 'N/A'}\n🔎 Reference: ${parsed.reference || 'N/A'}\n📋 Verification ID: ${result.verificationId}\n\n⏰ Review and process`,
-                                            { reply_markup: { inline_keyboard: [[{ text: '✅ Approve', callback_data: `approve_dep_${result.verificationId}` }, { text: '❌ Deny', callback_data: `deny_dep_${result.verificationId}` }]] } }
-                                        );
-                                    } catch (e) { }
-                                }
-                            } catch { }
-                        } else {
-                            // No verification created yet (no receiver match) – proactively notify admins
-                            try {
-                                const adminUsers = await require('../models/User').find({ role: 'admin' }, { telegramId: 1 });
-                                for (const admin of adminUsers) {
-                                    try {
-                                        await bot.telegram.sendMessage(
-                                            admin.telegramId,
-                                            `📝 Pending Deposit Receipt (No Match Yet)\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${user.phone || user.telegramId || ctx.from.id}\n💰 Amount: ETB ${parsed.amount?.toFixed(2) || 'N/A'}\n🔎 Reference: ${parsed.reference || 'N/A'}\n\n⏳ Waiting for receiver SMS to auto-verify.`
+                                            `📝 Pending Deposit Receipt (No Match Yet)\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${user.phone || user.telegramId || ctx.from.id}\n💰 Amount: ETB ${parsed.amount?.toFixed(2) || 'N/A'}\n🔎 Reference: ${parsed.reference || 'N/A'}\n\n⏳ Could not create verification. User may need to resend or contact support.`
                                         );
                                     } catch (e) { }
                                 }

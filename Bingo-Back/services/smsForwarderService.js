@@ -940,19 +940,36 @@ class SmsForwarderService {
             const BOT_TOKEN = process.env.BOT_TOKEN;
             if (!BOT_TOKEN) return;
             const User = require('../models/User');
-            const user = await require('../models/User').findById(verification.userId);
+            const userId = verification.userId?._id || verification.userId;
+            const user = await User.findById(userId).lean();
             const adminUsers = await User.find({ role: 'admin', telegramId: { $ne: null } }, { telegramId: 1 });
             if (!adminUsers || adminUsers.length === 0) return;
 
             const amount = Number(verification.amount).toFixed(2);
             const status = verification.status === 'verified' ? 'verified (auto)' : 'pending review';
-            const text = `🆕 New Deposit Verification\n\n👤 User: ${user?.firstName || ''} ${user?.lastName || ''}\n📱 Phone: ${user?.phone || user?._id}\n💰 Amount: ETB ${amount}\n📋 Verification ID: ${String(verification._id)}\n🔄 Status: ${status}`;
+            let ref = 'N/A';
+            if (verification.userSMS) {
+                const smsRec = await SMSRecord.findById(verification.userSMS).lean();
+                ref = smsRec?.parsedData?.reference || 'N/A';
+            }
+            const text = verification.status === 'pending_review'
+                ? `📝 Pending Deposit Receipt (No Match Yet)\n\n👤 User: ${user?.firstName || ''} ${user?.lastName || ''}\n📱 Phone: ${user?.phone || user?._id || 'N/A'}\n💰 Amount: ETB ${amount}\n🔎 Reference: ${ref}\n\n⏳ Waiting for receiver SMS to auto-verify.`
+                : `🆕 New Deposit Verification\n\n👤 User: ${user?.firstName || ''} ${user?.lastName || ''}\n📱 Phone: ${user?.phone || user?._id || 'N/A'}\n💰 Amount: ETB ${amount}\n📋 Verification ID: ${String(verification._id)}\n🔄 Status: ${status}`;
+
+            const reply_markup = {
+                inline_keyboard: [
+                    [
+                        { text: '✅ Approve', callback_data: `approve_dep_${verification._id}` },
+                        { text: '❌ Deny', callback_data: `deny_dep_${verification._id}` }
+                    ]
+                ]
+            };
 
             await Promise.all(
                 adminUsers.map(a => fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: String(a.telegramId), text })
+                    body: JSON.stringify({ chat_id: String(a.telegramId), text, reply_markup })
                 }).catch(() => { }))
             );
         } catch (_) {

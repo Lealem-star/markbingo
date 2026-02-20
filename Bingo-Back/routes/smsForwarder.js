@@ -79,6 +79,13 @@ router.post('/user-sms', async (req, res) => {
                 verification = await SmsForwarderService.createPendingVerificationFromUserSMS(userSMS);
             } catch (e) {
                 console.error('Failed to create pending verification from user SMS:', e);
+                // If duplicate, find existing verification so bot can show Approve/Deny buttons
+                if (e?.message?.includes('DUPLICATE_VERIFICATION')) {
+                    verification = await DepositVerification.findOne({
+                        userSMS: userSMS._id,
+                        status: { $in: ['pending_review', 'verified', 'approved'] }
+                    });
+                }
             }
         }
 
