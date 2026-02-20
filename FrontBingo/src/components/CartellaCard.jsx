@@ -183,7 +183,7 @@ export default function CartellaCard({
                                         title={isClickable ? 'Click to mark/unmark' : ''}
                                     >
                                         {isFree ? (
-                                            <span className="cartela-star">★</span>
+                                            <span className="cartela-star">🇪🇹</span>
                                         ) : (
                                             <span className="cartela-number">{number}</span>
                                         )}
