@@ -765,6 +765,107 @@ class SmsForwarderService {
         }
     }
 
+    // Fallback: create pending verification using explicit userId (e.g. from bot request when phone resolution fails)
+    static async createPendingVerificationWithExplicitUserId(userSMS, explicitUserId) {
+        try {
+            if (!explicitUserId || !userSMS || !userSMS.parsedData?.amount) {
+                throw new Error('Missing required data for verification');
+            }
+            const SMSRecord = require('../models/SMSRecord');
+            const placeholder = new SMSRecord({
+                phoneNumber: 'unknown',
+                message: 'PENDING RECEIVER MATCH',
+                timestamp: userSMS.timestamp || new Date(),
+                source: 'receiver',
+                parsedData: {
+                    amount: userSMS.parsedData?.amount || null,
+                    reference: userSMS.parsedData?.reference || null,
+                    datetime: userSMS.parsedData?.datetime || null,
+                    paymentMethod: userSMS.parsedData?.paymentMethod || null,
+                    rawMessage: 'PENDING RECEIVER MATCH'
+                },
+                status: 'pending',
+                userId: null
+            });
+            await placeholder.save();
+
+            const matchResult = {
+                matches: { amountMatch: !!userSMS.parsedData?.amount, referenceMatch: false, timeMatch: false, paymentMethodMatch: false, phoneMatch: false },
+                criticalScore: 1,
+                optionalScore: 0,
+                matchScore: 1,
+                totalCriteria: 2,
+                confidence: 0,
+                isVerified: false,
+                reason: 'Awaiting receiver SMS'
+            };
+
+            return await this.createDepositVerification(explicitUserId, userSMS, placeholder, matchResult);
+        } catch (e) {
+            console.error('Error creating pending verification with explicit userId:', e);
+            throw e;
+        }
+    }
+
+    // Create pending verification from bot context when API could not create one (so admins get Approve/Deny buttons)
+    static async createPendingVerificationFromBotContext(userId, { amount, reference, phoneNumber, userName }) {
+        try {
+            if (!userId || amount == null) {
+                throw new Error('Missing required: userId, amount');
+            }
+            const amt = Number(amount) || 0;
+            const userSMS = new SMSRecord({
+                phoneNumber: phoneNumber || 'user',
+                message: reference ? `Bot fallback: ${amt} ref ${reference}` : `Bot fallback: ${amt}`,
+                timestamp: new Date(),
+                source: 'user',
+                parsedData: {
+                    amount: amt,
+                    reference: reference || null,
+                    datetime: null,
+                    paymentMethod: null,
+                    rawMessage: 'Bot fallback - could not create verification from SMS'
+                },
+                status: 'pending',
+                userId
+            });
+            await userSMS.save();
+
+            const placeholder = new SMSRecord({
+                phoneNumber: 'unknown',
+                message: 'PENDING RECEIVER MATCH',
+                timestamp: new Date(),
+                source: 'receiver',
+                parsedData: {
+                    amount: amt,
+                    reference: reference || null,
+                    datetime: null,
+                    paymentMethod: null,
+                    rawMessage: 'PENDING RECEIVER MATCH'
+                },
+                status: 'pending',
+                userId: null
+            });
+            await placeholder.save();
+
+            const matchResult = {
+                matches: { amountMatch: true, referenceMatch: false, timeMatch: false, paymentMethodMatch: false, phoneMatch: false },
+                criticalScore: 1,
+                optionalScore: 0,
+                matchScore: 1,
+                totalCriteria: 2,
+                confidence: 0,
+                isVerified: false,
+                reason: 'Awaiting receiver SMS'
+            };
+
+            return await this.createDepositVerification(userId, userSMS, placeholder, matchResult);
+        } catch (e) {
+            console.error('Error creating pending verification from bot context:', e);
+            throw e;
+        }
+    }
+
     // Auto-approve and credit funds for verified deposits
     static async autoApproveVerification(verificationId) {
         try {

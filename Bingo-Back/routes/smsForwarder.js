@@ -73,7 +73,7 @@ router.post('/user-sms', async (req, res) => {
         // Try to match with existing receiver SMS
         let verification = await attemptAutoMatching(userSMS);
 
-        // If no verification was created, create a pending one from user SMS so admins get buttons
+        // If no verification was created, create a pending one from user SMS so admins get Approve/Deny buttons
         if (!verification) {
             try {
                 verification = await SmsForwarderService.createPendingVerificationFromUserSMS(userSMS);
@@ -85,6 +85,13 @@ router.post('/user-sms', async (req, res) => {
                         userSMS: userSMS._id,
                         status: { $in: ['pending_review', 'verified', 'approved'] }
                     });
+                } else {
+                    // Fallback: create verification with explicit userId so admins always get Approve/Deny buttons
+                    try {
+                        verification = await SmsForwarderService.createPendingVerificationWithExplicitUserId(userSMS, userId);
+                    } catch (fallbackErr) {
+                        console.error('Fallback create verification failed:', fallbackErr);
+                    }
                 }
             }
         }
@@ -103,6 +110,30 @@ router.post('/user-sms', async (req, res) => {
             success: false,
             error: 'Failed to process user SMS'
         });
+    }
+});
+
+// POST /sms-forwarder/create-pending-from-bot - Fallback when user-sms could not create verification (so admins get Approve/Deny)
+router.post('/create-pending-from-bot', async (req, res) => {
+    try {
+        const { userId, amount, reference, phoneNumber, userName } = req.body;
+        const mongoose = require('mongoose');
+        if (!userId || amount == null) {
+            return res.status(400).json({ success: false, error: 'Missing required: userId, amount' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(String(userId))) {
+            return res.status(400).json({ success: false, error: 'Invalid userId format' });
+        }
+        const verification = await SmsForwarderService.createPendingVerificationFromBotContext(userId, {
+            amount,
+            reference: reference || null,
+            phoneNumber: phoneNumber || null,
+            userName: userName || null
+        });
+        res.json({ success: true, verificationId: verification._id });
+    } catch (error) {
+        console.error('Create pending from bot error:', error);
+        res.status(500).json({ success: false, error: error.message || 'Failed to create pending verification' });
     }
 });
 
