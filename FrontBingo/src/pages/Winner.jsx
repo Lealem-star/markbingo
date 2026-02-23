@@ -133,9 +133,25 @@ export default function Winner({ onNavigate, onResetToGame }) {
         winner.firstName ||
         (winner.cartelaNumber ? `Cartella #${winner.cartelaNumber}` : 'Winner');
 
-    // Collect winner names and de-duplicate (in case same user appears multiple times)
-    const winnerNamesRaw = winners.map(getWinnerDisplayName);
-    const winnerNames = Array.from(new Set(winnerNamesRaw));
+    // Build a unique winner list by user identity (userId / sessionId),
+    // falling back to display name if needed
+    const uniqueWinners = [];
+    const seenKeys = new Set();
+
+    winners.forEach((w) => {
+        const key =
+            w.userId ||
+            w.sessionId ||
+            (w.user && w.user.id) ||
+            getWinnerDisplayName(w);
+
+        if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            uniqueWinners.push(w);
+        }
+    });
+
+    const winnerNames = uniqueWinners.map(getWinnerDisplayName);
     const winnerName = winnerNames[0] || 'Winner';
     const winnerInitial = winnerName.charAt(0).toUpperCase();
 
