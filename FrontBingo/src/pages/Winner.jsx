@@ -137,11 +137,6 @@ export default function Winner({ onNavigate, onResetToGame }) {
     const winnerName = winnerNames[0] || 'Winner';
     const winnerInitial = winnerName.charAt(0).toUpperCase();
 
-    const winnersText =
-        winnerNames.length === 1
-            ? `${winnerNames[0]} has won the game`
-            : `${winnerNames.join(', ')} have won`;
-
     // Try to get card data
                             let cardData = null;
                             try {
@@ -176,13 +171,20 @@ export default function Winner({ onNavigate, onResetToGame }) {
                             <h1 className="text-white font-extrabold text-5xl md:text-6xl tracking-wider mb-4 drop-shadow-lg">
                                 BINGO!
                             </h1>
-                            <div className="flex items-center justify-center gap-3">
-                                <div className="px-4 py-2 rounded-lg bg-green-500 border-2 border-green-600 flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{ backgroundColor: '#22c55e', borderColor: '#16a34a', padding: '0.5rem 1rem' }}>
-                                    {winnerInitial}
-                                </div>
-                                <p className="text-white text-lg md:text-xl font-semibold">
-                                    {winnersText}
-                                </p>
+                            <div className="flex flex-col items-center justify-center gap-2">
+                                {winnerNames.map((name, idx) => (
+                                    <div key={`${name}-${idx}`} className="flex items-center justify-center gap-3">
+                                        <div
+                                            className="px-4 py-2 rounded-lg bg-green-500 border-2 border-green-600 flex items-center justify-center text-white font-bold text-lg shadow-lg"
+                                            style={{ backgroundColor: '#22c55e', borderColor: '#16a34a', padding: '0.5rem 1rem' }}
+                                        >
+                                            {(name || 'W').charAt(0).toUpperCase()}
+                                        </div>
+                                        <p className="text-white text-lg md:text-xl font-semibold">
+                                            {name}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
