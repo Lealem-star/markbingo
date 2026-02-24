@@ -158,8 +158,17 @@ export default function Winner({ onNavigate, onResetToGame }) {
                             <h1 className="text-white font-extrabold text-5xl md:text-6xl tracking-wider mb-4 drop-shadow-lg">
                                 BINGO!
                             </h1>
+                            {/* Winner count summary */}
+                            <div className="flex items-center justify-center gap-3 w-full rounded-lg px-4 py-3 mb-4">
+                                <span className="text-2xl" aria-hidden>🎉</span>
+                                <span className="text-white font-semibold text-lg drop-shadow-sm">
+                                    {uniqueWinners.length === 1
+                                        ? '1 player won!'
+                                        : `${uniqueWinners.length} players won!`}
+                                </span>
+                            </div>
                             <div className="flex flex-col items-center justify-center gap-2">
-                                {winnerNames.map((name, idx) => (
+                                {winnerNames.slice(0, 3).map((name, idx) => (
                                     <div key={`${name}-${idx}`} className="flex items-center justify-center gap-3">
                                         <div
                                             className="px-4 py-2 rounded-lg bg-green-500 border-2 border-green-600 flex items-center justify-center text-white font-bold text-lg shadow-lg"
@@ -172,6 +181,11 @@ export default function Winner({ onNavigate, onResetToGame }) {
                                         </p>
                                     </div>
                                 ))}
+                                {winnerNames.length > 3 && (
+                                    <p className="text-white text-lg font-semibold opacity-90">
+                                        +{winnerNames.length - 3} more
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
