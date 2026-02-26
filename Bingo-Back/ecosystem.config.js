@@ -19,7 +19,9 @@ module.exports = {
                 API_BASE_URL: 'http://localhost:3001',
                 JWT_SECRET: 'your_super_secret_jwt_key_here_change_this',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo',
-                AGENT_PHONE_NUMBERS: '+251994237676',
+                // Comma‑separated list of agent/receiver phone numbers used to detect bank SMS
+                // Updated to current SIM number for SMS forwarding
+                AGENT_PHONE_NUMBERS: '+251722399868',
                 AGENT_SERVICES: 'CBEBirr,CBE',
                 SMS_WEBHOOK_SECRET: 'i_secreted_lealem'
             },
