@@ -729,10 +729,10 @@ router.get('/stats/today', adminMiddleware, async (req, res) => {
         
         // Calculate total players (unique real users) and system revenue,
         // excluding games that only have bot players.
-        // Also track how much bots win in games that include at least one real user.
+        // Also track how many games (with at least one real user) were won by bots.
         const uniquePlayerIds = new Set();
         let systemCut = 0;
-        let botWinningsFromRealGames = 0;
+        let botGamesWonFromRealGames = 0;
 
         games.forEach((game) => {
             const humanIds = getHumanPlayerIds(game.players);
@@ -745,22 +745,28 @@ router.get('/stats/today', adminMiddleware, async (req, res) => {
             humanIds.forEach((id) => uniquePlayerIds.add(id));
             systemCut += game.systemCut || 0;
 
-            // For games that have at least one real player, sum bot winners' prizes
+            // For games that have at least one real player, count games where any bot won
             if (Array.isArray(game.winners) && game.winners.length > 0) {
+                let hasBotWinner = false;
                 game.winners.forEach((winner) => {
                     const user = winner?.userId;
                     if (!user) {
                         return;
                     }
                     if (isBotTelegramId(user.telegramId)) {
-                        botWinningsFromRealGames += winner.prize || 0;
+                        hasBotWinner = true;
                     }
                 });
+                if (hasBotWinner) {
+                    botGamesWonFromRealGames += 1;
+                }
             }
         });
 
         const totalPlayers = uniquePlayerIds.size;
-        res.json({ totalPlayers, systemCut, botWinningsFromRealGames });
+        // Keep the existing response field name so the frontend continues to work,
+        // but now it represents "number of games won by bots (with real users)".
+        res.json({ totalPlayers, systemCut, botWinningsFromRealGames: botGamesWonFromRealGames });
     } catch { res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' }); }
 });
 
