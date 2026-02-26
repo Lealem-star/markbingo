@@ -193,9 +193,9 @@ export default function AdminStats() {
                 </div>
                 <div className="admin-stats-card">
                     <div>
-                        <div className="admin-stats-label">Bot Winnings (Games With Real Users)</div>
+                        <div className="admin-stats-label">Bot Games Won (Games With Real Users)</div>
                         <div className="admin-stats-value admin-stats-value-red">
-                            ETB {isLoading ? '...' : (today.botWinningsFromRealGames || 0)}
+                            {isLoading ? '...' : (today.botWinningsFromRealGames || 0)}
                         </div>
                     </div>
                 </div>
