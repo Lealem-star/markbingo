@@ -11,7 +11,6 @@ export default function AdminStats() {
     const [todayFinance, setTodayFinance] = useState({ totalGames: 0, totalDeposit: 0, totalWithdraw: 0 });
     const [totalMainWallet, setTotalMainWallet] = useState(0);
     const [totalPlayWallet, setTotalPlayWallet] = useState(0);
-    const [totalSystemRevenue, setTotalSystemRevenue] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -36,7 +35,7 @@ export default function AdminStats() {
 
             const [
                 todayRes,
-                gamesRes,
+                dailyRes,
                 overviewRes,
                 depositsRes,
                 withdrawalsCompletedRes,
@@ -44,7 +43,7 @@ export default function AdminStats() {
                 totalPlayRes
             ] = await Promise.allSettled([
                 apiFetch('/admin/stats/today', { timeoutMs: 15000 }),
-                apiFetch('/admin/stats/games?days=14', { timeoutMs: 30000 }),
+                apiFetch('/admin/stats/daily?days=14', { timeoutMs: 30000 }),
                 apiFetch('/admin/stats/overview', { timeoutMs: 20000 }),
                 apiFetch(`/admin/balances/deposits?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, { timeoutMs: 20000 }),
                 apiFetch('/admin/balances/withdrawals?status=completed', { timeoutMs: 20000 }),
@@ -61,62 +60,10 @@ export default function AdminStats() {
                 : { totalPlayers: 0, systemCut: 0, botWinningsFromRealGames: 0 };
 
             let nextDailyStats = [];
-            let nextTotalSystemRevenue = 0;
-            if (gamesRes.status === 'fulfilled') {
-                const games = gamesRes.value?.games || [];
-
-                // Group games by day and format for display
-                const statsByDay = {};
-                games.forEach((game) => {
-                    if (game.finishedAt) {
-                        const day = new Date(game.finishedAt).toISOString().slice(0, 10);
-                        if (!statsByDay[day]) {
-                            statsByDay[day] = { day, games: [] };
-                        }
-                        statsByDay[day].games.push(game);
-                    }
-                });
-
-                nextDailyStats = Object.values(statsByDay)
-                    .map((dayData) => {
-                        const dayGames = dayData.games;
-
-                        const totalRevenue = dayGames.reduce((sum, g) => sum + (g.systemCut || 0), 0);
-
-                        // Calculate unique players for this day
-                        const uniquePlayerIds = new Set();
-                        dayGames.forEach((game) => {
-                            if (game.players && Array.isArray(game.players)) {
-                                game.players.forEach((playerId) => {
-                                    if (playerId) {
-                                        uniquePlayerIds.add(playerId.toString());
-                                    }
-                                });
-                            }
-                        });
-                        const totalUniquePlayers = uniquePlayerIds.size;
-
-                        const uniqueStakes = [...new Set(dayGames.map((g) => g.stake || 0).filter((s) => s > 0))];
-                        uniqueStakes.sort((a, b) => a - b);
-                        const stakesDisplay = uniqueStakes.length > 0
-                            ? uniqueStakes.map((s) => `ETB ${s}`).join(', ')
-                            : 'N/A';
-
-                        return {
-                            day: dayData.day,
-                            stakes: uniqueStakes,
-                            stakesDisplay,
-                            noPlayed: totalUniquePlayers,
-                            systemRevenue: totalRevenue,
-                            totalGames: dayGames.length
-                        };
-                    })
-                    .sort((a, b) => a.day.localeCompare(b.day))
-                    .reverse();
-
-                nextTotalSystemRevenue = games.reduce((sum, game) => sum + (game.systemCut || 0), 0);
+            if (dailyRes.status === 'fulfilled') {
+                nextDailyStats = dailyRes.value?.days || [];
             } else {
-                console.error('Error fetching daily game stats:', gamesRes.reason);
+                console.error('Error fetching daily stats:', dailyRes.reason);
             }
 
             const overview = overviewRes.status === 'fulfilled' ? overviewRes.value : null;
@@ -147,7 +94,6 @@ export default function AdminStats() {
             // Update everything together to avoid "card-by-card" pop-in
             setToday(nextToday);
             setDailyStats(nextDailyStats);
-            setTotalSystemRevenue(nextTotalSystemRevenue);
             setTodayFinance(nextTodayFinance);
             setTotalMainWallet(nextTotalMain);
             setTotalPlayWallet(nextTotalPlay);
@@ -221,7 +167,7 @@ export default function AdminStats() {
             {/* Daily Statistics Table */}
             <div
                 className="admin-stats-table-container"
-                style={{ '--stats-table-cols': 5, minHeight: '360px' }}
+                style={{ '--stats-table-cols': 8, minHeight: '360px' }}
             >
                 <h3 className="admin-stats-table-title">Daily Statistics</h3>
 
@@ -233,6 +179,9 @@ export default function AdminStats() {
                         <div className="admin-stats-table-header-item">Stake</div>
                         <div className="admin-stats-table-header-item">Total Players</div>
                         <div className="admin-stats-table-header-item">System Revenue</div>
+                        <div className="admin-stats-table-header-item">Bot Wins</div>
+                        <div className="admin-stats-table-header-item">Deposits</div>
+                        <div className="admin-stats-table-header-item">Withdrawals</div>
                     </div>
 
                     {/* Table Content */}
@@ -243,8 +192,11 @@ export default function AdminStats() {
                                     <div className="admin-stats-table-cell">{new Date(stat.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                                     <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.totalGames || 0}</div>
                                     <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.stakesDisplay}</div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.noPlayed || 0}</div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.totalPlayers || 0}</div>
                                     <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {(stat.systemRevenue || 0).toFixed(2)}</div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{stat.botGamesWon || 0}</div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {(stat.totalDeposits || 0).toFixed(2)}</div>
+                                    <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {(stat.totalWithdrawals || 0).toFixed(2)}</div>
                                 </div>
                             ))
                         ) : (

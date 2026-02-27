@@ -791,6 +791,153 @@ router.get('/stats/revenue/by-day', adminMiddleware, async (req, res) => {
     } catch { res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' }); }
 });
 
+// Daily aggregated stats for admin table (games + finance), server-local day (Africa/Addis_Ababa)
+router.get('/stats/daily', adminMiddleware, async (req, res) => {
+    try {
+        const days = Math.max(1, Math.min(60, Number(req.query.days || 14)));
+
+        // Start at local midnight "days-1" days ago
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const since = new Date(startOfToday);
+        since.setDate(since.getDate() - (days - 1));
+
+        const dayKeyLocal = (dt) => {
+            if (!dt) return null;
+            const d = new Date(dt);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        };
+
+        // Games (real-user only)
+        const games = await Game.find(
+            { finishedAt: { $gte: since }, status: 'finished' },
+            { stake: 1, systemCut: 1, finishedAt: 1, players: 1, winners: 1 }
+        )
+            .populate('players.userId winners.userId', 'telegramId')
+            .lean();
+
+        const byDay = new Map();
+        const ensureDay = (key) => {
+            if (!byDay.has(key)) {
+                byDay.set(key, {
+                    day: key,
+                    totalGames: 0,
+                    uniquePlayerIds: new Set(),
+                    systemRevenue: 0,
+                    stakes: new Set(),
+                    botGamesWon: 0,
+                    totalDeposits: 0,
+                    totalWithdrawals: 0
+                });
+            }
+            return byDay.get(key);
+        };
+
+        for (const g of games) {
+            const humanIds = getHumanPlayerIds(g.players);
+            if (humanIds.length === 0) continue; // skip bot-only games
+
+            const key = dayKeyLocal(g.finishedAt);
+            if (!key) continue;
+            const row = ensureDay(key);
+
+            row.totalGames += 1;
+            row.systemRevenue += (g.systemCut || 0);
+            row.stakes.add(g.stake || 0);
+            humanIds.forEach((id) => row.uniquePlayerIds.add(id));
+
+            // Bot game win: count game if any winner is a bot
+            if (Array.isArray(g.winners) && g.winners.length > 0) {
+                let hasBotWinner = false;
+                g.winners.forEach((w) => {
+                    const user = w?.userId;
+                    if (user && isBotTelegramId(user.telegramId)) {
+                        hasBotWinner = true;
+                    }
+                });
+                if (hasBotWinner) row.botGamesWon += 1;
+            }
+        }
+
+        // Deposits (completed, grouped by createdAt local day)
+        const deposits = await Transaction.find(
+            { type: 'deposit', status: 'completed', createdAt: { $gte: since } },
+            { amount: 1, createdAt: 1 }
+        ).lean();
+        for (const d of deposits) {
+            const key = dayKeyLocal(d.createdAt);
+            if (!key) continue;
+            const row = ensureDay(key);
+            row.totalDeposits += Number(d.amount) || 0;
+        }
+
+        // Withdrawals (completed approvals, grouped by processed date local day)
+        const withdrawals = await Transaction.find(
+            {
+                type: 'withdrawal',
+                status: 'completed',
+                'processedBy.adminId': { $exists: true, $ne: null },
+                $or: [
+                    { 'processedBy.processedAt': { $gte: since } },
+                    { 'processedBy.processedAt': null, updatedAt: { $gte: since } }
+                ]
+            },
+            { amount: 1, processedAt: 1, updatedAt: 1, processedBy: 1 }
+        ).lean();
+
+        for (const w of withdrawals) {
+            const processedDate = w.processedBy?.processedAt || w.processedAt || w.updatedAt;
+            const key = dayKeyLocal(processedDate);
+            if (!key) continue;
+            const row = ensureDay(key);
+            row.totalWithdrawals += Number(w.amount) || 0;
+        }
+
+        // Build response list for last N days, descending (today → past)
+        const list = [];
+        for (let i = 0; i < days; i++) {
+            const d = new Date(startOfToday);
+            d.setDate(d.getDate() - i);
+            const key = dayKeyLocal(d);
+            const row = byDay.get(key);
+            if (!row) {
+                list.push({
+                    day: key,
+                    stakes: [],
+                    stakesDisplay: 'N/A',
+                    totalGames: 0,
+                    totalPlayers: 0,
+                    systemRevenue: 0,
+                    botGamesWon: 0,
+                    totalDeposits: 0,
+                    totalWithdrawals: 0
+                });
+            } else {
+                const stakes = Array.from(row.stakes).filter((s) => s > 0).sort((a, b) => a - b);
+                list.push({
+                    day: key,
+                    stakes,
+                    stakesDisplay: stakes.length ? stakes.map((s) => `ETB ${s}`).join(', ') : 'N/A',
+                    totalGames: row.totalGames,
+                    totalPlayers: row.uniquePlayerIds.size,
+                    systemRevenue: row.systemRevenue,
+                    botGamesWon: row.botGamesWon,
+                    totalDeposits: row.totalDeposits,
+                    totalWithdrawals: row.totalWithdrawals
+                });
+            }
+        }
+
+        res.json({ days: list });
+    } catch (error) {
+        console.error('Daily stats error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
 // --- Additional Admin Endpoints ---
 router.get('/stats/games', adminMiddleware, async (req, res) => {
     try {
