@@ -405,34 +405,54 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             const gamesByFinished = await Game.find({
                 finishedAt: { $gte: start, $lte: end },
                 status: 'finished'
-            }).lean();
+            })
+                .populate('players.userId', 'telegramId')
+                .populate('winners.userId', 'telegramId')
+                .lean();
             const gamesByCreated = await Game.find({
                 finishedAt: { $exists: false },
                 createdAt: { $gte: start, $lte: end },
                 status: 'finished'
-            }).lean();
+            })
+                .populate('players.userId', 'telegramId')
+                .populate('winners.userId', 'telegramId')
+                .lean();
             const gameMap = new Map();
             [...gamesByFinished, ...gamesByCreated].forEach(g => {
                 if (!gameMap.has(g.gameId)) gameMap.set(g.gameId, g);
             });
             const games = Array.from(gameMap.values());
-            const totalGames = games.length;
+
+            // Only include games that have at least one real (non-bot) user
+            const realUserGames = games.filter((game) => getHumanPlayerIdsFromGame(game).length > 0);
+            const totalGames = realUserGames.length;
             
             // Calculate total players (unique players across all games)
             const uniquePlayerIds = new Set();
-            games.forEach(game => {
-                if (game.players && Array.isArray(game.players)) {
-                    game.players.forEach(player => {
-                        if (player.userId) {
-                            uniquePlayerIds.add(player.userId.toString());
-                        }
-                    });
-                }
+            realUserGames.forEach(game => {
+                getHumanPlayerIdsFromGame(game).forEach((id) => uniquePlayerIds.add(id));
             });
             const totalPlayers = uniquePlayerIds.size;
             
-            const totalRevenue = games.reduce((s, g) => s + (g.systemCut || 0), 0);
-            const totalPrizes = games.reduce((s, g) => s + (g.totalPrizes || 0), 0);
+            const totalRevenue = realUserGames.reduce((s, g) => s + (g.systemCut || 0), 0);
+            const totalPrizes = realUserGames.reduce((s, g) => s + (g.totalPrizes || 0), 0);
+
+            // Count games (with at least one real user) where any winner is a bot
+            let botGamesWonFromRealGames = 0;
+            realUserGames.forEach((game) => {
+                if (Array.isArray(game.winners) && game.winners.length > 0) {
+                    let hasBotWinner = false;
+                    game.winners.forEach((winner) => {
+                        const user = winner?.userId;
+                        if (user && isBotTelegramId(user.telegramId)) {
+                            hasBotWinner = true;
+                        }
+                    });
+                    if (hasBotWinner) {
+                        botGamesWonFromRealGames += 1;
+                    }
+                }
+            });
 
             const deposits = await Transaction.find({
                 type: 'deposit',
@@ -520,6 +540,7 @@ ${displayDate}
 🎮 *Total Games:* ${totalGames.toLocaleString()}
 👥 *Total Players:* ${totalPlayers.toLocaleString()}
 💰 *System Revenue:* ${totalRevenue.toLocaleString()} ETB
+🤖 *Bot Games Won (Real-User Games):* ${botGamesWonFromRealGames.toLocaleString()}
 💳 *Total Deposits:* ${totalDeposits.toLocaleString()} ETB
 👤 *New Users:* ${totalNewUsers.toLocaleString()}
 ⏳ *Pending Withdrawals:* ${totalPendingWithdrawals} (${totalPendingWithdrawalAmount.toLocaleString()} ETB)
