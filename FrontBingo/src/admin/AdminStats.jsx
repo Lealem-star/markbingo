@@ -270,11 +270,11 @@ export default function AdminStats() {
                         <div className="admin-stats-table-header-item">Players</div>
                         <div className="admin-stats-table-header-item">Stake</div>
                         <div className="admin-stats-table-header-item">Prize Pool</div>
-                        <div className="admin-stats-table-header-item">System Revenue</div>
+                        <div className="admin-stats-table-header-item">System Cut (20%)</div>
                         <div className="admin-stats-table-header-item">Bot</div>
                         <div className="admin-stats-table-header-item">Real</div>
                         <div className="admin-stats-table-header-item">Who Won</div>
-                        <div className="admin-stats-table-header-item">Net Revenue</div>
+                        <div className="admin-stats-table-header-item">Net Revenue (Real Users)</div>
                     </div>
                     <div className="admin-stats-table-content">
                         {!isLoading && groupedGameHistory.length > 0 ? (

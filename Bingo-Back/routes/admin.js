@@ -938,7 +938,11 @@ router.get('/stats/daily', adminMiddleware, async (req, res) => {
     }
 });
 
-// Game history for last N days (for AdminStats page). Uses game.stake, total pool, who won (Bot/Real/Both), real cost = (botPlayers * stake) - botWonAmount, net = systemCut - real cost.
+// Game history for last N days (for AdminStats page).
+// Uses game.stake, total pool, who won (Bot/Real/Both).
+// Real financial net = realStake - realPrizes, where:
+//   realStake = realPlayers * stake
+//   realPrizes = sum of prizes paid to real users
 router.get('/stats/game-history', adminMiddleware, async (req, res) => {
     try {
         const days = Math.max(1, Math.min(14, Number(req.query.days || 2)));
@@ -971,6 +975,7 @@ router.get('/stats/game-history', adminMiddleware, async (req, res) => {
             });
 
             let botWonAmount = 0;
+            let realPrizes = 0;
             let hasBotWinner = false;
             let hasRealWinner = false;
             let winnersPrizeSum = 0;
@@ -983,6 +988,7 @@ router.get('/stats/game-history', adminMiddleware, async (req, res) => {
                     botWonAmount += prize;
                     hasBotWinner = true;
                 } else {
+                    realPrizes += prize;
                     hasRealWinner = true;
                 }
             });
@@ -991,8 +997,8 @@ router.get('/stats/game-history', adminMiddleware, async (req, res) => {
             if (hasBotWinner && hasRealWinner) whoWon = 'Both';
             else if (hasBotWinner) whoWon = 'Bot';
 
-            const realCost = Math.max(0, (botPlayers * stake) - botWonAmount);
-            const netRevenue = (g.systemCut || 0) - realCost;
+            const realStake = realPlayers * stake;
+            const netRevenue = realStake - realPrizes;
 
             const totalPrizes =
                 typeof g.totalPrizes === 'number' && g.totalPrizes > 0 ? g.totalPrizes : winnersPrizeSum;
