@@ -237,7 +237,10 @@ export default function AdminStats() {
                     </div>
 
                     {/* Table Content */}
-                    <div className="admin-stats-table-content">
+                    <div
+                        className="admin-stats-table-content"
+                        style={{ maxHeight: '260px', overflowY: 'auto' }}
+                    >
                         {!isLoading && weeklyStats.length > 0 ? (
                             weeklyStats.map((stat, index) => (
                                 <div key={index} className="admin-stats-table-row">
@@ -263,20 +266,24 @@ export default function AdminStats() {
                 className="admin-stats-table-container"
                 style={{ '--stats-table-cols': 9, minHeight: '200px', marginTop: '2.5rem' }}
             >
-                <h3 className="admin-stats-table-title">Game History (Last 2 Days)</h3>
+                <h3 className="admin-stats-table-title">Game History</h3>
                 <div className="admin-stats-table-wrapper">
+
                     <div className="admin-stats-table-header">
                         <div className="admin-stats-table-header-item">Game ID</div>
                         <div className="admin-stats-table-header-item">Players</div>
                         <div className="admin-stats-table-header-item">Stake</div>
-                        <div className="admin-stats-table-header-item">Prize Pool</div>
-                        <div className="admin-stats-table-header-item">System Cut (20%)</div>
+                        <div className="admin-stats-table-header-item">Prize</div>
+                        <div className="admin-stats-table-header-item">System Cut</div>
                         <div className="admin-stats-table-header-item">Bot</div>
                         <div className="admin-stats-table-header-item">Real</div>
                         <div className="admin-stats-table-header-item">Who Won</div>
-                        <div className="admin-stats-table-header-item">Net Revenue (Real Users)</div>
+                        <div className="admin-stats-table-header-item">Net Revenue</div>
                     </div>
-                    <div className="admin-stats-table-content">
+                    <div
+                        className="admin-stats-table-content"
+                        style={{ maxHeight: '260px', overflowY: 'auto' }}
+                    >
                         {!isLoading && groupedGameHistory.length > 0 ? (
                             groupedGameHistory.map((group) => (
                                 <React.Fragment key={group.dateKey}>
@@ -335,6 +342,7 @@ export default function AdminStats() {
                             </div>
                         )}
                     </div>
+
                 </div>
             </div>
 
