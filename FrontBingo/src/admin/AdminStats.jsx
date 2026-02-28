@@ -114,6 +114,47 @@ export default function AdminStats() {
 
     const weeklyStats = dailyStats.slice(0, 7);
 
+    const groupedGameHistory = React.useMemo(() => {
+        if (!Array.isArray(gameHistory) || gameHistory.length === 0) {
+            return [];
+        }
+
+        const byDate = {};
+
+        gameHistory.forEach((game) => {
+            if (!game || !game.finishedAt) {
+                return;
+            }
+
+            const finished = new Date(game.finishedAt);
+            if (Number.isNaN(finished.getTime())) {
+                return;
+            }
+
+            const dateKey = finished.toISOString().slice(0, 10);
+            const dateLabel = finished.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            if (!byDate[dateKey]) {
+                byDate[dateKey] = {
+                    dateKey,
+                    dateLabel,
+                    netRevenueSum: 0,
+                    games: []
+                };
+            }
+
+            const net = typeof game.netRevenue === 'number' ? game.netRevenue : 0;
+            byDate[dateKey].netRevenueSum += net;
+            byDate[dateKey].games.push(game);
+        });
+
+        return Object.values(byDate).sort((a, b) => (a.dateKey < b.dateKey ? 1 : -1));
+    }, [gameHistory]);
+
     return (
         <div className="admin-stats-container admin-stats-page">
             {/* Today's Stats Section */}
@@ -236,22 +277,62 @@ export default function AdminStats() {
                         <div className="admin-stats-table-header-item">Net Revenue</div>
                     </div>
                     <div className="admin-stats-table-content">
-                        {!isLoading && gameHistory.length > 0 ? (
-                            gameHistory.map((game, index) => (
-                                <div key={game.gameId || index} className="admin-stats-table-row">
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{game.gameId || '—'}</div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{game.totalPlayers ?? 0}</div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">ETB {game.stake ?? 0}</div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {(game.prizePool ?? 0).toFixed(2)}</div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {(game.systemRevenue ?? 0).toFixed(2)}</div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{game.botPlayers ?? 0}</div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{game.realPlayers ?? 0}</div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-center">{game.whoWon ?? '—'}</div>
-                                    <div className="admin-stats-table-cell admin-stats-table-cell-right">ETB {(game.netRevenue ?? 0).toFixed(2)}</div>
-                                </div>
+                        {!isLoading && groupedGameHistory.length > 0 ? (
+                            groupedGameHistory.map((group) => (
+                                <React.Fragment key={group.dateKey}>
+                                    <div className="admin-stats-table-row admin-stats-table-row-day">
+                                        <div className="admin-stats-table-cell admin-stats-table-cell-left">
+                                            {group.dateLabel} — Net Revenue: ETB {group.netRevenueSum.toFixed(2)}
+                                        </div>
+                                        <div className="admin-stats-table-cell" />
+                                        <div className="admin-stats-table-cell" />
+                                        <div className="admin-stats-table-cell" />
+                                        <div className="admin-stats-table-cell" />
+                                        <div className="admin-stats-table-cell" />
+                                        <div className="admin-stats-table-cell" />
+                                        <div className="admin-stats-table-cell" />
+                                        <div className="admin-stats-table-cell" />
+                                    </div>
+                                    {group.games.map((game, index) => (
+                                        <div
+                                            key={game.gameId || `${group.dateKey}-${index}`}
+                                            className="admin-stats-table-row"
+                                        >
+                                            <div className="admin-stats-table-cell admin-stats-table-cell-center">
+                                                {game.gameId || '—'}
+                                            </div>
+                                            <div className="admin-stats-table-cell admin-stats-table-cell-center">
+                                                {game.totalPlayers ?? 0}
+                                            </div>
+                                            <div className="admin-stats-table-cell admin-stats-table-cell-center">
+                                                ETB {game.stake ?? 0}
+                                            </div>
+                                            <div className="admin-stats-table-cell admin-stats-table-cell-right">
+                                                ETB {(game.prizePool ?? 0).toFixed(2)}
+                                            </div>
+                                            <div className="admin-stats-table-cell admin-stats-table-cell-right">
+                                                ETB {(game.systemRevenue ?? 0).toFixed(2)}
+                                            </div>
+                                            <div className="admin-stats-table-cell admin-stats-table-cell-center">
+                                                {game.botPlayers ?? 0}
+                                            </div>
+                                            <div className="admin-stats-table-cell admin-stats-table-cell-center">
+                                                {game.realPlayers ?? 0}
+                                            </div>
+                                            <div className="admin-stats-table-cell admin-stats-table-cell-center">
+                                                {game.whoWon ?? '—'}
+                                            </div>
+                                            <div className="admin-stats-table-cell admin-stats-table-cell-right">
+                                                ETB {(game.netRevenue ?? 0).toFixed(2)}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </React.Fragment>
                             ))
                         ) : (
-                            <div className="admin-stats-empty">{isLoading ? 'Loading...' : 'No game history for last 2 days'}</div>
+                            <div className="admin-stats-empty">
+                                {isLoading ? 'Loading...' : 'No game history for last 2 days'}
+                            </div>
                         )}
                     </div>
                 </div>

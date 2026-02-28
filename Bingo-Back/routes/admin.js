@@ -973,10 +973,12 @@ router.get('/stats/game-history', adminMiddleware, async (req, res) => {
             let botWonAmount = 0;
             let hasBotWinner = false;
             let hasRealWinner = false;
+            let winnersPrizeSum = 0;
             (g.winners || []).forEach((w) => {
                 if (!w || !w.userId) return;
                 const tid = w.userId.telegramId;
                 const prize = w.prize || 0;
+                winnersPrizeSum += prize;
                 if (isBotTelegramId(tid)) {
                     botWonAmount += prize;
                     hasBotWinner = true;
@@ -992,10 +994,13 @@ router.get('/stats/game-history', adminMiddleware, async (req, res) => {
             const realCost = Math.max(0, (botPlayers * stake) - botWonAmount);
             const netRevenue = (g.systemCut || 0) - realCost;
 
+            const totalPrizes =
+                typeof g.totalPrizes === 'number' && g.totalPrizes > 0 ? g.totalPrizes : winnersPrizeSum;
+
             list.push({
                 gameId: g.gameId,
                 totalPlayers: (g.players || []).length,
-                prizePool: g.totalPrizes || 0,
+                prizePool: totalPrizes,
                 systemRevenue: g.systemCut || 0,
                 botPlayers,
                 realPlayers,
