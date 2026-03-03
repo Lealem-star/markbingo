@@ -24,15 +24,38 @@ require('dotenv').config();
 const WebSocket = require('ws');
 const fetch = require('node-fetch');
 
+function base64UrlToJson(segment) {
+    try {
+        let s = String(segment || '').replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4 !== 0) s += '=';
+        return JSON.parse(Buffer.from(s, 'base64').toString('utf8'));
+    } catch (e) {
+        return null;
+    }
+}
+
+function getJwtExpMs(token) {
+    const parts = String(token || '').split('.');
+    if (parts.length < 2) return null;
+    const payload = base64UrlToJson(parts[1]);
+    return payload && typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+}
+
 class PlayerBot {
     constructor(config = {}) {
         this.apiBase = config.apiBase || process.env.API_BASE || 'http://localhost:3001';
         this.wsBase = config.wsBase || process.env.WS_BASE || 'ws://localhost:3001';
         this.stake = config.stake || parseInt(process.env.STAKE || '10');
         this.token = config.token || process.env.JWT_TOKEN;
+        this.botSecret = process.env.PLAYER_BOT_SECRET || '';
+        this.botTelegramId = process.env.BOT_TELEGRAM_ID || '';
+        this.botFirstName = process.env.BOT_FIRST_NAME || process.env.BOT_NAME || 'Bot';
+        this.botLastName = process.env.BOT_LAST_NAME || '';
         this.ws = null;
         this.selectionDelayMs = this.computeSelectionDelay();
         this.pendingSelectionTimeout = null;
+        this.tokenRefreshTimeout = null;
+        this.refreshInFlight = null;
         this.gameState = {
             phase: 'waiting',
             gameId: null,
@@ -111,6 +134,90 @@ class PlayerBot {
      */
     setToken(token) {
         this.token = token;
+        this.selectionDelayMs = this.computeSelectionDelay();
+        this.scheduleBackgroundTokenRefresh();
+    }
+
+    clearTokenRefreshTimeout() {
+        if (this.tokenRefreshTimeout) {
+            clearTimeout(this.tokenRefreshTimeout);
+            this.tokenRefreshTimeout = null;
+        }
+    }
+
+    scheduleBackgroundTokenRefresh() {
+        this.clearTokenRefreshTimeout();
+        const expMs = getJwtExpMs(this.token);
+        if (!expMs) return;
+
+        // Refresh token 30 minutes before it expires
+        const refreshAtMs = expMs - (30 * 60 * 1000);
+        const delay = refreshAtMs - Date.now();
+        if (delay <= 1000) {
+            // If already close/expired, do it soon
+            this.tokenRefreshTimeout = setTimeout(() => this.refreshTokenIfPossible().catch(() => {}), 2000);
+            return;
+        }
+
+        this.tokenRefreshTimeout = setTimeout(() => {
+            this.refreshTokenIfPossible().catch(() => {});
+        }, delay);
+    }
+
+    async refreshTokenIfPossible() {
+        if (!this.botSecret || !this.botTelegramId) {
+            return null;
+        }
+        if (this.refreshInFlight) {
+            return this.refreshInFlight;
+        }
+
+        this.refreshInFlight = (async () => {
+            const res = await fetch(`${this.apiBase}/api/auth/bot/token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-bot-secret': this.botSecret
+                },
+                body: JSON.stringify({
+                    telegramId: this.botTelegramId,
+                    firstName: this.botFirstName,
+                    lastName: this.botLastName
+                })
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.token) {
+                const msg = data?.error || `HTTP_${res.status}`;
+                throw new Error(`Bot token refresh failed: ${msg}`);
+            }
+
+            this.setToken(data.token);
+            console.log('✅ Refreshed bot JWT token');
+            return data.token;
+        })();
+
+        try {
+            return await this.refreshInFlight;
+        } finally {
+            this.refreshInFlight = null;
+        }
+    }
+
+    async ensureValidToken() {
+        // If we already have a token with plenty of time, keep it.
+        const expMs = getJwtExpMs(this.token);
+        if (this.token && expMs && expMs - Date.now() > (10 * 60 * 1000)) {
+            return this.token;
+        }
+        // If token has no exp (old), or is near-expiry, refresh via secret if available.
+        const refreshed = await this.refreshTokenIfPossible();
+        if (refreshed) return refreshed;
+
+        if (!this.token) {
+            throw new Error('No authentication token. Provide JWT_TOKEN or set PLAYER_BOT_SECRET + BOT_TELEGRAM_ID.');
+        }
+        return this.token;
     }
 
     /**
@@ -118,7 +225,7 @@ class PlayerBot {
      */
     connect() {
         if (!this.token) {
-            throw new Error('No authentication token. Set JWT_TOKEN environment variable or call setToken().');
+            throw new Error('No authentication token. Set JWT_TOKEN or enable auto-refresh (PLAYER_BOT_SECRET + BOT_TELEGRAM_ID).');
         }
 
         const wsUrl = `${this.wsBase}/ws?token=${this.token}&stake=${this.stake}`;
@@ -146,19 +253,44 @@ class PlayerBot {
             console.log(`🔌 WebSocket closed: ${code} - ${reason}`);
             this.gameState.isConnected = false;
 
-            if (code !== 1008 && this.reconnectAttempts < this.maxReconnectAttempts) {
+            if (code === 1008) {
+                console.error('❌ Authentication failed - attempting token refresh and reconnect');
+                setTimeout(() => {
+                    this.handleAuthFailureReconnect().catch((e) => {
+                        console.error('❌ Token refresh failed:', e.message);
+                    });
+                }, 250);
+                return;
+            }
+
+            if (this.reconnectAttempts < this.maxReconnectAttempts) {
                 this.reconnectAttempts++;
                 const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
                 console.log(`🔄 Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-                setTimeout(() => this.connect(), delay);
-            } else if (code === 1008) {
-                console.error('❌ Authentication failed - token may be expired');
+                setTimeout(() => this.connectWithFreshToken().catch(() => {}), delay);
             }
         });
 
         this.ws.on('error', (error) => {
             console.error('❌ WebSocket error:', error.message);
         });
+    }
+
+    async handleAuthFailureReconnect() {
+        await this.refreshTokenIfPossible();
+        // Reset reconnect attempts after fresh token
+        this.reconnectAttempts = 0;
+        await this.connectWithFreshToken();
+    }
+
+    async connectWithFreshToken() {
+        await this.ensureValidToken();
+        // Close old socket if still around
+        if (this.ws) {
+            try { this.ws.terminate(); } catch (e) { /* ignore */ }
+            this.ws = null;
+        }
+        this.connect();
     }
 
     /**
@@ -461,17 +593,9 @@ async function main() {
         wsBase: process.env.WS_BASE || 'ws://localhost:3001'
     });
 
-    // Check for authentication token
-    if (!bot.token) {
-        console.error('❌ No JWT_TOKEN found in environment variables.');
-        console.error('   Set JWT_TOKEN environment variable or add it to .env file');
-        console.error('   Example: JWT_TOKEN="your_token_here" STAKE="10" node bots/playerBot.js');
-        process.exit(1);
-    }
-
     // Connect to WebSocket
     try {
-        bot.connect();
+        await bot.connectWithFreshToken();
     } catch (error) {
         console.error('❌ Failed to start bot:', error.message);
         process.exit(1);

@@ -9,6 +9,30 @@ const router = express.Router();
 // JWT secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_here_change_this';
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
+const PLAYER_BOT_SECRET = process.env.PLAYER_BOT_SECRET || '';
+const PLAYER_BOT_TOKEN_TTL = process.env.PLAYER_BOT_TOKEN_TTL || '24h';
+
+function isBotTelegramId(telegramId) {
+    if (!telegramId) return false;
+    const idStr = String(telegramId);
+    const num = parseInt(idStr, 10);
+    const inBotRange = !Number.isNaN(num) && num >= 9000000000 && num <= 9000000020;
+    return inBotRange || idStr.includes('bot_user_');
+}
+
+function getJwtExpMs(token) {
+    try {
+        const parts = String(token).split('.');
+        if (parts.length < 2) return null;
+        let payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        while (payload.length % 4 !== 0) payload += '=';
+        const json = Buffer.from(payload, 'base64').toString('utf8');
+        const data = JSON.parse(json);
+        return typeof data.exp === 'number' ? data.exp * 1000 : null;
+    } catch (e) {
+        return null;
+    }
+}
 
 // Log all requests to this router
 router.use((req, res, next) => {
@@ -301,6 +325,59 @@ router.post('/telegram/verify', async (req, res) => {
     }
 });
 
+// POST /auth/bot/token - server-to-server token for player bots (auto-refresh)
+router.post('/bot/token', async (req, res) => {
+    try {
+        const secret = req.headers['x-bot-secret'] || req.body?.secret || '';
+        if (!PLAYER_BOT_SECRET || secret !== PLAYER_BOT_SECRET) {
+            return res.status(401).json({ error: 'UNAUTHORIZED' });
+        }
+
+        const telegramId = String(req.body?.telegramId || '').trim();
+        const firstName = String(req.body?.firstName || 'Bot').trim();
+        const lastName = String(req.body?.lastName || '').trim();
+
+        if (!telegramId || !/^\d+$/.test(telegramId) || !isBotTelegramId(telegramId)) {
+            return res.status(400).json({ error: 'INVALID_BOT_TELEGRAM_ID' });
+        }
+
+        let user = await UserService.getUserByTelegramId(telegramId);
+        if (!user) {
+            user = await UserService.createOrUpdateUser({
+                id: telegramId,
+                first_name: firstName,
+                last_name: lastName,
+                username: `bot_user_${telegramId}`
+            });
+        }
+
+        if (!user || !user._id) {
+            return res.status(500).json({ error: 'USER_CREATION_FAILED' });
+        }
+
+        // Ensure wallet exists
+        const wallet = await WalletService.getWallet(user._id);
+        if (!wallet) {
+            await WalletService.createWallet(user._id);
+        }
+
+        const token = jwt.sign(
+            { sub: user._id.toString(), iat: Math.floor(Date.now() / 1000) },
+            JWT_SECRET,
+            { expiresIn: PLAYER_BOT_TOKEN_TTL }
+        );
+
+        res.json({
+            token,
+            expiresAt: getJwtExpMs(token),
+            user: { id: user._id.toString(), telegramId }
+        });
+    } catch (error) {
+        console.error('Bot token error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
 // GET /auth/debug - Debug endpoint to check auth status
 router.get('/debug', (req, res) => {
     res.json({
@@ -311,7 +388,8 @@ router.get('/debug', (req, res) => {
         jwtSecretSet: !!JWT_SECRET,
         endpoints: {
             telegramVerify: '/api/auth/telegram/verify (POST)',
-            telegramAuth: '/api/auth/telegram-auth (POST)'
+            telegramAuth: '/api/auth/telegram-auth (POST)',
+            botToken: '/api/auth/bot/token (POST)'
         },
         instructions: 'Check PM2 logs for detailed auth request logging'
     });
