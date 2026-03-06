@@ -1126,17 +1126,37 @@ Thank you for your dedication! 🙏`;
 
 
         const adminStates = new Map();
+        const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         async function getBroadcastTargets() {
             const dbUsers = await require('../models/User').find({}, { telegramId: 1 });
             const ids = (dbUsers || []).map(u => String(u.telegramId)).filter(Boolean);
             if (!ids.length) { throw new Error('NO_RECIPIENTS'); }
             return Array.from(new Set(ids));
         }
-        async function sendToAll(ids, sendOne) {
-            const results = await Promise.allSettled(ids.map(id => sendOne(id)));
-            const success = results.filter(r => r.status === 'fulfilled').length;
-            const failed = results.length - success;
-            return { success, failed, total: results.length };
+        async function sendToAll(ids, sendOne, opts = {}) {
+            const rateLimitMs = typeof opts.rateLimitMs === 'number' ? opts.rateLimitMs : 45; // ~22 msg/sec
+            let success = 0;
+            let failed = 0;
+
+            for (let i = 0; i < ids.length; i++) {
+                const id = ids[i];
+                try {
+                    await sendOne(id);
+                    success++;
+                } catch (e) {
+                    failed++;
+                    const retryAfter = e?.response?.parameters?.retry_after;
+                    if (typeof retryAfter === 'number' && retryAfter > 0) {
+                        await sleep((retryAfter * 1000) + 250);
+                    }
+                }
+
+                if (rateLimitMs > 0) {
+                    await sleep(rateLimitMs);
+                }
+            }
+
+            return { success, failed, total: ids.length };
         }
         function buildBroadcastMarkup(caption) {
             const kb = { inline_keyboard: [] };
@@ -1144,6 +1164,24 @@ Thank you for your dedication! 🙏`;
             const base = kb.inline_keyboard.length ? { reply_markup: kb } : {};
             if (caption !== undefined) return { ...base, caption, parse_mode: 'HTML' };
             return { ...base, parse_mode: 'HTML' };
+        }
+        async function runBroadcastInBackground({ adminTelegramId, targets, kindLabel, sendOne }) {
+            const startedAt = Date.now();
+            try {
+                const result = await sendToAll(targets, sendOne, { rateLimitMs: 45 });
+                const elapsedSec = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+                await bot.telegram.sendMessage(
+                    adminTelegramId,
+                    `📣 Broadcast finished (${kindLabel}): ✅ ${result.success} / ${result.total} delivered${result.failed ? `, ❌ ${result.failed} failed` : ''}.\n⏱️ Time: ~${elapsedSec}s`,
+                    { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } }
+                );
+            } catch (e) {
+                await bot.telegram.sendMessage(
+                    adminTelegramId,
+                    `❌ Broadcast failed (${kindLabel}): ${e?.message || 'Unknown error'}.`,
+                    { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } }
+                );
+            }
         }
         async function sendPendingMediaToAll(pending, caption) {
             const targets = await getBroadcastTargets();
@@ -1973,12 +2011,15 @@ Thank you for your dedication! 🙏`;
                     const adminTelegramId = String(ctx.from.id);
                     const adminName = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim() || ctx.from.username || 'Admin';
                     try {
-                        const targets = await getBroadcastTargets();
+                        const targets = (await getBroadcastTargets()).filter((id) => String(id) !== adminTelegramId);
                         const options = buildBroadcastMarkup(ctx.message.text);
-                        const { success, failed, total } = await sendToAll(targets, async (id) => {
-                            await bot.telegram.sendMessage(id, ctx.message.text, options);
+                        await ctx.reply(`📣 Broadcast started to ${targets.length} users. You will get a summary when it finishes.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        runBroadcastInBackground({
+                            adminTelegramId,
+                            targets,
+                            kindLabel: 'text',
+                            sendOne: async (id) => bot.telegram.sendMessage(id, ctx.message.text, options)
                         });
-                        await ctx.reply(`📣 Broadcast result: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
 
                         // Notify other admins about broadcast
                         const messagePreview = ctx.message.text.length > 100
@@ -1988,7 +2029,7 @@ Thank you for your dedication! 🙏`;
                             adminTelegramId,
                             `👤 Admin Action: Broadcast Sent\n\n` +
                             `📝 Message Preview: ${messagePreview}\n` +
-                            `📊 Results: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}\n` +
+                            `📊 Status: Started (background)\n` +
                             `📣 Broadcast by: ${adminName}\n` +
                             `🕐 Time: ${new Date().toLocaleString()}`
                         );
@@ -2008,9 +2049,24 @@ Thank you for your dedication! 🙏`;
                     const adminTelegramId = String(ctx.from.id);
                     const adminName = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim() || ctx.from.username || 'Admin';
                     try {
-                        const result = await sendPendingMediaToAll(state.pending, ctx.message.text || '');
-                        const { success, failed, total } = result;
-                        await ctx.reply(`📣 Broadcast result: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        const caption = ctx.message.text || '';
+                        const pending = state.pending;
+                        const allTargets = (await getBroadcastTargets()).filter((id) => String(id) !== adminTelegramId);
+                        const options = buildBroadcastMarkup(caption);
+
+                        await ctx.reply(`📣 Broadcast started to ${allTargets.length} users. You will get a summary when it finishes.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        runBroadcastInBackground({
+                            adminTelegramId,
+                            targets: allTargets,
+                            kindLabel: pending?.kind || 'media',
+                            sendOne: async (id) => {
+                                if (pending.kind === 'photo') return bot.telegram.sendPhoto(id, pending.fileId, options);
+                                if (pending.kind === 'video') return bot.telegram.sendVideo(id, pending.fileId, options);
+                                if (pending.kind === 'document') return bot.telegram.sendDocument(id, pending.fileId, options);
+                                if (pending.kind === 'animation') return bot.telegram.sendAnimation(id, pending.fileId, options);
+                                throw new Error('UNSUPPORTED_MEDIA');
+                            }
+                        });
 
                         // Notify other admins about broadcast
                         const mediaType = state.pending?.kind || 'media';
@@ -2019,7 +2075,7 @@ Thank you for your dedication! 🙏`;
                             adminTelegramId,
                             `👤 Admin Action: Broadcast Sent (${mediaType})\n\n` +
                             `📝 Caption: ${captionPreview}\n` +
-                            `📊 Results: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}\n` +
+                            `📊 Status: Started (background)\n` +
                             `📣 Broadcast by: ${adminName}\n` +
                             `🕐 Time: ${new Date().toLocaleString()}`
                         );
@@ -2605,7 +2661,7 @@ Thank you for your dedication! 🙏`;
             const adminName = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim() || ctx.from.username || 'Admin';
             try {
                 let targets = [];
-                targets = await getBroadcastTargets();
+                targets = (await getBroadcastTargets()).filter((id) => String(id) !== adminTelegramId);
                 if (ctx.message.photo) {
                     const best = ctx.message.photo[ctx.message.photo.length - 1];
                     const fileId = best?.file_id;
@@ -2616,8 +2672,13 @@ Thank you for your dedication! 🙏`;
                     } else {
                         adminStates.delete(adminId);
                         const options = buildBroadcastMarkup(caption);
-                        const { success, failed, total } = await sendToAll(targets, async (id) => { await bot.telegram.sendPhoto(id, fileId, options); });
-                        await ctx.reply(`📣 Broadcast result: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        await ctx.reply(`📣 Broadcast started to ${targets.length} users. You will get a summary when it finishes.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        runBroadcastInBackground({
+                            adminTelegramId,
+                            targets,
+                            kindLabel: 'photo',
+                            sendOne: async (id) => bot.telegram.sendPhoto(id, fileId, options)
+                        });
 
                         // Notify other admins
                         const captionPreview = caption.length > 100 ? caption.substring(0, 100) + '...' : caption;
@@ -2625,7 +2686,7 @@ Thank you for your dedication! 🙏`;
                             adminTelegramId,
                             `👤 Admin Action: Broadcast Sent (photo)\n\n` +
                             `📝 Caption: ${captionPreview || 'No caption'}\n` +
-                            `📊 Results: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}\n` +
+                            `📊 Status: Started (background)\n` +
                             `📣 Broadcast by: ${adminName}\n` +
                             `🕐 Time: ${new Date().toLocaleString()}`
                         );
@@ -2639,8 +2700,13 @@ Thank you for your dedication! 🙏`;
                     } else {
                         adminStates.delete(adminId);
                         const options = buildBroadcastMarkup(caption);
-                        const { success, failed, total } = await sendToAll(targets, async (id) => { await bot.telegram.sendVideo(id, fileId, options); });
-                        await ctx.reply(`📣 Broadcast result: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        await ctx.reply(`📣 Broadcast started to ${targets.length} users. You will get a summary when it finishes.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        runBroadcastInBackground({
+                            adminTelegramId,
+                            targets,
+                            kindLabel: 'video',
+                            sendOne: async (id) => bot.telegram.sendVideo(id, fileId, options)
+                        });
 
                         // Notify other admins
                         const captionPreview = caption.length > 100 ? caption.substring(0, 100) + '...' : caption;
@@ -2648,7 +2714,7 @@ Thank you for your dedication! 🙏`;
                             adminTelegramId,
                             `👤 Admin Action: Broadcast Sent (video)\n\n` +
                             `📝 Caption: ${captionPreview || 'No caption'}\n` +
-                            `📊 Results: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}\n` +
+                            `📊 Status: Started (background)\n` +
                             `📣 Broadcast by: ${adminName}\n` +
                             `🕐 Time: ${new Date().toLocaleString()}`
                         );
@@ -2662,8 +2728,13 @@ Thank you for your dedication! 🙏`;
                     } else {
                         adminStates.delete(adminId);
                         const options = buildBroadcastMarkup(caption);
-                        const { success, failed, total } = await sendToAll(targets, async (id) => { await bot.telegram.sendDocument(id, fileId, options); });
-                        await ctx.reply(`📣 Broadcast result: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        await ctx.reply(`📣 Broadcast started to ${targets.length} users. You will get a summary when it finishes.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        runBroadcastInBackground({
+                            adminTelegramId,
+                            targets,
+                            kindLabel: 'document',
+                            sendOne: async (id) => bot.telegram.sendDocument(id, fileId, options)
+                        });
 
                         // Notify other admins
                         const captionPreview = caption.length > 100 ? caption.substring(0, 100) + '...' : caption;
@@ -2671,7 +2742,7 @@ Thank you for your dedication! 🙏`;
                             adminTelegramId,
                             `👤 Admin Action: Broadcast Sent (document)\n\n` +
                             `📝 Caption: ${captionPreview || 'No caption'}\n` +
-                            `📊 Results: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}\n` +
+                            `📊 Status: Started (background)\n` +
                             `📣 Broadcast by: ${adminName}\n` +
                             `🕐 Time: ${new Date().toLocaleString()}`
                         );
@@ -2726,8 +2797,13 @@ Thank you for your dedication! 🙏`;
                     } else {
                         adminStates.delete(adminId);
                         const options = buildBroadcastMarkup(caption);
-                        const { success, failed, total } = await sendToAll(targets, async (id) => { await bot.telegram.sendAnimation(id, fileId, options); });
-                        await ctx.reply(`📣 Broadcast result: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        await ctx.reply(`📣 Broadcast started to ${targets.length} users. You will get a summary when it finishes.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                        runBroadcastInBackground({
+                            adminTelegramId,
+                            targets,
+                            kindLabel: 'animation',
+                            sendOne: async (id) => bot.telegram.sendAnimation(id, fileId, options)
+                        });
 
                         // Notify other admins
                         const captionPreview = caption.length > 100 ? caption.substring(0, 100) + '...' : caption;
@@ -2735,7 +2811,7 @@ Thank you for your dedication! 🙏`;
                             adminTelegramId,
                             `👤 Admin Action: Broadcast Sent (animation)\n\n` +
                             `📝 Caption: ${captionPreview || 'No caption'}\n` +
-                            `📊 Results: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}\n` +
+                            `📊 Status: Started (background)\n` +
                             `📣 Broadcast by: ${adminName}\n` +
                             `🕐 Time: ${new Date().toLocaleString()}`
                         );
@@ -2757,9 +2833,22 @@ Thank you for your dedication! 🙏`;
             const adminTelegramId = String(ctx.from.id);
             const adminName = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim() || ctx.from.username || 'Admin';
             try {
-                const result = await sendPendingMediaToAll(state.pending, '');
-                const { success, failed, total } = result;
-                await ctx.reply(`📣 Broadcast result: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                const pending = state.pending;
+                const targets = (await getBroadcastTargets()).filter((id) => String(id) !== adminTelegramId);
+                const options = buildBroadcastMarkup('');
+                await ctx.reply(`📣 Broadcast started to ${targets.length} users. You will get a summary when it finishes.`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back', callback_data: 'back_to_admin' }]] } });
+                runBroadcastInBackground({
+                    adminTelegramId,
+                    targets,
+                    kindLabel: pending?.kind || 'media',
+                    sendOne: async (id) => {
+                        if (pending.kind === 'photo') return bot.telegram.sendPhoto(id, pending.fileId, options);
+                        if (pending.kind === 'video') return bot.telegram.sendVideo(id, pending.fileId, options);
+                        if (pending.kind === 'document') return bot.telegram.sendDocument(id, pending.fileId, options);
+                        if (pending.kind === 'animation') return bot.telegram.sendAnimation(id, pending.fileId, options);
+                        throw new Error('UNSUPPORTED_MEDIA');
+                    }
+                });
 
                 // Notify other admins
                 const mediaType = state.pending?.kind || 'media';
@@ -2767,7 +2856,7 @@ Thank you for your dedication! 🙏`;
                     adminTelegramId,
                     `👤 Admin Action: Broadcast Sent (${mediaType})\n\n` +
                     `📝 Caption: No caption\n` +
-                    `📊 Results: ✅ ${success} / ${total} delivered${failed ? `, ❌ ${failed} failed` : ''}\n` +
+                    `📊 Status: Started (background)\n` +
                     `📣 Broadcast by: ${adminName}\n` +
                     `🕐 Time: ${new Date().toLocaleString()}`
                 );
