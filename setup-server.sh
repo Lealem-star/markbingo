@@ -89,9 +89,9 @@ cd /var/www/markbingo
 if [ -d ".git" ]; then
     echo "✅ Repository already exists, pulling latest changes..."
     git pull markbingo main || echo "⚠️  Could not pull latest changes. Continuing..."
-elif [ "$(ls -A /var/www/fikirbingo 2>/dev/null)" ]; then
+elif [ "$(ls -A /var/www/markbingo 2>/dev/null)" ]; then
     echo "⚠️  Directory is not empty. Please clear it or clone manually."
-    echo "   Run: rm -rf /var/www/fikirbingo/* (if safe to do so)"
+    echo "   Run: rm -rf /var/www/markbingo/* (if safe to do so)"
     exit 1
 else
     # Try SSH first, fallback to HTTPS with token

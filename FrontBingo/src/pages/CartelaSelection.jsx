@@ -227,7 +227,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
             try {
                 console.log('Fetching cartellas from /api/cartellas...');
-                console.log('API Base URL:', import.meta.env.VITE_API_URL || 'https://fikirbingo.com');
+                console.log('API Base URL:', import.meta.env.VITE_API_URL || 'https://markbingo.com');
                 console.log('Session ID:', sessionId ? 'present' : 'missing');
                 setLoading(true);
 

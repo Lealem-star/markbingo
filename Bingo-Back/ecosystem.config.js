@@ -15,7 +15,7 @@ module.exports = {
                 BOT_TOKEN: '8603012890:AAH4P7QaCV_P2DV4B1BizGjENW-67JfhI78',
                 RUN_TELEGRAM_BOT: 'false',
                 ADMIN_BOOT_CODE: 'SuperSecret2018',
-                WEBAPP_URL: 'https://fikirbingo.com',
+                WEBAPP_URL: 'https://markbingo.com',
                 API_BASE_URL: 'http://localhost:3001',
                 JWT_SECRET: 'your_super_secret_jwt_key_here_change_this',
                 // Player-bot auth (used by /api/auth/bot/token)
@@ -52,7 +52,7 @@ module.exports = {
                 BOT_TOKEN: '8603012890:AAH4P7QaCV_P2DV4B1BizGjENW-67JfhI78',
                 RUN_TELEGRAM_BOT: 'true',
                 ADMIN_BOOT_CODE: 'SuperSecret2018',
-                WEBAPP_URL: 'https://fikirbingo.com',
+                WEBAPP_URL: 'https://markbingo.com',
                 API_BASE_URL: 'http://localhost:3001',
                 API_URL: 'http://localhost:3001',
                 MONGODB_URI: 'mongodb+srv://meseretlealem8_db_user:dnvd1DJOd2AJKgZ0@funnybingo.qygmvoo.mongodb.net/?appName=funnybingo'

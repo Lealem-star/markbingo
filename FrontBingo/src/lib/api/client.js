@@ -3,7 +3,7 @@ async function reauthenticateAndGetSession() {
         console.log('Re-authenticating due to 401...');
         const apiBase = import.meta.env.VITE_API_URL ||
             (window.location.hostname === 'localhost' ? 'http://localhost:3001' :
-                'https://fikirbingo.com');
+                'https://markbingo.com');
         const initData = window?.Telegram?.WebApp?.initData;
 
         // Try Telegram auth first
@@ -34,7 +34,7 @@ async function reauthenticateAndGetSession() {
 export function getApiBase() {
     return import.meta.env.VITE_API_URL ||
         (window.location.hostname === 'localhost' ? 'http://localhost:3001' :
-            'https://fikirbingo.com');
+            'https://markbingo.com');
 }
 
 export async function apiFetch(path, { method = 'GET', body, sessionId, headers = {}, timeoutMs = 10000 } = {}) {
