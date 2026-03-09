@@ -12,7 +12,7 @@ module.exports = {
                 NODE_ENV: 'production',
                 PORT: 3001,
                 TZ: 'Africa/Addis_Ababa',
-                BOT_TOKEN: '8497021561:AAFFo5LgBDOrOOSAsZHtSGvyeSBYqSrf2hw',
+                BOT_TOKEN: '8603012890:AAH4P7QaCV_P2DV4B1BizGjENW-67JfhI78',
                 RUN_TELEGRAM_BOT: 'false',
                 ADMIN_BOOT_CODE: 'SuperSecret2018',
                 WEBAPP_URL: 'https://fikirbingo.com',
@@ -49,7 +49,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 TZ: 'Africa/Addis_Ababa',
-                BOT_TOKEN: '8497021561:AAFFo5LgBDOrOOSAsZHtSGvyeSBYqSrf2hw',
+                BOT_TOKEN: '8603012890:AAH4P7QaCV_P2DV4B1BizGjENW-67JfhI78',
                 RUN_TELEGRAM_BOT: 'true',
                 ADMIN_BOOT_CODE: 'SuperSecret2018',
                 WEBAPP_URL: 'https://fikirbingo.com',

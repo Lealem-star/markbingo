@@ -123,11 +123,11 @@ export default function AdminLayout({ onNavigate }) {
             <div className="min-h-screen" style={{ backgroundColor: '#e6e6fa' }}>
                 <div className="max-w-md mx-auto p-4 text-white text-center">
                     <div className="mt-20">
-                        {/* Animated FUN Bingo Logo */}
+                        {/* Animated Mark Bingo Logo */}
                         <div className="relative mb-6">
                             <img
                                 src="/lb.png"
-                                alt="FUN Bingo Logo"
+                                alt="Mark Bingo Logo"
                                 className="w-16 h-16 mx-auto animate-pulse"
                             />
                             {/* Search animation overlay */}
@@ -184,7 +184,7 @@ export default function AdminLayout({ onNavigate }) {
                 <div className="app-header">
                     <div className="app-logo">
                         <div className="logo-circle">
-                            <img src="/lb.png" alt="FUN Bingo Logo" className="logo-image" />
+                            <img src="/lb.png" alt="Mark Bingo Logo" className="logo-image" />
                         </div>
                         <span className="app-title">Admin</span>
                     </div>

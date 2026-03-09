@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Fikir Bingo Server Setup Script
+# Mark Bingo Server Setup Script
 # Run this script on your VPS server after connecting via SSH
 # This script will:
 # - Install Node.js, PM2, Nginx, Certbot
@@ -10,7 +10,7 @@
 
 set -e  # Exit on error
 
-echo "🚀 Starting Fikir Bingo Server Setup..."
+echo "🚀 Starting Mark Bingo Server Setup..."
 echo "======================================"
 
 # Update system
@@ -51,15 +51,15 @@ ufw --force enable
 
 # Create app directory
 echo "📁 Creating application directory..."
-mkdir -p /var/www/fikirbingo
-mkdir -p /var/www/fikirbingo/Bingo-Back/logs
+mkdir -p /var/www/markbingo
+mkdir -p /var/www/markbingo/Bingo-Back/logs
 
 # Setup SSH key for GitHub (if not exists)
 echo "🔐 Setting up GitHub authentication..."
 if [ ! -f ~/.ssh/id_ed25519 ] && [ ! -f ~/.ssh/id_rsa ]; then
     echo "📝 Generating SSH key for GitHub..."
-    ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N "" -C "server@fikirbingo.com" 2>/dev/null || \
-    ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N "" -C "server@fikirbingo.com"
+    ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N "" -C "server@markbingo.com" 2>/dev/null || \
+    ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N "" -C "server@markbingo.com"
     
     echo ""
     echo "⚠️  IMPORTANT: Add this SSH key to your GitHub account!"
@@ -83,12 +83,12 @@ fi
 
 # Clone repository
 echo "📥 Cloning repository..."
-cd /var/www/fikirbingo
+cd /var/www/markbingo
 
 # Check if directory is a git repository
 if [ -d ".git" ]; then
     echo "✅ Repository already exists, pulling latest changes..."
-    git pull origin main || echo "⚠️  Could not pull latest changes. Continuing..."
+    git pull markbingo main || echo "⚠️  Could not pull latest changes. Continuing..."
 elif [ "$(ls -A /var/www/fikirbingo 2>/dev/null)" ]; then
     echo "⚠️  Directory is not empty. Please clear it or clone manually."
     echo "   Run: rm -rf /var/www/fikirbingo/* (if safe to do so)"
@@ -96,7 +96,7 @@ elif [ "$(ls -A /var/www/fikirbingo 2>/dev/null)" ]; then
 else
     # Try SSH first, fallback to HTTPS with token
     echo "🔄 Attempting to clone via SSH..."
-    if git clone git@github.com:Lealem-star/funbingo.git . 2>/dev/null; then
+    if git clone git@github.com:Lealem-star/markbingo.git . 2>/dev/null; then
         echo "✅ Repository cloned successfully via SSH"
     else
         echo "⚠️  SSH clone failed. Using HTTPS method..."
@@ -104,7 +104,7 @@ else
         echo "   (Get one from: https://github.com/settings/tokens)"
         echo "   (Make sure it has 'repo' scope)"
         read -r GITHUB_TOKEN
-        if git clone https://${GITHUB_TOKEN}@github.com/Lealem-star/funbingo.git .; then
+        if git clone https://${GITHUB_TOKEN}@github.com/Lealem-star/markbingo.git .; then
             echo "✅ Repository cloned successfully via HTTPS"
         else
             echo "❌ Failed to clone repository. Please check your authentication."
@@ -116,12 +116,12 @@ fi
 
 # Install backend dependencies
 echo "📦 Installing backend dependencies..."
-cd /var/www/fikirbingo/Bingo-Back
+cd /var/www/markbingo/Bingo-Back
 npm install
 
 # Install frontend dependencies and build
 echo "📦 Installing frontend dependencies..."
-cd /var/www/fikirbingo/FrontBingo
+cd /var/www/markbingo/FrontBingo
 npm install
 echo "🏗️  Building frontend..."
 npm run build
@@ -130,9 +130,9 @@ echo ""
 echo "✅ Server setup completed!"
 echo ""
 echo "Next steps:"
-echo "1. Configure environment variables in /var/www/fikirbingo/Bingo-Back/.env"
+echo "1. Configure environment variables in /var/www/markbingo/Bingo-Back/.env"
 echo "2. Configure Nginx (see nginx-config.conf or DEPLOYMENT_GUIDE.md)"
-echo "3. Setup SSL certificate: certbot --nginx -d fikirbingo.com -d www.fikirbingo.com"
-echo "4. Start backend: cd /var/www/fikirbingo/Bingo-Back && pm2 start ecosystem.config.js && pm2 save"
+echo "3. Setup SSL certificate: certbot --nginx -d markbingo.com -d www.markbingo.com"
+echo "4. Start backend: cd /var/www/markbingo/Bingo-Back && pm2 start ecosystem.config.js && pm2 save"
 echo ""
 

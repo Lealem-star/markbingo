@@ -307,7 +307,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                             if (inviter.telegramId) {
                                 await ctx.telegram.sendMessage(
                                     inviter.telegramId,
-                                    `🎉 Great news! Someone joined FUN Bingo using your invite link!`
+                                    `🎉 Great news! Someone joined Mark Bingo using your invite link!`
                                 ).catch(() => { }); // Ignore errors if user blocked bot
                             }
                         }
@@ -348,12 +348,12 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 registered = !!(user && (user.isRegistered || user.phone));
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '👋 Welcome to FUN Bingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
+                    const regText = '👋 Welcome to Mark Bingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
                     const photoPath = path.join(__dirname, '..', 'static', 'lb.png');
                     const photo = fs.existsSync(photoPath) ? { source: fs.createReadStream(photoPath) } : (WEBAPP_URL || '').replace(/\/$/, '') + '/lb.png';
                     return ctx.replyWithPhoto(photo, { caption: regText, reply_markup: regKeyboard.reply_markup });
                 }
-                const welcomeText = `👋 Welcome to FUN Bingo! Choose an Option below.`;
+                const welcomeText = `👋 Welcome to Mark Bingo! Choose an Option below.`;
                 const playBtn = isHttpsWebApp
                     ? [{ text: '🎮 Play-10', web_app: { url: webAppUrl + '?stake=10' } }]
                     : [{ text: '🎮 Play-10', callback_data: 'play' }];
@@ -796,7 +796,7 @@ Thank you for your dedication! 🙏`;
 
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '👋 Welcome to FUN Bingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
+                    const regText = '👋 Welcome to Mark Bingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
                     return ctx.reply(regText, regKeyboard);
                 }
 
@@ -810,11 +810,11 @@ Thank you for your dedication! 🙏`;
                             ]
                         }
                     };
-                    return ctx.reply('🎮 Ready to play FUN Bingo!', keyboard);
+                    return ctx.reply('🎮 Ready to play Mark Bingo!', keyboard);
                 } else {
                     // Fallback if no HTTPS web app URL
                     const keyboard = { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } };
-                    return ctx.reply('🎮 To play FUN Bingo, please use our web app:\n\n' + webAppUrl, keyboard);
+                    return ctx.reply('🎮 To play Mark Bingo, please use our web app:\n\n' + webAppUrl, keyboard);
                 }
             } catch {
                 return ctx.reply('❌ Database unavailable. Please try again later.');
@@ -854,8 +854,8 @@ Thank you for your dedication! 🙏`;
                     `<code>"</code>\n` +
                     `<pre>│ Name: ${userName}\n` +
                     `│ Phone Number: ${userPhone}\n` +
-                    `│ Withdrawable Balance (Main Wallet): ${mainValue.toFixed(1)}\n` +
-                    `│ Non-Withdrawable Balance (Play Balance): ${playValue.toFixed(1)}</pre>`;
+                    `│ Withdrawable Balance: ${mainValue.toFixed(1)}\n` +
+                    `│ Non-Withdrawable Balance: ${playValue.toFixed(1)}</pre>`;
 
                 ctx.reply(message, { parse_mode: 'HTML' });
             } catch (error) {
@@ -874,7 +874,10 @@ Thank you for your dedication! 🙏`;
             ctx.reply('Please select the bank option you wish to use for the top-up.\n\nእባክዎ ለማስገባት የሚፈልጉትን የባንክ አማራጭ ይምረጡ:', {
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: '📱 Telebirr', callback_data: 'deposit_telebirr' }]
+                        [
+                            { text: '📱 Telebirr', callback_data: 'deposit_telebirr' },
+                            { text: '💳 CBE Birr', callback_data: 'deposit_cbe' }
+                        ]
                     ]
                 }
             });
@@ -898,13 +901,13 @@ Thank you for your dedication! 🙏`;
         });
 
         bot.command('support', (ctx) => {
-            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@Funbingosupport1\n\n💬 For general support:\n@Funbingosupport1\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@markbingosupport\n\n💬 For general support:\n@markbingosupport\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
         });
 
         bot.command('instruction', (ctx) => {
             const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
             if (isHttpsWebApp) keyboard.inline_keyboard.unshift([{ text: '🎮 Start Playing', web_app: { url: webAppUrl + '?stake=10' } }]);
-            ctx.reply('📖 How to Play FUN Bingo:\n\n1️⃣ Select a bingo card\n2️⃣ Wait for numbers to be called\n3️⃣ Mark numbers on your card\n4️⃣ Call "BINGO!" when you win\n\n🎯 Win by getting 5 in a row (horizontal, vertical, or diagonal)\n\n💰 Prizes are shared among all winners!', { reply_markup: keyboard });
+            ctx.reply('📖 How to Play Mark Bingo:\n\n1️⃣ Select a bingo card\n2️⃣ Wait for numbers to be called\n3️⃣ Mark numbers on your card\n4️⃣ Call "BINGO!" when you win\n\n🎯 Win by getting 5 in a row (horizontal, vertical, or diagonal)\n\n💰 Prizes are shared among all winners!', { reply_markup: keyboard });
         });
 
         // Admin: manual daily report trigger (optional date: YYYY-MM-DD)
@@ -1294,7 +1297,10 @@ Thank you for your dedication! 🙏`;
             ctx.reply('Please select the bank option you wish to use for the top-up.\n\nእባክዎ ለማስገባት የሚፈልጉትን የባንክ አማራጭ ይምረጡ:', {
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: '📱 Telebirr', callback_data: 'deposit_telebirr' }]
+                        [
+                            { text: '📱 Telebirr', callback_data: 'deposit_telebirr' },
+                            { text: '💳 CBE Birr', callback_data: 'deposit_cbe' }
+                        ]
                     ]
                 }
             });
@@ -1302,14 +1308,39 @@ Thank you for your dedication! 🙏`;
 
         bot.action('support', (ctx) => {
             ctx.answerCbQuery('☎️ Support info...');
-            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@Funbingosupport1\n\n💬 For general support:\n@Funbingosupport1\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@markbingosupport\n\n💬 For general support:\n@markbingosupport\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
         });
 
         bot.action('instruction', (ctx) => {
             ctx.answerCbQuery('📖 Instructions...');
-            const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
-            if (isHttpsWebApp) keyboard.inline_keyboard.unshift([{ text: '🎮 Start Playing', web_app: { url: webAppUrl + '?stake=10' } }]);
-            ctx.reply('📖 How to Play FUN Bingo:\n\n1️⃣ Select a bingo card\n2️⃣ Wait for numbers to be called\n3️⃣ Mark numbers on your card\n4️⃣ Call "BINGO!" when you win\n\n🎯 Win by getting 5 in a row (horizontal, vertical, or diagonal)\n\n💰 Prizes are shared among all winners!', { reply_markup: keyboard });
+            const keyboard = {
+                inline_keyboard: [
+                    isHttpsWebApp
+                        ? [{ text: '🎮 Start Playing', web_app: { url: webAppUrl + '?stake=10' } }]
+                        : [{ text: '🎮 Start Playing', callback_data: 'play' }]
+                ]
+            };
+            const howToPlayText = `የቢንጎ ጨዋታ ህጎች
+
+መጫወቻ ካርድ
+ጨዋታውን ለመጀመር ከሚመጣልን ከ1-400 የመጫወቻ ካርድ ውስጥ አንዱን እንመርጣለን
+የመጫወቻ ካርዱ ላይ በቀይ ቀለም የተመረጡ ቁጥሮች የሚያሳዩት መጫወቻ ካርድ በሌላ ተጫዋች መመረጡን ነው
+የመጫወቻ ካርድ ስንነካው ከታች በኩል ካርድ ቁጥሩ የሚይዘዉን መጫወቻ ካርድ ያሳየናል
+ወደ ጨዋታው ለመግባት የምንፈልገዉን ካርድ ከመረጥን ለምዝገባ የተሰጠው ሰኮንድ ዜሮ ሲሆን
+ቀጥታ ወደ ጨዋታ ያስገባናል
+
+ጨዋታ
+ወደ ጨዋታው ስንገባ በመረጥነው የካርድ ቁጥር መሰረት የመጫወቻ ካርድ እናገኛለን
+ከላይ በቀኝ በኩል ጨዋታው ለመጀመር ያለዉን ቀሪ ሴኮንድ መቁጠር ይጀምራል
+ጨዋታው ሲጀምር የተለያዪ ቁጥሮች ከ1 እስከ 75 መጥራት ይጀምራል
+የሚጠራው ቁጥር የኛ መጫወቻ ካርድ ዉስጥ ካለ የተጠራዉን ቁጥር ክሊክ በማረግ መምረጥ እንችላለን
+የመረጥነዉን ቁጥር ማጥፋት ከፈለግን መልሰን እራሱን ቁጠር ክሊክ በማረግ ማጥፋት እንችላለን
+
+አሸናፊ
+ቁጥሮቹ ሲጠሩ ከመጫወቻ ካርዳችን ላይ እየመረጥን ወደጎን ወይም ወደታች ወይም ወደሁለቱም አግዳሚ ወይም አራቱን ማእዘናት ከመረጥን ወዲያውኑ ከታች በኩል bingo የሚለዉን በመንካት ማሸነፍ እንችላለን
+ወደጎን ወይም ወደታች ወይም ወደሁለቱም አግዳሚ ወይም አራቱን ማእዘናት ሳይጠሩ bingo የሚለዉን ክሊክ ካደረግን ከጨዋታው እንታገዳለን
+ሁለት ወይም ከዚያ በላይ ተጫዋቾች እኩል ቢያሸንፉ ደራሹ ለቀጥራቸው ይካፈላል።`;
+            ctx.reply(howToPlayText, { reply_markup: keyboard });
         });
 
 
@@ -1754,7 +1785,7 @@ Thank you for your dedication! 🙏`;
             ctx.answerCbQuery('🔗 Invite friends...');
             const inviteLink = `https://t.me/${ctx.botInfo.username}?start=invite_${ctx.from.id}`;
             const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
-            keyboard.inline_keyboard.unshift([{ text: '📤 Share Link', url: `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=Join me in FUN Bingo!` }]);
+            keyboard.inline_keyboard.unshift([{ text: '📤 Share Link', url: `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=Join me in Mark Bingo!` }]);
 
             // Send image with caption
             const imagePath = path.join(__dirname, '../static/lb.png');
@@ -1762,21 +1793,21 @@ Thank you for your dedication! 🙏`;
                 await ctx.replyWithPhoto(
                     { source: imagePath },
                     {
-                        caption: `🔗 Invite Friends to FUN Bingo!\n\n🎁 Get ETB 1 bonus to your Play Wallet for each friend who registers.\n\n👥 Share this link with your friends:\n\n${inviteLink}`,
+                        caption: `🔗 Invite Friends to Mark Bingo!\n\n🎁 Get ETB 1 bonus to your Play Wallet for each friend who registers.\n\n👥 Share this link with your friends:\n\n${inviteLink}`,
                         reply_markup: keyboard
                     }
                 );
             } catch (error) {
                 console.error('Error sending invite image:', error);
                 // Fallback to text message if image fails
-                ctx.reply(`🔗 Invite Friends to FUN Bingo!\n\n🎁 Get ETB 1 bonus to your Play Wallet for each friend who registers.\n\n👥 Share this link with your friends:\n\n${inviteLink}`, { reply_markup: keyboard });
+                ctx.reply(`🔗 Invite Friends to Mark Bingo!\n\n🎁 Get ETB 1 bonus to your Play Wallet for each friend who registers.\n\n👥 Share this link with your friends:\n\n${inviteLink}`, { reply_markup: keyboard });
             }
         });
 
         bot.action('back_to_menu', async (ctx) => {
             if (!(await requireRegistration(ctx))) return;
             ctx.answerCbQuery('🔙 Back to menu');
-            const welcomeText = `👋 Welcome to FUN Bingo! Choose an Option below.`;
+            const welcomeText = `👋 Welcome to Mark Bingo! Choose an Option below.`;
             const playBtn = isHttpsWebApp
                 ? [{ text: '🎮 Play-10', web_app: { url: webAppUrl + '?stake=10' } }]
                 : [{ text: '🎮 Play-10', callback_data: 'play' }];
@@ -1798,7 +1829,7 @@ Thank you for your dedication! 🙏`;
             const userId = String(ctx.from.id);
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using inline code for the Telebirr account so it is tap‑to‑copy, and a code block for the instructions
-            const telebirrMessage = `የ Telebirr አካውንት: \`0994237676\`
+            const telebirrMessage = `የ Telebirr አካውንት (Eyob Mengist): \`0968050511\`
 
 መመሪያ
 
@@ -1808,7 +1839,7 @@ Thank you for your dedication! 🙏`;
 3. የደረሳችሁን አጭር የጹሁፍ መለክት(sms) ሙሉዉን ኮፒ(copy) በማረግ አልያም ያነሳችሁትን ስክሪንሻት ከታሽ ባለው የቴሌግራም የጹሁፍ ማስገቢአው ላይ ፔስት(paste) በማረግ ይላኩት
 \`\`\`
 
-የሚያጋጥማቹ የክፍያ ችግር ካለ @Funbingosupport1  በዚ ሳፖርት ማዉራት ይችላሉ`;
+የሚያጋጥማቹ የክፍያ ችግር ካለ @markbingosupport  በዚ ሳፖርት ማዉራት ይችላሉ`;
             
             depositStates.set(userId, 'awaiting_receipt');
             ctx.reply(telebirrMessage, { parse_mode: 'Markdown' });
@@ -1838,10 +1869,10 @@ Thank you for your dedication! 🙏`;
             depositStates.set(userId, 'awaiting_receipt');
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using code block formatting to create a styled box effect
-            const telebirrMessage = `የ Telebirr አካውንት
+            const telebirrMessage = `የ Telebirr አካውንት (Eyob Mengist)
 
 \`\`\`
-0994237676
+0968050511
 \`\`\`
 
 መመሪያ
@@ -1852,7 +1883,7 @@ Thank you for your dedication! 🙏`;
 3. የደረሳችሁን አጭር የጹሁፍ መለክት(sms) ሙሉዉን ኮፒ(copy) በማረግ አልያም ያነሳችሁትን ስክሪንሻት ከታሽ ባለው የቴሌግራም የጹሁፍ ማስገቢአው ላይ ፔስት(paste) በማረግ ይላኩት
 \`\`\`
 
-የሚያጋጥማቹ የክፍያ ችግር ካለ @Funbingosupport1  በዚ ሳፖርት ማዉራት ይችላሉ`;
+የሚያጋጥማቹ የክፍያ ችግር ካለ @markbingosupport  በዚ ሳፖርት ማዉራት ይችላሉ`;
             
             ctx.reply(telebirrMessage, { parse_mode: 'Markdown' });
         });
@@ -1893,7 +1924,7 @@ Thank you for your dedication! 🙏`;
         // Copy button handlers
         bot.action('copy_telebirr', (ctx) => {
             ctx.answerCbQuery('📋 Telebirr number copied!');
-            ctx.reply('📱 Telebirr Number:\n\n```\n0994237676\n```\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
+            ctx.reply('📱 Telebirr Number (Eyob Mengist):\n\n```\n0968050511\n```\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
         });
         // Temporarily disabled - Commercial Bank copy handler
         // bot.action('copy_commercial', (ctx) => {
@@ -1905,6 +1936,17 @@ Thank you for your dedication! 🙏`;
         //     ctx.answerCbQuery('📋 CBE Birr number copied!');
         //     ctx.reply('💳 CBE Birr Number:\n\n`0934551781`\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
         // });
+
+        // CBE Birr (CBEBirr) deposit using fixed agent number
+        bot.action('deposit_cbe', (ctx) => {
+            const userId = String(ctx.from.id);
+            ctx.answerCbQuery('💳 CBE Birr deposit...');
+            const cbeMessage = `💳 CBE Birr Deposit\n\n📋 Agent Details:\n👤 Account Holder: Eyob Mengist\n💳 CBE Birr: \`096 509 0929\`\n🏦 Bank: Commercial Bank of Ethiopia\n\nመመሪያ\n\n\`\`\`\n1. Open CBE Birr app ወይም አጭር ቁጥር 847 ይጠቀሙ\n2. Select "Send Money"\n3. Enter agent number: 096 509 0929\n4. Enter the amount you want to deposit\n5. Complete the transaction\n6. ከCBEBirr የሚደርስዎትን የአጭር መልዕክት (SMS) ሙሉ በሙሉ ኮፒ አድርጉ ወይም ስክሪንሻት ይውሰዱ እና በቦቱ ላይ ያስገቡ\n\`\`\`\n\nየሚያጋጥማቹ የክፍያ ችግር ካለ @markbingosupport  በዚ ሳፖርት ማዉራት ይችላሉ`;
+            if (typeof depositStates !== 'undefined' && depositStates instanceof Map) {
+                depositStates.set(userId, 'awaiting_receipt');
+            }
+            ctx.reply(cbeMessage, { parse_mode: 'Markdown' });
+        });
 
         bot.on('contact', async (ctx) => {
             try {
@@ -1949,7 +1991,7 @@ Thank you for your dedication! 🙏`;
                     // Private welcome message to the registering user (no broadcast, no phone number)
                     if (isNewRegistration) {
                         await ctx.reply(
-                            `${displayName} welcome to Fun Bingo and enjoy 🎁 Welcome Bonus: 10 ETB added to your Play Wallet!\n\nአዋጅ ፡ በእንኳን ደህና መጡ የአስር ብር ስጦታ ቢያሸንፉ ለተጨማሪ የመጫወቻ ዋሌት ብቻ እንደሚያገኙ ልብ ይለዋል። ሆኖም የበሉትን ወደ withdrawable wallet የመጨመር ፍላጎት ካልዎት የdeposit ታሪክ ብቻ መፍጠር እንደሚጠብቅዎ እንዲገነዘቡ እናሳስባለን ውድ ደንበኛችን።`,
+                            `${displayName} welcome to Mark Bingo and enjoy 🎁 Welcome Bonus: 10 ETB added to your Play Wallet!\n\nአዋጅ ፡ በእንኳን ደህና መጡ የአስር ብር ስጦታ ቢያሸንፉ ለተጨማሪ የመጫወቻ ዋሌት ብቻ እንደሚያገኙ ልብ ይለዋል። ሆኖም የበሉትን ወደ withdrawable wallet የመጨመር ፍላጎት ካልዎት የdeposit ታሪክ ብቻ መፍጠር እንደሚጠብቅዎ እንዲገነዘቡ እናሳስባለን ውድ ደንበኛችን።`,
                             { reply_markup: { remove_keyboard: true } }
                         );
                     } else {
@@ -1963,7 +2005,7 @@ Thank you for your dedication! 🙏`;
                         (ctx.from?.first_name || '').trim() ||
                         'User';
                     ctx.reply(
-                        `${displayName} welcome to Fun Bingo and enjoy 🎁 Welcome Bonus: 10 ETB added to your Play Wallet!\n\nአዋጅ ፡ በእንኳን ደህና መጡ የአስር ብር ስጦታ ቢያሸንፉ ለተጨማሪ የመጫወቻ ዋሌት ብቻ እንደሚያገኙ ልብ ይለዋል። ሆኖም የበሉትን ወደ withdrawable wallet የመጨመር ፍላጎት ካልዎት የdeposit ታሪክ ብቻ መፍጠር እንደሚጠብቅዎ እንዲገነዘቡ እናሳስባለን ውድ ደንበኛችን።`,
+                        `${displayName} welcome to Mark Bingo and enjoy 🎁 Welcome Bonus: 10 ETB added to your Play Wallet!\n\nአዋጅ ፡ በእንኳን ደህና መጡ የአስር ብር ስጦታ ቢያሸንፉ ለተጨማሪ የመጫወቻ ዋሌት ብቻ እንደሚያገኙ ልብ ይለዋል። ሆኖም የበሉትን ወደ withdrawable wallet የመጨመር ፍላጎት ካልዎት የdeposit ታሪክ ብቻ መፍጠር እንደሚጠብቅዎ እንዲገነዘቡ እናሳስባለን ውድ ደንበኛችን።`,
                         { reply_markup: { remove_keyboard: true } }
                     );
                 }
@@ -2362,7 +2404,7 @@ Thank you for your dedication! 🙏`;
                                     depositStates.delete(userId);
                                     const msg = forwardedCount > 0
                                         ? '📷 Receipt image received!\n\n✅ Your deposit receipt has been forwarded to admin for manual review.\n\n⏳ You will be notified when your deposit is approved or denied.'
-                                        : '❌ Failed to forward receipt. Please contact support @Funbingosupport1';
+                                        : '❌ Failed to forward receipt. Please contact support @markbingosupport';
                                     return ctx.reply(msg, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
                                 } catch (error) {
                                     console.error('Error processing deposit image:', error);
@@ -2637,7 +2679,7 @@ Thank you for your dedication! 🙏`;
                             reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] }
                         });
                     } else {
-                        await ctx.reply('❌ Failed to forward receipt. Please contact support @Funbingosupport1', {
+                        await ctx.reply('❌ Failed to forward receipt. Please contact support @markbingosupport', {
                             reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] }
                         });
                     }

@@ -41,7 +41,7 @@ class NotificationService {
                 `• Play: ETB ${play.toFixed(2)}`,
                 '',
                 '❓ Questions? Contact support:',
-                '@Funbingosupport1'
+                '@markbingosupport'
             ].join('\n');
 
             const reply_markup = {

@@ -1,7 +1,7 @@
 /**
- * FUN Bingo Player Bot
- * 
- * An automated bot that plays the FUN Bingo game by:
+ * Mark Bingo Player Bot
+ *
+ * An automated bot that plays the Mark Bingo game by:
  * 1. Authenticating to get a JWT token
  * 2. Connecting to WebSocket
  * 3. Joining a game room
@@ -594,7 +594,7 @@ class PlayerBot {
 
 // Main execution
 async function main() {
-    console.log('🤖 FUN Bingo Player Bot Starting...\n');
+    console.log('🤖 Mark Bingo Player Bot Starting...\n');
 
     const bot = new PlayerBot({
         stake: parseInt(process.env.STAKE || '10'),

@@ -1,10 +1,10 @@
-# 🎯 Fun Bingo - Full Stack Bingo Game Platform
+# 🎯 Mark Bingo - Full Stack Bingo Game Platform
 
 A modern, real-time multiplayer Bingo game platform with integrated payment system, Telegram bot support, and comprehensive admin dashboard.
 
 ## 📋 Overview
 
-Fun Bingo is a complete web-based bingo game application that allows users to play bingo games in real-time, manage their wallet, view game history, and compete on leaderboards. The platform includes a Telegram bot for game management and notifications, along with a robust admin panel for game administration.
+Mark Bingo is a complete web-based bingo game application that allows users to play bingo games in real-time, manage their wallet, view game history, and compete on leaderboards. The platform includes a Telegram bot for game management and notifications, along with a robust admin panel for game administration.
 
 ## ✨ Features
 
@@ -54,7 +54,7 @@ Fun Bingo is a complete web-based bingo game application that allows users to pl
 ## 📁 Project Structure
 
 ```
-funbingo/
+markbingo/
 ├── FrontBingo/              # React frontend application
 │   ├── src/
 │   │   ├── pages/          # Main application pages
@@ -92,8 +92,8 @@ funbingo/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Lealem-star/funbingo.git
-   cd funbingo
+   git clone https://github.com/Lealem-star/markbingo.git
+   cd markbingo
    ```
 
 2. **Install Frontend Dependencies**
@@ -211,7 +211,7 @@ This project is licensed under the ISC License.
 
 ## 🔗 Links
 
-- Repository: [https://github.com/Lealem-star/funbingo](https://github.com/Lealem-star/funbingo)
+- Repository: [https://github.com/Lealem-star/markbingo](https://github.com/Lealem-star/markbingo)
 
 ---
 
