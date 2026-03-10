@@ -83,7 +83,7 @@ class NotificationService {
             ].filter(Boolean).join('\n');
             const reply_markup = {
                 inline_keyboard: [
-                    [{ text: '💬 Contact Support', url: 'https://t.me/Funbingosupport1' }],
+                    [{ text: '💬 Contact Support', url: 'https://t.me/markbingosupport' }],
                     [{ text: '🎮 Play Now', web_app: { url: WEBAPP_URL + '?stake=10' } }]
                 ]
             };
@@ -109,7 +109,7 @@ class NotificationService {
             ].filter(Boolean).join('\n');
             const reply_markup = {
                 inline_keyboard: [
-                    [{ text: '💬 Contact Support', url: 'https://t.me/Funbingosupport1' }],
+                    [{ text: '💬 Contact Support', url: 'https://t.me/markbingosupport' }],
                     [{ text: '🎮 Play Now', web_app: { url: WEBAPP_URL + '?stake=10' } }]
                 ]
             };

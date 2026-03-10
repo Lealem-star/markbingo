@@ -89,12 +89,17 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             try {
                 await bot.telegram.setMyCommands([
                     { command: 'start', description: 'Start' },
+                    { command: 'register', description: 'Register' },
                     { command: 'play', description: 'Play' },
                     { command: 'deposit', description: 'Deposit' },
                     { command: 'withdraw', description: 'Withdraw' },
                     { command: 'balance', description: 'Balance' },
                     { command: 'support', description: 'Contact Support' },
-                    { command: 'instruction', description: 'How to Play' }
+                    { command: 'instruction', description: 'Instruction' },
+                    { command: 'invite', description: 'Invite' },
+                    { command: 'agent', description: 'Register As Agent' },
+                    { command: 'invitesubagent', description: 'Invite Sub-Agent' },
+                    { command: 'sale', description: 'Sale' }
                 ]);
 
                 if (isHttpsWebApp) {
@@ -257,12 +262,17 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
 
                 const userCommands = [
                     { command: 'start', description: 'Start' },
+                    { command: 'register', description: 'Register' },
                     { command: 'play', description: 'Play' },
                     { command: 'deposit', description: 'Deposit' },
                     { command: 'withdraw', description: 'Withdraw' },
                     { command: 'balance', description: 'Balance' },
                     { command: 'support', description: 'Contact Support' },
-                    { command: 'instruction', description: 'How to Play' }
+                    { command: 'instruction', description: 'Instruction' },
+                    { command: 'invite', description: 'Invite' },
+                    { command: 'agent', description: 'Register As Agent' },
+                    { command: 'invitesubagent', description: 'Invite Sub-Agent' },
+                    { command: 'sale', description: 'Sale' }
                 ];
 
                 // Select commands based on role
@@ -362,7 +372,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                         inline_keyboard: [
                             playBtn,
                             [{ text: '💵 Check Balance', callback_data: 'balance' }, { text: '💰 Deposit', callback_data: 'deposit' }],
-                            [{ text: '☎️ Contact Support', callback_data: 'support' }, { text: '📖 Instruction', callback_data: 'instruction' }],
+                            [{ text: 'Contact Support', url: 'https://t.me/markbingosupport' }, { text: '📖 Instruction', callback_data: 'instruction' }],
                             [{ text: '🤑 Withdraw', callback_data: 'withdraw' }, { text: '🔗 Invite', callback_data: 'invite' }]
                         ]
                     }
@@ -768,6 +778,30 @@ Thank you for your dedication! 🙏`;
         });
 
         // User commands
+        bot.command('register', async (ctx) => {
+            try {
+                if (!(await ensureNotBlocked(ctx))) return;
+                await UserService.createOrUpdateUser(ctx.from);
+                const telegramId = String(ctx.from.id);
+                const user = await UserService.getUserByTelegramId(telegramId);
+                const registered = !!(user && (user.isRegistered || user.phone));
+                if (registered) {
+                    return ctx.reply('✅ You are already registered with this account.');
+                }
+                const regKeyboard = {
+                    reply_markup: {
+                        keyboard: [[{ text: '📱 Share Contact', request_contact: true }]],
+                        resize_keyboard: true,
+                        one_time_keyboard: true
+                    }
+                };
+                const regText = '📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
+                return ctx.reply(regText, regKeyboard);
+            } catch {
+                return ctx.reply('❌ Database unavailable. Please try again later.');
+            }
+        });
+
         bot.command('play', async (ctx) => {
             try {
                 if (!(await ensureNotBlocked(ctx))) return;
@@ -901,13 +935,79 @@ Thank you for your dedication! 🙏`;
         });
 
         bot.command('support', (ctx) => {
-            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@markbingosupport\n\n💬 For general support:\n@markbingosupport\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+            ctx.reply('Please click the button below to get in touch with our support team.', {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: 'Contact Support', url: 'https://t.me/markbingosupport' }]
+                    ]
+                }
+            });
         });
 
         bot.command('instruction', (ctx) => {
-            const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
-            if (isHttpsWebApp) keyboard.inline_keyboard.unshift([{ text: '🎮 Start Playing', web_app: { url: webAppUrl + '?stake=10' } }]);
-            ctx.reply('📖 How to Play Mark Bingo:\n\n1️⃣ Select a bingo card\n2️⃣ Wait for numbers to be called\n3️⃣ Mark numbers on your card\n4️⃣ Call "BINGO!" when you win\n\n🎯 Win by getting 5 in a row (horizontal, vertical, or diagonal)\n\n💰 Prizes are shared among all winners!', { reply_markup: keyboard });
+            const keyboard = {
+                inline_keyboard: [
+                    isHttpsWebApp
+                        ? [{ text: '🎮 Start Playing', web_app: { url: webAppUrl + '?stake=10' } }]
+                        : [{ text: '🎮 Start Playing', callback_data: 'play' }]
+                ]
+            };
+            const howToPlayText = `የቢንጎ ጨዋታ ህጎች
+
+መጫወቻ ካርድ
+ጨዋታውን ለመጀመር ከሚመጣልን ከ1-400 የመጫወቻ ካርድ ውስጥ አንዱን እንመርጣለን
+የመጫወቻ ካርዱ ላይ በቀይ ቀለም የተመረጡ ቁጥሮች የሚያሳዩት መጫወቻ ካርድ በሌላ ተጫዋች መመረጡን ነው
+የመጫወቻ ካርድ ስንነካው ከታች በኩል ካርድ ቁጥሩ የሚይዘዉን መጫወቻ ካርድ ያሳየናል
+ወደ ጨዋታው ለመግባት የምንፈልገዉን ካርድ ከመረጥን ለምዝገባ የተሰጠው ሰኮንድ ዜሮ ሲሆን
+ቀጥታ ወደ ጨዋታ ያስገባናል
+
+ጨዋታ
+ወደ ጨዋታው ስንገባ በመረጥነው የካርድ ቁጥር መሰረት የመጫወቻ ካርድ እናገኛለን
+ከላይ በቀኝ በኩል ጨዋታው ለመጀመር ያለዉን ቀሪ ሴኮንድ መቁጠር ይጀምራል
+ጨዋታው ሲጀምር የተለያዪ ቁጥሮች ከ1 እስከ 75 መጥራት ይጀምራል
+የሚጠራው ቁጥር የኛ መጫወቻ ካርድ ዉስጥ ካለ የተጠራዉን ቁጥር ክሊክ በማረግ መምረጥ እንችላለን
+የመረጥነዉን ቁጥር ማጥፋት ከፈለግን መልሰን እራሱን ቁጠር ክሊክ በማረግ ማጥፋት እንችላለን
+
+አሸናፊ
+ቁጥሮቹ ሲጠሩ ከመጫወቻ ካርዳችን ላይ እየመረጥን ወደጎን ወይም ወደታች ወይም ወደሁለቱም አግዳሚ ወይም አራቱን ማእዘናት ከመረጥን ወዲያውኑ ከታች በኩል bingo የሚለዉን በመንካት ማሸነፍ እንችላለን
+ወደጎን ወይም ወደታች ወይም ወደሁለቱም አግዳሚ ወይም አራቱን ማእዘናት ሳይጠሩ bingo የሚለዉን ክሊክ ካደረግን ከጨዋታው እንታገዳለን
+ሁለት ወይም ከዚያ በላይ ተጫዋቾች እኩል ቢያሸንፉ ደራሹ ለቀጥራቸው ይካፈላል።`;
+            ctx.reply(howToPlayText, { reply_markup: keyboard });
+        });
+
+        bot.command('invite', async (ctx) => {
+            try {
+                if (!(await ensureNotBlocked(ctx))) return;
+                const inviteLink = `https://t.me/${ctx.botInfo.username}?start=invite_${ctx.from.id}`;
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('Join me in Mark Bingo!')}`;
+                return ctx.reply('Here is your referral link', {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'Share', url: shareUrl }]
+                        ]
+                    }
+                });
+            } catch {
+                return ctx.reply('❌ Could not generate invite link. Please try again.');
+            }
+        });
+
+        bot.command('agent', async (ctx) => {
+            return ctx.reply('Register As Agent is not available yet. Please contact support if you need agent access.', {
+                reply_markup: { inline_keyboard: [[{ text: 'Contact Support', url: 'https://t.me/markbingosupport' }]] }
+            });
+        });
+
+        bot.command('invitesubagent', async (ctx) => {
+            return ctx.reply('Invite Sub-Agent is not available yet. Please contact support for assistance.', {
+                reply_markup: { inline_keyboard: [[{ text: 'Contact Support', url: 'https://t.me/markbingosupport' }]] }
+            });
+        });
+
+        bot.command('sale', async (ctx) => {
+            return ctx.reply('Sale is not available yet. Please contact support for assistance.', {
+                reply_markup: { inline_keyboard: [[{ text: 'Contact Support', url: 'https://t.me/markbingosupport' }]] }
+            });
         });
 
         // Admin: manual daily report trigger (optional date: YYYY-MM-DD)
@@ -1308,7 +1408,13 @@ Thank you for your dedication! 🙏`;
 
         bot.action('support', (ctx) => {
             ctx.answerCbQuery('☎️ Support info...');
-            ctx.reply('☎️ Contact Support:\n\n📞 For payment issues:\n@markbingosupport\n\n💬 For general support:\n@markbingosupport\n\n⏰ Support hours:\n24/7 available', { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+            ctx.reply('Please click the button below to get in touch with our support team.', {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: 'Contact Support', url: 'https://t.me/markbingosupport' }]
+                    ]
+                }
+            });
         });
 
         bot.action('instruction', (ctx) => {
@@ -1784,24 +1890,14 @@ Thank you for your dedication! 🙏`;
             if (!(await requireRegistration(ctx))) return;
             ctx.answerCbQuery('🔗 Invite friends...');
             const inviteLink = `https://t.me/${ctx.botInfo.username}?start=invite_${ctx.from.id}`;
-            const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
-            keyboard.inline_keyboard.unshift([{ text: '📤 Share Link', url: `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=Join me in Mark Bingo!` }]);
-
-            // Send image with caption
-            const imagePath = path.join(__dirname, '../static/lb.png');
-            try {
-                await ctx.replyWithPhoto(
-                    { source: imagePath },
-                    {
-                        caption: `🔗 Invite Friends to Mark Bingo!\n\n🎁 Get ETB 1 bonus to your Play Wallet for each friend who registers.\n\n👥 Share this link with your friends:\n\n${inviteLink}`,
-                        reply_markup: keyboard
-                    }
-                );
-            } catch (error) {
-                console.error('Error sending invite image:', error);
-                // Fallback to text message if image fails
-                ctx.reply(`🔗 Invite Friends to Mark Bingo!\n\n🎁 Get ETB 1 bonus to your Play Wallet for each friend who registers.\n\n👥 Share this link with your friends:\n\n${inviteLink}`, { reply_markup: keyboard });
-            }
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('Join me in Mark Bingo!')}`;
+            return ctx.reply('Here is your referral link', {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: 'Share', url: shareUrl }]
+                    ]
+                }
+            });
         });
 
         bot.action('back_to_menu', async (ctx) => {
@@ -1816,7 +1912,7 @@ Thank you for your dedication! 🙏`;
                     inline_keyboard: [
                         playBtn,
                         [{ text: '💵 Check Balance', callback_data: 'balance' }, { text: '💰 Deposit', callback_data: 'deposit' }],
-                        [{ text: '☎️ Contact Support', callback_data: 'support' }, { text: '📖 Instruction', callback_data: 'instruction' }],
+                        [{ text: 'Contact Support', url: 'https://t.me/markbingosupport' }, { text: '📖 Instruction', callback_data: 'instruction' }],
                         [{ text: '🤑 Withdraw', callback_data: 'withdraw' }, { text: '🔗 Invite', callback_data: 'invite' }]
                     ]
                 }
@@ -1965,7 +2061,7 @@ Thank you for your dedication! 🙏`;
                                 inline_keyboard: [
                                     playBtn,
                                     [{ text: '💵 Check Balance', callback_data: 'balance' }, { text: '💰 Deposit', callback_data: 'deposit' }],
-                                    [{ text: '☎️ Contact Support', callback_data: 'support' }, { text: '📖 Instruction', callback_data: 'instruction' }],
+                                    [{ text: 'Contact Support', url: 'https://t.me/markbingosupport' }, { text: '📖 Instruction', callback_data: 'instruction' }],
                                     [{ text: '🤑 Withdraw', callback_data: 'withdraw' }, { text: '🔗 Invite', callback_data: 'invite' }]
                                 ]
                             }
@@ -2021,7 +2117,7 @@ Thank you for your dedication! 🙏`;
                     inline_keyboard: [
                         playBtn,
                         [{ text: '💵 Check Balance', callback_data: 'balance' }, { text: '💰 Deposit', callback_data: 'deposit' }],
-                        [{ text: '☎️ Contact Support', callback_data: 'support' }, { text: '📖 Instruction', callback_data: 'instruction' }],
+                        [{ text: 'Contact Support', url: 'https://t.me/markbingosupport' }, { text: '📖 Instruction', callback_data: 'instruction' }],
                         [{ text: '🤑 Withdraw', callback_data: 'withdraw' }, { text: '🔗 Invite', callback_data: 'invite' }]
                     ]
                 }
