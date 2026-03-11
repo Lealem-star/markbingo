@@ -134,9 +134,9 @@ class WalletService {
     // Process game bet - use main wallet first, then play wallet
     static async processGameBet(userId, amount, gameId) {
         try {
-            const wallet = await Wallet.findOne({ userId });
+            let wallet = await Wallet.findOne({ userId });
             if (!wallet) {
-                throw new Error('Wallet not found');
+                wallet = await this.createWallet(userId);
             }
 
             // Check if main wallet has enough

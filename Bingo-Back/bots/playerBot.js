@@ -22,7 +22,44 @@
 
 require('dotenv').config();
 const WebSocket = require('ws');
-const fetch = require('node-fetch');
+const https = require('https');
+const http = require('http');
+
+/** POST JSON to URL and return { ok, status, data } (Node built-in, no fetch dependency) */
+function postJson(url, body, extraHeaders = {}) {
+    const urlObj = new URL(url);
+    const isHttps = urlObj.protocol === 'https:';
+    const lib = isHttps ? https : http;
+    const bodyStr = JSON.stringify(body);
+    const headers = {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(bodyStr, 'utf8'),
+        ...extraHeaders
+    };
+    return new Promise((resolve, reject) => {
+        const req = lib.request({
+            hostname: urlObj.hostname,
+            port: urlObj.port || (isHttps ? 443 : 80),
+            path: urlObj.pathname + urlObj.search,
+            method: 'POST',
+            headers
+        }, (res) => {
+            const chunks = [];
+            res.on('data', (chunk) => chunks.push(chunk));
+            res.on('end', () => {
+                const raw = Buffer.concat(chunks).toString('utf8');
+                try {
+                    resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data: raw ? JSON.parse(raw) : {} });
+                } catch (e) {
+                    reject(new Error('Invalid JSON response'));
+                }
+            });
+        });
+        req.on('error', reject);
+        req.write(bodyStr);
+        req.end();
+    });
+}
 
 function base64UrlToJson(segment) {
     try {
@@ -173,22 +210,18 @@ class PlayerBot {
         }
 
         this.refreshInFlight = (async () => {
-            const res = await fetch(`${this.apiBase}/api/auth/bot/token`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-bot-secret': this.botSecret
-                },
-                body: JSON.stringify({
+            const { ok, status, data } = await postJson(
+                `${this.apiBase}/api/auth/bot/token`,
+                {
                     telegramId: this.botTelegramId,
                     firstName: this.botFirstName,
                     lastName: this.botLastName
-                })
-            });
+                },
+                { 'x-bot-secret': this.botSecret }
+            );
 
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok || !data.token) {
-                const msg = data?.error || `HTTP_${res.status}`;
+            if (!ok || !data.token) {
+                const msg = data?.error || `HTTP_${status}`;
                 throw new Error(`Bot token refresh failed: ${msg}`);
             }
 

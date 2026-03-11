@@ -136,10 +136,15 @@ export function WebSocketProvider({ children }) {
             setIsConnecting(true);
 
             // No timeout - require real WebSocket connection
-            const wsBase = import.meta.env.VITE_WS_URL ||
+            // Normalize base: if env already includes /ws (e.g. tunnel URL), don't double-append (avoids /ws/ws)
+            let wsBase = import.meta.env.VITE_WS_URL ||
                 (window.location.hostname === 'localhost' ? 'ws://localhost:3001' :
                     'ws://84.247.178.86');
-            const wsUrl = `${wsBase}/ws?token=${safeSessionId}`;
+            wsBase = (wsBase || '').replace(/\/+$/, '');
+            if (!/\/ws$/i.test(wsBase)) {
+                wsBase += '/ws';
+            }
+            const wsUrl = `${wsBase}?token=${safeSessionId}`;
             console.log('Connecting to general WebSocket:', wsUrl);
 
             const ws = new WebSocket(wsUrl);
@@ -628,17 +633,10 @@ export function WebSocketProvider({ children }) {
                 connecting = false;
                 connectionAttemptRef.current = false;
 
-                // WebSocket failed - app will show connection error
+                // WebSocket failed - app will show connection error.
+                // Do NOT schedule retry here: onclose will also fire and handle reconnect with backoff.
+                // Scheduling here too caused "Insufficient resources" from too many parallel retries.
                 console.log('⚠️ WebSocket connection failed - app requires real connection');
-
-                // Set a timeout to retry connection if it fails
-                setTimeout(() => {
-                    if (!stopped && !connected) {
-                        console.log('🔄 Retrying WebSocket connection after error...');
-                        connectionAttemptRef.current = false; // Reset before retrying
-                        connect();
-                    }
-                }, 5000);
             };
         };
 
