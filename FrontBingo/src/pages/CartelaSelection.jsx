@@ -269,6 +269,8 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         const selectedNumbers = Array.isArray(gameState.yourSelections) ? gameState.yourSelections : [];
         const hasCards = Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0;
         const isGameRunning = gameState.phase === 'running' && gameState.gameId;
+        const isGameStarting = gameState.phase === 'starting' && gameState.gameId;
+        const shouldGoToGameLayout = isGameRunning || isGameStarting;
         
         console.log('🎮 CartelaSelection - Game state changed:', {
             phase: gameState.phase,
@@ -277,14 +279,15 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             hasSelectedCard: selectedNumbers.length > 0,
             yourCardsCount: gameState.yourCards?.length || 0,
             hasCards,
-            isGameRunning
+            isGameRunning,
+            isGameStarting
         });
 
-        // When a game is running, always move into GameLayout:
+        // When a game is starting or running, always move into GameLayout:
         // - Players with cards see their boards.
         // - Users without cards see watch mode.
-        if (isGameRunning) {
-            console.log('🎮 NAVIGATION TRIGGERED - Game started, requesting game layout', {
+        if (shouldGoToGameLayout) {
+            console.log('🎮 NAVIGATION TRIGGERED - Game starting/running, requesting game layout', {
                 gameId: gameState.gameId,
                 phase: gameState.phase,
                 hasCards,
@@ -811,7 +814,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             </header>
 
             <main className="p-4 mt-2 pb-6">
-                {/* Wait Message Box - Show when game is running (not in registration) */}
+                {/* Wait Message Box - Show when game is running (not in registration). Offer watch mode. */}
                 {gameState.phase !== 'registration' && gameState.phase !== 'announce' && (
                     <div className="mb-4 mx-4">
                         <div className="alert-banner-appeal animate-slide-in">
@@ -825,6 +828,16 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                             <div className="alert-message-text">
                                 Please wait until the current game finishes. You can select cartela when registration starts again.
                             </div>
+                            {/* Watch current game - navigate to game layout (watch mode) */}
+                            {(gameState.phase === 'starting' || gameState.phase === 'running') && gameState.gameId && onNavigate && (
+                                <button
+                                    type="button"
+                                    onClick={() => onNavigate('game-layout', true)}
+                                    className="ml-3 px-3 py-1.5 rounded-md text-sm font-medium bg-white/90 text-purple-700 hover:bg-white border border-purple-300 shrink-0"
+                                >
+                                    Watch current game
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
