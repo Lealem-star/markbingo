@@ -712,7 +712,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             <main className="p-4 mt-2 pb-6">
                 
                 {/* Number Selection Grid - Inside Scrollable Box */}
-                <div className="mt-4 mb-2 mx-4">
+                <div className="mt-4 mb-4 mx-4">
                     <div className="cartela-grid-scrollable rounded-lg p-4 max-h-[320px] min-h-[260px] overflow-y-auto" style={{ background: '#cfade0' }}>
                         <div className="cartela-numbers-grid">
                             {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
