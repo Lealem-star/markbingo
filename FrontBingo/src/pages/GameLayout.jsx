@@ -884,20 +884,26 @@ export default function GameLayout({
                             )}
                         </div>
 
-                        {/* Recently Called Numbers - Circular Buttons in Row */}
-                        <div className="recent-numbers-joy">
-                            {(() => {
-                                // Get recently called numbers (excluding current)
-                                const recent = calledNumbers.slice(-3);
-                                return recent.map((n, index) => {
-                                    const letter = n <= 15 ? 'B' : n <= 30 ? 'I' : n <= 45 ? 'N' : n <= 60 ? 'G' : 'O';
-                                    return (
-                                        <div key={`recent-${n}-${index}`} className={`recent-number-circle recent-number-${letter.toLowerCase()}`}>
-                                            {`${letter}${n}`}
-                                        </div>
-                                    );
-                                });
-                            })()}
+                        {/* Recently Called Numbers - Joy Bingo style: empty placeholder before calls, then circular buttons in row */}
+                        <div className={`recent-numbers-joy ${calledNumbers.length === 0 ? 'recent-numbers-empty' : ''}`}>
+                            {calledNumbers.length === 0 ? (
+                                <span className="recent-numbers-placeholder">—</span>
+                            ) : (
+                                (() => {
+                                    let recent = currentNumber
+                                        ? calledNumbers.filter((n) => n !== currentNumber).slice(-3)
+                                        : calledNumbers.slice(-3);
+                                    if (recent.length === 0) recent = calledNumbers.slice(-3);
+                                    return recent.map((n, index) => {
+                                        const letter = n <= 15 ? 'B' : n <= 30 ? 'I' : n <= 45 ? 'N' : n <= 60 ? 'G' : 'O';
+                                        return (
+                                            <div key={`recent-${n}-${index}`} className={`recent-number-circle recent-number-${letter.toLowerCase()}`}>
+                                                {`${letter}${n}`}
+                                            </div>
+                                        );
+                                    });
+                                })()
+                            )}
                         </div>
 
                         {/* Single Cartela or Watch Mode - Render in Right Column */}

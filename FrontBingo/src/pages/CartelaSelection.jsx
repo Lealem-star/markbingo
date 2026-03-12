@@ -682,6 +682,10 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             <header className="p-4 mb-0">
                 {/* Second Row: Wallet info and Timer - White boxes style */}
                 <div className="game-info-bar-light flex items-stretch rounded-lg flex-nowrap mobile-info-bar" style={{ marginBottom: '1rem' }}>
+                    {/* Timer - Joy Bingo style: leftmost, large orange number, no label */}
+                    <div className="info-box info-box-timer flex-1 flex items-center justify-center">
+                        <span className="timer-value">{timerSeconds}s</span>
+                    </div>
                     <div className="info-box flex-1">
                         <div className="info-label">Wallet</div>
                         <div className="info-value">
@@ -699,10 +703,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                             <div className="info-value">{gameState.playersCount || 0}</div>
                         </div>
                     )}
-                    <div className="info-box flex-1">
-                        <div className="info-label">Timer</div>
-                        <div className="info-value">{timerSeconds}s</div>
-                    </div>
                 </div>
 
 
@@ -713,7 +713,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 
                 {/* Number Selection Grid - Inside Scrollable Box */}
                 <div className="my-4 mx-4">
-                    <div className="cartela-grid-scrollable bg-purple-200 rounded-lg p-4 max-h-[320px] min-h-[260px] overflow-y-auto" style={{ background: '#e9d5ff' }}>
+                    <div className="cartela-grid-scrollable rounded-lg p-4 max-h-[320px] min-h-[260px] overflow-y-auto" style={{ background: '#cfade0' }}>
                         <div className="cartela-numbers-grid">
                             {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
                                 // Ensure type consistency for comparison (convert to number)

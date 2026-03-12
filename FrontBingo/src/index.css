@@ -2505,7 +2505,6 @@ body {
     margin: 0 12px 20px;
     background: #cfade0;
     border-radius: 16px;
-    border: 4px solid white;
 }
 
 .cartela-grid-scrollable {
@@ -4211,6 +4210,18 @@ body {
     font-weight: 700;
 }
 
+/* Timer box - Joy Bingo style: large, bold orange number, no label */
+.info-box-timer {
+    min-width: 44px;
+}
+
+.timer-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ea580c;
+    line-height: 1;
+}
+
 /* BINGO Grid Container */
 .bingo-grid-container {
     background: rgba(255, 255, 255, 0.8);
@@ -4479,90 +4490,101 @@ body {
 }
 
 
-/* Current Call Bar */
+/* Current Call Bar - Joy Bingo style: label left, placeholder circle right */
 .current-call-bar {
-    background: #800080; /* Dark purple - updated */
-    border-radius: 24px; /* more circular edges */
-    padding: 12px 14px;
+    background: #6b21a8;
+    border-radius: 24px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
-    box-shadow: 0 4px 10px rgba(88, 28, 135, 0.35);
+    box-shadow: 0 2px 8px rgba(107, 33, 168, 0.3);
 }
 
 .current-call-label {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: white;
 }
 
 .current-call-ball {
-    background: #f97316; /* Orange */
+    background: #f97316;
     color: white;
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 13px;
+    flex-shrink: 0;
 }
 
 .current-call-ball.waiting {
-    background: rgba(255, 255, 255, 0.3);
-    color: rgba(255, 255, 255, 0.6);
+    background: #f97316;
+    color: rgba(255, 255, 255, 0.9);
 }
 
-/* Recent Numbers - Circular Buttons in Row */
+/* Recent Numbers - Joy Bingo style: empty placeholder before calls, circular buttons when numbers called */
 .recent-numbers-joy {
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: 10px;
     margin-bottom: 8px;
-    padding: 8px 12px;
-    background: #e9d5ff; /* Light purple/lavender background */
-    border: 3px solid #dc2626; /* Red border */
-    border-radius: 8px;
+    padding: 10px 14px;
+    min-height: 48px;
+    background: #cfade0;
+    border-radius: 12px;
     justify-content: center;
     align-items: center;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+}
+
+.recent-numbers-joy.recent-numbers-empty {
+    justify-content: center;
+}
+
+.recent-numbers-placeholder {
+    color: rgba(107, 33, 168, 0.4);
+    font-size: 14px;
 }
 
 .recent-number-circle {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     color: white;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-/* Color coding based on letter */
+/* Joy Bingo colors: B=yellow, I=green, N=blue, G=red, O=purple */
 .recent-number-b {
-    background: #6B21A8; /* Dark purple */
+    background: #eab308;
 }
 
 .recent-number-i {
-    background: #059669; /* Dark green */
+    background: #22c55e;
 }
 
 .recent-number-n {
-    background: #7C3AED; /* Purple */
+    background: #3b82f6;
 }
 
 .recent-number-g {
-    background: #F59E0B; /* Golden yellow/orange */
+    background: #ef4444;
 }
 
 .recent-number-o {
-    background: #EA580C; /* Orange */
+    background: #a855f7;
 }
 
 /* User Cartelas Container - Full Width Below Columns */
