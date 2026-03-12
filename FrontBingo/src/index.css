@@ -2503,13 +2503,13 @@ body {
     gap: 6px;
     padding: 10px 12px;
     margin: 0 12px 20px;
-    background: rgba(255, 255, 255, 0.5);
+    background: #cfade0;
     border-radius: 16px;
-    border: 2px solid white;
+    border: 4px solid white;
 }
 
 .cartela-grid-scrollable {
-    border: 2px solid white;
+    border: 4px solid white;
 }
 
 .cartela-preview-section {
