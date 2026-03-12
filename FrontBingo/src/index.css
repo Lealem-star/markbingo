@@ -4171,12 +4171,12 @@ body {
 
 /* Joy Bingo Light Purple Background */
 .joy-bingo-bg {
-    background: #e9d5ff !important; /* Light purple background */
+    background: #cfade0 !important; /* Light purple background */
 }
 
 /* Override app-container background for GameLayout */
 .app-container.joy-bingo-bg {
-    background: #e9d5ff !important;
+    background: #cfade0 !important;
 }
 
 /* Light Purple Info Bar */
@@ -4275,7 +4275,7 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 9px;
+    font-size: 11px;
     transition: all 0.2s ease;
     width: 100%;
     outline: none;
@@ -4286,7 +4286,7 @@ body {
 
 .bingo-number-default {
     /* Uncalled tiles should look like soft light-gray/lavender buttons with dark text */
-    background: #efe8ff;
+    background: #cec2eb;
     color: white;
 }
 
@@ -4340,9 +4340,9 @@ body {
 
 /* Reduced Size Status Box */
 .game-status-box-small {
-    background: #cfade0;
+    background: #cec2eb;
     border-radius: 8px;
-    padding: 6px 10px;
+    padding: 10px 14px;
     text-align: center;
     flex: 0 0 auto;
     min-width: 0;
