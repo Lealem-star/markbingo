@@ -711,7 +711,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
             <main className="p-4 mt-2 pb-6 flex flex-col gap-4">
                 {/* Number Selection Grid - Inside Scrollable Box */}
-                <div className="mx-4">
+                <div className="mx-4 mb-6">
                     <div className="cartela-grid-scrollable rounded-lg p-4 max-h-[320px] min-h-[260px] overflow-y-auto" style={{ background: '#cfade0' }}>
                         <div className="cartela-numbers-grid">
                             {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
@@ -757,7 +757,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 {/* Selected Cartella Preview (single cartela) */}
                 {/* Only show preview during registration phase or if user has cards in running game */}
                 {selectedCards.length > 0 && (gameState.phase === 'registration' || (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0)) && (
-                    <div className="mt-6">
+                    <div style={{ marginTop: '40px' }}>
                         {/* <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">Your Selected Cartella</h3> */}
                         <div className="rounded-lg p-2">
                             <div style={{ display: 'flex', justifyContent: 'center', width: '100%', boxSizing: 'border-box' }}>
@@ -778,6 +778,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                         </div>
                     </div>
                 )}
+                
             </main>
 
             {/* <BottomNav current="game" onNavigate={onNavigate} /> */}
