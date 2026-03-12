@@ -758,9 +758,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 {/* Selected Cartella Preview (single cartela) */}
                 {/* Only show preview during registration phase or if user has cards in running game */}
                 {selectedCards.length > 0 && (gameState.phase === 'registration' || (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0)) && (
-                    <div className="mt-6">
+                    <div className="mt-4">
                         {/* <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">Your Selected Cartella</h3> */}
-                        <div className="bg-purple-200 rounded-lg p-4" style={{ background: '#e9d5ff' }}>
+                        <div className="rounded-lg p-2">
                             <div style={{ display: 'flex', justifyContent: 'center', width: '100%', boxSizing: 'border-box' }}>
                                 {selectedCards.slice(0, 1).map(({ number, card }) => (
                                     <CartellaCard
