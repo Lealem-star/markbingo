@@ -2788,13 +2788,15 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0px;
-    flex: 0 0 auto;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .cartela-row {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 0px;
+    flex: 1 1 0;
 }
 
 .cartela-cell {
