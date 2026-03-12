@@ -671,7 +671,12 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
+                                            style={{
+                                                flex: hasTwoCartelas ? '0 0 auto' : '1',
+                                                minHeight: '20px',
+                                                marginBottom: hasTwoCartelas ? 3 : 4,
+                                                ...(hasTwoCartelas ? { maxHeight: '24px' } : {})
+                                            }}
                                         >
                                             {n}
                                         </button>
@@ -696,7 +701,12 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
+                                            style={{
+                                                flex: hasTwoCartelas ? '0 0 auto' : '1',
+                                                minHeight: '20px',
+                                                marginBottom: hasTwoCartelas ? 3 : 4,
+                                                ...(hasTwoCartelas ? { maxHeight: '24px' } : {})
+                                            }}
                                         >
                                             {n}
                                         </button>
@@ -721,7 +731,12 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
+                                            style={{
+                                                flex: hasTwoCartelas ? '0 0 auto' : '1',
+                                                minHeight: '20px',
+                                                marginBottom: hasTwoCartelas ? 3 : 4,
+                                                ...(hasTwoCartelas ? { maxHeight: '24px' } : {})
+                                            }}
                                         >
                                             {n}
                                         </button>
@@ -746,7 +761,12 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
+                                            style={{
+                                                flex: hasTwoCartelas ? '0 0 auto' : '1',
+                                                minHeight: '20px',
+                                                marginBottom: hasTwoCartelas ? 3 : 4,
+                                                ...(hasTwoCartelas ? { maxHeight: '24px' } : {})
+                                            }}
                                         >
                                             {n}
                                         </button>
@@ -771,7 +791,12 @@ export default function GameLayout({
                                         <button
                                             key={n}
                                             className={`bingo-number-btn ${className}`}
-                                            style={{ flex: hasTwoCartelas ? '0 0 auto' : '1', minHeight: '20px', ...(hasTwoCartelas ? { maxHeight: '24px' } : {}) }}
+                                            style={{
+                                                flex: hasTwoCartelas ? '0 0 auto' : '1',
+                                                minHeight: '20px',
+                                                marginBottom: hasTwoCartelas ? 3 : 4,
+                                                ...(hasTwoCartelas ? { maxHeight: '24px' } : {})
+                                            }}
                                         >
                                             {n}
                                         </button>

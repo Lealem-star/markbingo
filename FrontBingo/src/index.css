@@ -2496,13 +2496,13 @@ body {
     margin-top: 16px;
 }
 
-/* Mobile-first Cartela Selection Layout */
+/* Mobile-first Cartela Selection Layout - Joy Bingo style: 9 per row, margins, gaps */
 .cartela-numbers-grid {
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap: 6px;
-    padding: 6px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 10px;
+    padding: 12px 16px;
+    margin: 0 16px 20px;
     background: rgba(255, 255, 255, 0.5);
     border-radius: 16px;
     border: 2px solid #ffffff;
@@ -2598,8 +2598,10 @@ body {
 /* Mobile responsive adjustments */
 @media (max-width: 480px) {
     .cartela-numbers-grid {
-        grid-template-columns: repeat(10, 1fr);
-        gap: 3px;
+        grid-template-columns: repeat(9, 1fr);
+        gap: 8px;
+        padding: 10px 12px;
+        margin: 0 12px 20px;
     }
 
     .cartela-number-btn {
@@ -4313,7 +4315,7 @@ body {
     align-items: center;
     gap: 6px;
     margin-bottom: 8px;
-    background: #e9d5ff;
+    background: #cec2eb; /* Joy Bingo STARTED box background */
     border-radius: 12px;
     padding: 6px 8px;
     border: 1px solid rgba(139, 92, 246, 0.3);
@@ -4475,8 +4477,8 @@ body {
 
 /* Current Call Bar */
 .current-call-bar {
-    background: #6b21a8; /* Dark purple */
-    border-radius: 16px;
+    background: #800080; /* Dark purple - updated */
+    border-radius: 24px; /* more circular edges */
     padding: 12px 14px;
     display: flex;
     align-items: center;

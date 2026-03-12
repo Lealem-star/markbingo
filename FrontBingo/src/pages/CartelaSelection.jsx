@@ -270,9 +270,8 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         const hasCards = Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0;
         const isGameRunning = gameState.phase === 'running' && gameState.gameId;
         const isGameStarting = gameState.phase === 'starting' && gameState.gameId;
-        const hasPlayers = typeof gameState.playersCount === 'number' && gameState.playersCount > 0;
-        // Only move into GameLayout when a real game with at least one player is starting/running.
-        const shouldGoToGameLayout = hasPlayers && (isGameRunning || isGameStarting);
+        // When there's an ongoing game, go to game-layout (watch mode or play). No need to show "please wait" on this page.
+        const shouldGoToGameLayout = isGameRunning || isGameStarting;
         
         console.log('🎮 CartelaSelection - Game state changed:', {
             phase: gameState.phase,
@@ -282,12 +281,11 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             yourCardsCount: gameState.yourCards?.length || 0,
             hasCards,
             playersCount: gameState.playersCount,
-            hasPlayers,
             isGameRunning,
             isGameStarting
         });
 
-        // When a game with players is starting or running, move into GameLayout:
+        // When a game is starting or running, navigate to GameLayout (watch mode if no cards, play if has cards):
         // - Players with cards see their boards.
         // - Users without cards see watch mode.
         if (shouldGoToGameLayout) {
@@ -746,34 +744,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             </header>
 
             <main className="p-4 mt-2 pb-6">
-                {/* Wait Message Box - Show when game is running (not in registration). Offer watch mode. */}
-                {gameState.phase !== 'registration' && gameState.phase !== 'announce' && (
-                    <div className="mb-4 mx-4">
-                        <div className="alert-banner-appeal animate-slide-in">
-                            {/* Icon on the left */}
-                            <div className="alert-icon-wrapper">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            {/* Message text */}
-                            <div className="alert-message-text">
-                                Please wait until the current game finishes. You can select cartela when registration starts again.
-                            </div>
-                            {/* Watch current game - navigate to game layout (watch mode) */}
-                            {(gameState.phase === 'starting' || gameState.phase === 'running') && gameState.gameId && onNavigate && (
-                                <button
-                                    type="button"
-                                    onClick={() => onNavigate('game-layout', true)}
-                                    className="ml-3 px-3 py-1.5 rounded-md text-sm font-medium bg-white/90 text-purple-700 hover:bg-white border border-purple-300 shrink-0"
-                                >
-                                    Watch current game
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
-
+                
                 {/* Number Selection Grid - Inside Scrollable Box */}
                 <div className="my-4 mx-4">
                     <div className="bg-purple-200 rounded-lg p-4 max-h-[320px] min-h-[260px] overflow-y-auto" style={{ background: '#e9d5ff' }}>
