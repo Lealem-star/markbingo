@@ -1930,7 +1930,7 @@ Thank you for your dedication! 🙏`;
             const userId = String(ctx.from.id);
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using inline code for the Telebirr account so it is tap‑to‑copy, and a code block for the instructions
-            const telebirrMessage = `የ Telebirr አካውንት (Eyob Mengist): \`0968050511\`
+            const telebirrMessage = `የ Telebirr አካውንት (Eyob Mengist): \`0967606087\`
 
 መመሪያ
 
@@ -1973,7 +1973,7 @@ Thank you for your dedication! 🙏`;
             const telebirrMessage = `የ Telebirr አካውንት (Eyob Mengist)
 
 \`\`\`
-0968050511
+0967606087
 \`\`\`
 
 መመሪያ
@@ -2025,7 +2025,7 @@ Thank you for your dedication! 🙏`;
         // Copy button handlers
         bot.action('copy_telebirr', (ctx) => {
             ctx.answerCbQuery('📋 Telebirr number copied!');
-            ctx.reply('📱 Telebirr Number (Eyob Mengist):\n\n```\n0968050511\n```\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
+            ctx.reply('📱 Telebirr Number (Eyob Mengist):\n\n```\n0967606087\n```\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
         });
         // Temporarily disabled - Commercial Bank copy handler
         // bot.action('copy_commercial', (ctx) => {

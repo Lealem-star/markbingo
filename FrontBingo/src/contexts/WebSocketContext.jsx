@@ -423,6 +423,7 @@ export function WebSocketProvider({ children }) {
                                     detail: {
                                         gameId: newState.gameId,
                                         phase: newState.phase,
+                                        playersCount: newState.playersCount,
                                         hasCards: newState.yourCards?.length > 0
                                     }
                                 }));

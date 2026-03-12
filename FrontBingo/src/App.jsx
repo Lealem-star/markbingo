@@ -162,8 +162,13 @@ function AppContent() {
       console.log('🎯 gameStarted custom event received:', event.detail);
       if (!selectedStake) return;
       
-      // Navigate to game-layout when a game starts (players OR watchers).
-      if (event.detail.phase === 'running' && event.detail.gameId && currentPage !== 'game-layout') {
+      // Navigate to game-layout when a game starts AND there are enough players.
+      const playersCount = (event.detail && typeof event.detail.playersCount === 'number')
+        ? event.detail.playersCount
+        : gameState.playersCount;
+      const hasPlayers = typeof playersCount === 'number' && playersCount >= 2;
+
+      if (event.detail.phase === 'running' && event.detail.gameId && hasPlayers && currentPage !== 'game-layout') {
         console.log('🚀 FORCE NAVIGATING via custom event to game-layout');
         // Update selectedCartelas from gameState if available
         if (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) {
@@ -178,7 +183,7 @@ function AppContent() {
     
     window.addEventListener('gameStarted', handleGameStarted);
     return () => window.removeEventListener('gameStarted', handleGameStarted);
-  }, [selectedStake, currentPage, gameState.yourCards]);
+  }, [selectedStake, currentPage, gameState.yourCards, gameState.playersCount]);
 
   // Auto-navigate based on game state changes
   useEffect(() => {
@@ -203,9 +208,10 @@ function AppContent() {
       currentPage
     });
     
-    // Navigate to game layout when game is starting/running (players OR watchers).
+    // Navigate to game layout only when a real game is starting/running WITH enough players.
+    const hasPlayers = typeof gameState.playersCount === 'number' && gameState.playersCount >= 2;
     const isGameStartingOrRunning =
-      (gameState.phase === 'starting' || gameState.phase === 'running') && gameState.gameId;
+      (gameState.phase === 'starting' || gameState.phase === 'running') && gameState.gameId && hasPlayers;
     const isGameFinished = gameState.phase === 'announce' && gameState.gameId;
     
     const shouldNavigate = 
@@ -256,7 +262,7 @@ function AppContent() {
     } else {
       console.log('⏸️ Not navigating - conditions not met');
     }
-  }, [gameState.phase, gameState.gameId, gameState.yourCards, gameState.yourSelections, gameState.winners, selectedStake, currentPage]);
+  }, [gameState.phase, gameState.gameId, gameState.playersCount, gameState.yourCards, gameState.yourSelections, gameState.winners, selectedStake, currentPage]);
 
   // Handle query parameter routing for admin panel and stake
   useEffect(() => {

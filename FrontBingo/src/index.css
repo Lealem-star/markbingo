@@ -4492,14 +4492,14 @@ body {
 
 /* Current Call Bar - Joy Bingo style: label left, placeholder circle right */
 .current-call-bar {
-    background: #6b21a8;
+    background: #800080;
     border-radius: 24px;
     padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
-    box-shadow: 0 2px 8px rgba(107, 33, 168, 0.3);
+    box-shadow: 0 2px 8px rgba(128, 0, 128, 0.28);
 }
 
 .current-call-label {
@@ -4529,17 +4529,17 @@ body {
 
 /* Recent Numbers - Joy Bingo style: empty placeholder before calls, circular buttons when numbers called */
 .recent-numbers-joy {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    margin-bottom: 8px;
-    padding: 10px 14px;
-    min-height: 48px;
+    display: inline-flex;
+    gap: 8px;
+    margin: 0 auto 8px;
+    padding: 6px 10px;
     background: #cfade0;
     border-radius: 12px;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    width: fit-content;
+    max-width: 100%;
 }
 
 .recent-numbers-joy.recent-numbers-empty {
@@ -4552,11 +4552,11 @@ body {
 }
 
 .recent-number-circle {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     color: white;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     display: flex;
     align-items: center;

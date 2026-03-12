@@ -144,6 +144,10 @@ function countSelectedCartelas(room) {
     return Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
 }
 
+function countSelectedPlayers(room) {
+    return room?.selectedPlayers?.size || 0;
+}
+
 function getJoinableRoomForStake(stake) {
     const list = getRoomsForStake(stake);
     const totalCards = BingoCards.cards.length;
@@ -216,10 +220,11 @@ function makeRoom(stake) {
 
             const getUserSelections = (userId) => room.userCardSelections.get(userId) || [];
             const selectedCount = countSelectedCartelas(room);
+            const selectedPlayersCount = countSelectedPlayers(room);
             const snapshot = {
                 phase: room.phase,
                 gameId: room.currentGameId,
-                playersCount: selectedCount,
+                playersCount: selectedPlayersCount,
                 calledNumbers: room.calledNumbers,
                 called: room.calledNumbers,
                 stake: room.stake,
@@ -267,8 +272,9 @@ function makeRoom(stake) {
                 room.userCardSelections.delete(ws.userId);
 
                 const selectedCount = countSelectedCartelas(room);
+                const selectedPlayersCount = countSelectedPlayers(room);
                 const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
-                broadcast('players_update', { playersCount: selectedCount, prizePool: currentPrizePool }, room);
+                broadcast('players_update', { playersCount: selectedPlayersCount, prizePool: currentPrizePool }, room);
                 broadcast('registration_update', { takenCards: Array.from(room.takenCards) }, room);
             } else {
                 // During running/announce: DO NOT change selections, takenCards, or prize math.
@@ -357,7 +363,8 @@ async function startRegistration(room) {
 
     setTimeout(async () => {
         if (room.phase === 'registration') {
-            broadcast('registration_closed', { gameId: room.currentGameId }, room);
+            // Decide whether to start, extend, or restart registration.
+            // IMPORTANT: only broadcast registration_closed when we will actually start the game.
             startGame(room);
         }
     }, 30000); // 30 seconds
@@ -365,17 +372,18 @@ async function startRegistration(room) {
 
 function startGame(room) {
     const selectedCount = Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+    const selectedPlayersCount = room.selectedPlayers ? room.selectedPlayers.size : 0;
 
-    if (selectedCount === 0) {
+    if (selectedPlayersCount === 0) {
         // No players, start new registration immediately
         console.log(`No players joined game ${room.currentGameId} - skipping database creation and starting new registration`);
         startRegistration(room);
         return;
     }
 
-    if (selectedCount === 1) {
-        // Not enough players yet to start a game – extend registration instead of cancelling
-        console.log(`Only 1 selection for game ${room.currentGameId}. Extending registration by 30 seconds instead of cancelling.`);
+    if (selectedPlayersCount < 2) {
+        // Not enough players yet to start a game – extend registration until we have at least 2 players.
+        console.log(`Only ${selectedPlayersCount} player(s) joined game ${room.currentGameId}. Extending registration by 30 seconds.`);
 
         // Keep existing selections/takenCards and just extend the timer
         room.phase = 'registration';
@@ -388,7 +396,7 @@ function startGame(room) {
         broadcast('registration_extended', {
             gameId: room.currentGameId,
             stake: room.stake,
-            playersCount: selectedCount,
+            playersCount: selectedPlayersCount,
             duration: 30000,
             endsAt: room.registrationEndTime,
             takenCards: Array.from(room.takenCards),
@@ -404,6 +412,9 @@ function startGame(room) {
         }, 30000);
         return;
     }
+
+    // We have enough players to start. Tell clients registration is closed so they can move to "starting".
+    broadcast('registration_closed', { gameId: room.currentGameId }, room);
 
     // Process stake sources per player and build pot from paying players only
     let payingUsers = [];
@@ -540,7 +551,7 @@ function startGame(room) {
                     payload: {
                         gameId: room.currentGameId,
                         stake: room.stake,
-                        playersCount: selectedCount,
+                        playersCount: selectedPlayersCount,
                         pot: pot,
                         prizePool: prizePool,
                         calledNumbers: room.calledNumbers,
@@ -1194,13 +1205,14 @@ wss.on('connection', async (ws, request) => {
                     // Idempotent: clicking an already-selected cartela does nothing
                     if (selections.includes(cardNumber)) {
                         const selectedCount = countSelectedCartelas(room);
+                        const selectedPlayersCount = countSelectedPlayers(room);
                         const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
                         ws.send(JSON.stringify({
                             type: 'selection_confirmed',
                             payload: {
                                 cardNumber,
                                 selections,
-                                playersCount: selectedCount,
+                                playersCount: selectedPlayersCount,
                                 prizePool: currentPrizePool
                             }
                         }));
@@ -1231,6 +1243,7 @@ wss.on('connection', async (ws, request) => {
                     // Calculate current prize pool (80% of stake × total cartelas)
                     // This accounts for players who selected multiple cartelas
                     const selectedCount = countSelectedCartelas(room);
+                    const selectedPlayersCount = countSelectedPlayers(room);
                     const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
 
                     ws.send(JSON.stringify({
@@ -1238,14 +1251,14 @@ wss.on('connection', async (ws, request) => {
                         payload: {
                             cardNumber,
                             selections: nextSelections,
-                            playersCount: selectedCount,
+                            playersCount: selectedPlayersCount,
                             prizePool: currentPrizePool
                         }
                     }));
 
                     // Broadcast updates to all players
                     broadcast('players_update', {
-                        playersCount: selectedCount,
+                        playersCount: selectedPlayersCount,
                         prizePool: currentPrizePool
                     }, room);
                     broadcast('registration_update', {
@@ -1288,6 +1301,7 @@ wss.on('connection', async (ws, request) => {
 
                         // Recompute prize pool after removing player
                         const selectedCount = countSelectedCartelas(room);
+                        const selectedPlayersCount = countSelectedPlayers(room);
                         const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
 
                         // Notify the user
@@ -1296,14 +1310,14 @@ wss.on('connection', async (ws, request) => {
                             payload: {
                                 removedCard: removed,
                                 selections: nextSelections,
-                                playersCount: selectedCount,
+                                playersCount: selectedPlayersCount,
                                 prizePool: currentPrizePool
                             }
                         }));
 
                         // Broadcast updates to all players
                         broadcast('players_update', {
-                            playersCount: selectedCount,
+                            playersCount: selectedPlayersCount,
                             prizePool: currentPrizePool
                         }, room);
                         broadcast('registration_update', {
@@ -1313,7 +1327,8 @@ wss.on('connection', async (ws, request) => {
                     } else {
                         // Nothing to clear; reply benignly
                         const selectedCount = countSelectedCartelas(room);
-                        ws.send(JSON.stringify({ type: 'selection_cleared', payload: { removedCard: null, selections: [], playersCount: selectedCount, prizePool: Math.floor(selectedCount * room.stake * 0.8) } }));
+                        const selectedPlayersCount = countSelectedPlayers(room);
+                        ws.send(JSON.stringify({ type: 'selection_cleared', payload: { removedCard: null, selections: [], playersCount: selectedPlayersCount, prizePool: Math.floor(selectedCount * room.stake * 0.8) } }));
                     }
                 } else {
                     // Not in registration; ignore
