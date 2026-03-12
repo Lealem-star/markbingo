@@ -4353,12 +4353,14 @@ body {
     justify-content: center;
     gap: 6px;
     margin-bottom: 8px;
-    background: #cec2eb;
+    /* Single outer pill background for STARTED text */
+    background: #cec2eb !important;
     border-radius: 12px;
     padding: 10px 16px;
     min-height: 60px;
     border: none;
     box-shadow: 0 2px 6px rgba(148, 27, 176, 0.15);
+    width: 100%;
 }
 
 /* Reduced Size Status Box */
