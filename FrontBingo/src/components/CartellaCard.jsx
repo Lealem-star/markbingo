@@ -111,7 +111,8 @@ export default function CartellaCard({
     isPreview = false, 
     showWinningPattern = false,
     isAutoMarkOn = true,
-    onNumberToggle = null
+    onNumberToggle = null,
+    showHeader = false
 }) {
     // Use card prop if provided, otherwise fallback to null
     const grid = card || null;
@@ -132,19 +133,18 @@ export default function CartellaCard({
 
     return (
         <div className={`cartela-card ${isPreview ? 'cartela-preview' : 'cartela-full'}`}>
-            {/* <div className="cartela-header">
-                <span className="cartela-title">Cartela No: {id}</span>
-            </div> */}
 
             <div className="cartela-grid">
-                {/* BINGO Header */}
-                <div className="cartela-letters">
-                    {letters.map((letter, index) => (
-                        <div key={letter} className={`cartela-letter ${letterColors[index]}`}>
-                            {letter}
-                        </div>
-                    ))}
-                </div>
+                {/* BINGO Header (only when explicitly enabled, e.g. in GameLayout) */}
+                {showHeader && (
+                    <div className="cartela-letters">
+                        {letters.map((letter, index) => (
+                            <div key={letter} className={`cartela-letter ${letterColors[index]}`}>
+                                {letter}
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Numbers Grid */}
                 <div className="cartela-numbers">

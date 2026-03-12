@@ -2713,11 +2713,11 @@ body {
 
 /* Beautiful Cartela Card Styles */
 .cartela-card {
-    /* Light card panel like the second reference image */
-    background: #e9d5ff;
+    /* Remove solid background/border for Joy Bingo style; keep layout only */
+    background: transparent;
     border-radius: 16px;
-    padding: 16px;
-    box-shadow: 0 4px 16px rgba(148, 163, 184, 0.35);
+    padding: 0;
+    box-shadow: none;
     /* Make the whole card a responsive square */
     aspect-ratio: 1 / 1;
     width: 100%;

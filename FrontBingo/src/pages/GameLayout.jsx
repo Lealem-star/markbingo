@@ -870,6 +870,7 @@ export default function GameLayout({
                                             card={card}
                                             called={isAutoMarkOn ? calledNumbers : markedNumbers}
                                             isPreview={false}
+                                            showHeader={true}
                                             isAutoMarkOn={isAutoMarkOn}
                                             onNumberToggle={!isAutoMarkOn ? (number) => handleNumberToggle(cardNumber, number) : undefined}
                                         />
