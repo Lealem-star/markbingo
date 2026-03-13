@@ -2808,8 +2808,8 @@ body {
 .cartela-numbers {
     display: flex;
     flex-direction: column;
-    /* Even vertical gap between rows */
-    gap: 2px;
+    /* Joy Bingo-style vertical gap between rows */
+    gap: 4px;
     flex: 1 1 auto;
     min-height: 0;
 }
@@ -2817,8 +2817,8 @@ body {
 .cartela-row {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    /* Even horizontal gap between cells */
-    gap: 2px;
+    /* Joy Bingo-style horizontal gap between cells */
+    gap: 4px;
     flex: 1 1 0;
 }
 
@@ -2826,19 +2826,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 34px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
+    height: 32px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .cartela-normal {
-    /* Default tiles: soft light squares with dark text (second image style) */
-    background: #fdf2f8;
+    /* Default tiles: Joy Bingo-style light violet squares */
+    background: #e5e0ff;
     color: #111827;
-    border: 1px solid rgba(148, 163, 184, 0.6);
+    border: none;
 }
 
 .cartela-selected {
@@ -4300,7 +4300,7 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 20px;
+    font-size: 16px;
     transition: all 0.2s ease;
     width: 100%;
     outline: none;

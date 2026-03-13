@@ -724,10 +724,8 @@ function callNextNumber(room) {
     });
     broadcast('number_called', { gameId: room.currentGameId, number, calledNumbers: room.calledNumbers, value: number, called: room.calledNumbers }, room);
 
-    // Check for winners (fire and forget - don't block the game flow)
-    checkWinners(room).catch(err => {
-        console.error('Error in checkWinners (non-blocking):', err);
-    });
+    // Automatic winner detection disabled:
+    // winners are now only determined from explicit bingo_claim messages.
 
     // Call next number after delay (maintains consistent timing)
     console.log('⏰ Scheduling next number call in 5 seconds...');
