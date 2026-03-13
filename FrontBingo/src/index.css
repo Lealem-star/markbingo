@@ -2807,7 +2807,7 @@ body {
     display: flex;
     flex-direction: column;
     /* Joy Bingo-style compact vertical gap between rows */
-    gap: 5px;
+    gap: 10px;
     flex: 1 1 auto;
     min-height: 0;
 }
@@ -2816,8 +2816,8 @@ body {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     /* Joy Bingo-style compact, equal gap between cells */
-    column-gap: 5px;
-    row-gap: 5px;
+    column-gap: 10px;
+    row-gap: 10px;
     flex: 0 0 auto;
 }
 
