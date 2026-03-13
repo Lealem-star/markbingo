@@ -2718,8 +2718,6 @@ body {
     border-radius: 16px;
     padding: 0;
     box-shadow: none;
-    /* Make the whole card a responsive square */
-    aspect-ratio: 1 / 1;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -2808,8 +2806,8 @@ body {
 .cartela-numbers {
     display: flex;
     flex-direction: column;
-    /* Joy Bingo-style vertical gap between rows */
-    gap: 4px;
+    /* Joy Bingo-style compact vertical gap between rows */
+    gap: 3px;
     flex: 1 1 auto;
     min-height: 0;
 }
@@ -2817,9 +2815,9 @@ body {
 .cartela-row {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    /* Joy Bingo-style equal horizontal gap between cells */
-    column-gap: 4px;
-    row-gap: 4px;
+    /* Joy Bingo-style compact, equal gap between cells */
+    column-gap: 3px;
+    row-gap: 3px;
     flex: 0 0 auto;
 }
 
@@ -2827,9 +2825,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Make cells perfect squares so horizontal and vertical spacing look identical */
-    aspect-ratio: 1 / 1;
-    height: auto;
+    /* Auto height: keep cells slightly rounded rectangles like Joy Bingo */
+    height: 30px;
     border-radius: 10px;
     font-weight: 700;
     font-size: 14px;
