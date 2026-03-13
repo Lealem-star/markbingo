@@ -2817,19 +2817,22 @@ body {
 .cartela-row {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    /* Joy Bingo-style horizontal gap between cells */
-    gap: 4px;
-    flex: 1 1 0;
+    /* Joy Bingo-style equal horizontal gap between cells */
+    column-gap: 4px;
+    row-gap: 4px;
+    flex: 0 0 auto;
 }
 
 .cartela-cell {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 32px;
+    /* Make cells perfect squares so horizontal and vertical spacing look identical */
+    aspect-ratio: 1 / 1;
+    height: auto;
     border-radius: 10px;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 14px;
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
