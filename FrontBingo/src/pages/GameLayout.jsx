@@ -549,8 +549,8 @@ export default function GameLayout({
                     style={{
                         display: 'grid',
                         gridTemplateColumns,
-                        gap: '0.3rem',
-                        padding: '0.25rem',
+                        gap: '0.1rem',
+                        padding: '0.15rem',
                         marginTop: '0.75rem',
                         marginBottom: '0.75rem',
                         marginRight: '0.15rem',

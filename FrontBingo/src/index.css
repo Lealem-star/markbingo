@@ -2808,7 +2808,8 @@ body {
 .cartela-numbers {
     display: flex;
     flex-direction: column;
-    gap: 0px;
+    /* Even vertical gap between rows */
+    gap: 2px;
     flex: 1 1 auto;
     min-height: 0;
 }
@@ -2816,7 +2817,8 @@ body {
 .cartela-row {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0px;
+    /* Even horizontal gap between cells */
+    gap: 2px;
     flex: 1 1 0;
 }
 
@@ -2881,6 +2883,8 @@ body {
 
 .cartela-number {
     font-weight: 700;
+    /* Slightly larger number text inside each cell */
+    font-size: 15px;
 }
 
 .cartela-clickable {
@@ -4261,7 +4265,7 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 14px;
+    font-size: 21px;
     color: white;
     margin: 0 auto 8px; /* Extra gap between letter and numbers */
     flex-shrink: 0;
@@ -4296,7 +4300,7 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 11px;
+    font-size: 20px;
     transition: all 0.2s ease;
     width: 100%;
     outline: none;
@@ -4360,7 +4364,6 @@ body {
     min-height: 60px;
     border: none;
     box-shadow: 0 2px 6px rgba(148, 27, 176, 0.15);
-    width: 100%;
 }
 
 /* Reduced Size Status Box */
@@ -4369,7 +4372,7 @@ body {
 }
 
 .game-status-text-small {
-    font-size: 14px;
+    font-size: 21px;
     font-weight: 800;
     color: #800080;
     white-space: nowrap;
@@ -4524,16 +4527,16 @@ body {
 }
 
 .current-call-label {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 800;
     color: white;
 }
 
 .current-call-ball {
     background: #f97316;
     color: white;
-    width: 46px;
-    height: 46px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     display: flex;
     align-items: center;
