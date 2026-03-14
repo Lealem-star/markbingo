@@ -2623,24 +2623,26 @@ Thank you for your dedication! 🙏`;
                     }
 
                     const result = await response.json();
-                    console.log('📥 API response:', { success: result.success, verificationId: result.verificationId, isVerified: result.isVerified });
+                    console.log('📥 API response:', {
+                        success: result.success,
+                        verificationId: result.verificationId,
+                        isVerified: result.isVerified,
+                        status: result.status
+                    });
 
-                    if (result.success && result.verificationId) {
-                        // Admin notification with Approve/Deny is sent by smsForwarderService.notifyAdminsNewVerification
-                        // when verification is created. If verificationId exists, service already sent.
-
-                        // Close deposit session
+                    if (result.success) {
+                        // Close deposit session regardless of whether verificationId is present.
+                        // The backend always stores the SMS; verification may be created
+                        // immediately or later by fallback logic.
                         depositStates.delete(userId);
 
-                        // Simple confirmation message – detailed status will be sent when approved/credited
                         return ctx.reply('Deposit request received. Your top-up will be done in 1 minute.', {
                             reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] }
                         });
                     }
 
-                    // Any other combination (success without verificationId, or explicit failure)
-                    // is treated as an error so we don't fall back to half-broken admin notifications.
-                    throw new Error('Failed to process SMS or create verification');
+                    // Explicit failure from API
+                    throw new Error(result.error || 'Failed to process SMS or create verification');
                 } catch (error) {
                     // Close deposit session on error
                     depositStates.delete(userId);
