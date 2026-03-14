@@ -2850,9 +2850,10 @@ body {
 }
 
 .cartela-called {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    /* Green for marked/called numbers on user's cartela */
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
-    border: 1px solid #fcd34d;
+    border: 1px solid #6ee7b7;
 }
 
 .cartela-winning {

@@ -429,9 +429,25 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             return;
         }
 
-        // Max 1 cartela per user
+        // Max 1 cartela per user: if already selected, switch to new one (deselect old, select new)
         if (selectedNumbers.length >= 1) {
-            showError('You can select only 1 cartela.');
+            const currentCard = selectedNumbers[0];
+            if (currentCard === cardNum) return; // same card, toggle handled above
+            const isTakenByOthers = gameState.takenCards.some(taken => Number(taken) === cardNum);
+            if (isTakenByOthers) {
+                const takenMsg = 'ተይዟል ሌላ ᭭ምረጡ';
+                setAlertBanners(prev => (prev.includes(takenMsg) ? prev : [...prev, takenMsg]));
+                showError(takenMsg);
+                return;
+            }
+            try {
+                deselectCartella(currentCard);
+                selectCartella(cardNum);
+                showSuccess(`Cartella #${cardNum} selected! Waiting for game to start...`);
+            } catch (err) {
+                console.error('Error switching cartella:', err);
+                showError('Failed to switch cartela. Please try again.');
+            }
             return;
         }
 
