@@ -379,7 +379,7 @@ router.post('/reject-image-deposit/:id', async (req, res) => {
             const text = `❌ Deposit Denied\n\n📷 Your receipt image was reviewed.\n${reason ? `📄 Reason: ${reason}\n\n` : '\n'}If you believe this is a mistake, please contact support.`;
             const reply_markup = {
                 inline_keyboard: [
-                    [{ text: '💬 Contact Support', url: 'https://t.me/markbingosupport' }],
+                    [{ text: '💬 Contact Support', url: 'https://t.me/markbingosupport1' }],
                     [{ text: '🎮 Play Now', web_app: { url: WEBAPP_URL + '?stake=10' } }]
                 ]
             };

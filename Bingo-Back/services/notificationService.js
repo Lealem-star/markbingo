@@ -41,7 +41,7 @@ class NotificationService {
                 `• Play: ETB ${play.toFixed(2)}`,
                 '',
                 '❓ Questions? Contact support:',
-                '@markbingosupport'
+                '@markbingosupport1'
             ].join('\n');
 
             const reply_markup = {
@@ -83,7 +83,7 @@ class NotificationService {
             ].filter(Boolean).join('\n');
             const reply_markup = {
                 inline_keyboard: [
-                    [{ text: '💬 Contact Support', url: 'https://t.me/markbingosupport' }],
+                    [{ text: '💬 Contact Support', url: 'https://t.me/markbingosupport1' }],
                     [{ text: '🎮 Play Now', web_app: { url: WEBAPP_URL + '?stake=10' } }]
                 ]
             };
@@ -109,7 +109,7 @@ class NotificationService {
             ].filter(Boolean).join('\n');
             const reply_markup = {
                 inline_keyboard: [
-                    [{ text: '💬 Contact Support', url: 'https://t.me/markbingosupport' }],
+                    [{ text: '💬 Contact Support', url: 'https://t.me/markbingosupport1' }],
                     [{ text: '🎮 Play Now', web_app: { url: WEBAPP_URL + '?stake=10' } }]
                 ]
             };
