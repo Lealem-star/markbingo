@@ -64,9 +64,9 @@ const PORT = process.env.PORT || 3001;
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const WEBAPP_URL = process.env.WEBAPP_URL || '';
 
-// Middleware - CORS: allow frontend origins (Vercel + local dev) so browser requests succeed
+// Middleware - CORS: allow frontend origins (production + local dev) so browser requests succeed
 const allowedOrigins = [
-    'https://markbingo.vercel.app',
+    'https://markbingo.com',
     'http://localhost:5173',
     'http://localhost:3000',
     'http://127.0.0.1:5173',
