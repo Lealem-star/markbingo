@@ -340,7 +340,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 const adminText = '🛠️ Admin Panel';
 
                 // Construct admin URL using query parameters instead of hash
-                let adminUrl = 'https://markbingo.vercel.app?admin=true';
+                let adminUrl = 'https://markbingo.com?admin=true';
                 if (WEBAPP_URL && WEBAPP_URL !== 'undefined') {
                     const baseUrl = WEBAPP_URL.replace(/\/$/, '');
                     adminUrl = `${baseUrl}?admin=true`;
@@ -567,7 +567,7 @@ Thank you for your dedication! 🙏`;
             const adminText = '🛠️ Admin Panel';
 
             // Construct admin URL using query parameters instead of hash
-            let adminUrl = 'https://markbingo.vercel.app?admin=true';
+            let adminUrl = 'https://markbingo.com?admin=true';
             if (WEBAPP_URL && WEBAPP_URL !== 'undefined') {
                 const baseUrl = WEBAPP_URL.replace(/\/$/, '');
                 adminUrl = `${baseUrl}?admin=true`;
@@ -811,7 +811,7 @@ Thank you for your dedication! 🙏`;
                 if (isAdmin) {
                     // Admin gets admin panel
                     const adminText = '🛠️ Admin Panel';
-                    let adminUrl = 'https://markbingo.vercel.app?admin=true';
+                    let adminUrl = 'https://markbingo.com?admin=true';
                     if (WEBAPP_URL && WEBAPP_URL !== 'undefined') {
                         const baseUrl = WEBAPP_URL.replace(/\/$/, '');
                         adminUrl = `${baseUrl}?admin=true`;
@@ -1126,7 +1126,7 @@ Thank you for your dedication! 🙏`;
             const adminText = '🛠️ Admin Panel';
 
             // Construct admin URL using query parameters instead of hash
-            let adminUrl = 'https://markbingo.vercel.app?admin=true';
+            let adminUrl = 'https://markbingo.com?admin=true';
             if (WEBAPP_URL && WEBAPP_URL !== 'undefined') {
                 const baseUrl = WEBAPP_URL.replace(/\/$/, '');
                 adminUrl = `${baseUrl}?admin=true`;
@@ -3722,7 +3722,7 @@ module.exports = { startTelegramBot };
 // Allow running this file directly via PM2/node
 if (require.main === module) {
     const BOT_TOKEN = process.env.BOT_TOKEN;
-    const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.vercel.app';
+    const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.com';
     try {
         startTelegramBot({ BOT_TOKEN, WEBAPP_URL });
         if (typeof process.send === 'function') {

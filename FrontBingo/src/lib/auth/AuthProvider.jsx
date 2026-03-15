@@ -11,10 +11,9 @@ const AuthContext = createContext({ sessionId: null, user: null, setSessionId: (
 async function verifyTelegram(initData) {
 
     const apiBase = import.meta.env.VITE_API_URL ||
-
-        (window.location.hostname === 'localhost' ? 'http://localhost:3001' :
-
-            'https://markbingo.vercel.app');
+        (window.location.hostname === 'localhost'
+            ? 'http://localhost:3001'
+            : 'https://markbingo.com');
 
     console.log('🔐 Verifying Telegram auth:', {
         apiBase,

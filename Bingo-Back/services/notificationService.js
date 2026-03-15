@@ -20,7 +20,7 @@ class NotificationService {
     static async notifyWithdrawalApproved(userId, amount) {
         try {
             const BOT_TOKEN = process.env.BOT_TOKEN;
-            const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.vercel.app';
+            const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.com';
 
             const user = await User.findById(userId).lean();
             if (!user || !user.telegramId || !BOT_TOKEN) {
@@ -70,7 +70,7 @@ class NotificationService {
 
     static async notifyWithdrawalDenied(userId, amount, reason) {
         try {
-            const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.vercel.app';
+            const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.com';
             const user = await User.findById(userId).lean();
             if (!user) return false;
             const text = [
@@ -95,7 +95,7 @@ class NotificationService {
 
     static async notifyDepositDenied(userId, amount, verificationId, reason) {
         try {
-            const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.vercel.app';
+            const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.com';
             const user = await User.findById(userId).lean();
             if (!user) return false;
             const text = [

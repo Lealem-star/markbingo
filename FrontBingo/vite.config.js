@@ -12,7 +12,8 @@ export default defineConfig({
     ]
   },
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'http://84.247.178.86'),
-    'import.meta.env.VITE_WS_URL': JSON.stringify(process.env.VITE_WS_URL || 'ws://84.247.178.86'),
+    // Default to production domain over HTTPS; can be overridden by env vars
+    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://markbingo.com'),
+    'import.meta.env.VITE_WS_URL': JSON.stringify(process.env.VITE_WS_URL || 'wss://markbingo.com'),
   }
 })

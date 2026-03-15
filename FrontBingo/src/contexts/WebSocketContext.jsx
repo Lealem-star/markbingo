@@ -138,8 +138,9 @@ export function WebSocketProvider({ children }) {
             // No timeout - require real WebSocket connection
             // Normalize base: if env already includes /ws (e.g. tunnel URL), don't double-append (avoids /ws/ws)
             let wsBase = import.meta.env.VITE_WS_URL ||
-                (window.location.hostname === 'localhost' ? 'ws://localhost:3001' :
-                    'ws://84.247.178.86');
+                (window.location.hostname === 'localhost'
+                    ? 'ws://localhost:3001'
+                    : 'wss://markbingo.com');
             wsBase = (wsBase || '').replace(/\/+$/, '');
             if (!/\/ws$/i.test(wsBase)) {
                 wsBase += '/ws';
