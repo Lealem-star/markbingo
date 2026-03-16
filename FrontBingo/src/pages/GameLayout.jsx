@@ -830,7 +830,7 @@ export default function GameLayout({
                             onClick={handleManualBingo}
                             className={`action-button bingo-button game-bingo-button ${isManualClaiming ? 'loading' : ''}`}
                             disabled={!connected || !currentGameId || claimedBingoRef.current || gameState.phase !== 'running'}
-                            style={{ width: 'auto', paddingLeft: '1.75rem', paddingRight: '1.75rem' }}
+                            style={{ width: 'auto', paddingLeft: '5.75rem', paddingRight: '5.75rem' }}
                         >
                             <div className="button-content">
                                 <span className="button-text">BINGO!</span>
