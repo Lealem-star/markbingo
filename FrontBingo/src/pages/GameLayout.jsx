@@ -467,13 +467,14 @@ export default function GameLayout({
     // Determine game phase display
     const gamePhaseDisplay = (gameState.phase === 'running' || gameState.phase === 'playing') ? 'STARTED' : gameState.phase === 'registration' ? 'REGISTRATION' : 'WAITING';
     const hasSingleCartela = yourCards.length === 1;
+    const isWatchMode = yourCards.length === 0;
     const statusText = startCountdown > 0 ? startCountdown : gamePhaseDisplay;
     // For a single cartela, keep a fixed main content height so the left BINGO grid can stretch
     // and distribute numbers vertically (fills the empty space).
-    const mainContentHeight = hasSingleCartela ? '500px' : 'calc(100vh - 180px)';
+    const mainContentHeight = (hasSingleCartela || isWatchMode) ? '500px' : 'calc(100vh - 180px)';
     // Make left BINGO columns narrower and right side larger when showing single cartela,
     // otherwise keep 1:1 split.
-    const gridTemplateColumns = hasSingleCartela ? '0.8fr 1.2fr' : '1fr 1fr';
+    const gridTemplateColumns = (hasSingleCartela || isWatchMode) ? '0.8fr 1.2fr' : '1fr 1fr';
 
     return (
         <div className="app-container relative overflow-hidden joy-bingo-bg">
