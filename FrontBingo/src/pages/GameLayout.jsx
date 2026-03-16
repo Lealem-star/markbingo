@@ -553,12 +553,11 @@ export default function GameLayout({
                         gap: '0.1rem',
                         padding: '0.15rem',
                         marginTop: '0.75rem',
-                        marginBottom: '0.75rem',
+                        marginBottom: '1.5rem',
                         marginRight: '0.15rem',
                         height: mainContentHeight,
                         maxHeight: '500px'
-                    }}
-                >
+                    }}>
                     {/* Left Card - BINGO Grid with Square Letters */}
                     <div
                         className="bingo-grid-container"

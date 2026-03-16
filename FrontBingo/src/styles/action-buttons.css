@@ -12,6 +12,7 @@
 /* Base button styles */
 .action-button {
     position: relative;
+    /* Default behavior in action button rows */
     flex: 1;
     padding: 0.75rem 1rem;
     border-radius: 1.5rem;
@@ -28,6 +29,11 @@
     justify-content: center;
     gap: 0.675rem;
     min-height: 3rem;
+}
+
+/* GameLayout: allow BINGO button to be narrower than full width */
+.game-bingo-button {
+    flex: 0 0 auto;
 }
 
 /* Hover effects */
