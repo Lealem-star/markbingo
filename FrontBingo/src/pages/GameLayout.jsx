@@ -796,16 +796,21 @@ export default function GameLayout({
                                         : (manuallyMarkedNumbers[cardNumber] ? Array.from(manuallyMarkedNumbers[cardNumber]) : []);
                                     
                                     return (
-                                        <CartellaCard
-                                            key={cardNumber}
-                                            id={cardNumber}
-                                            card={card}
-                                            called={isAutoMarkOn ? calledNumbers : markedNumbers}
-                                            isPreview={false}
-                                            showHeader={true}
-                                            isAutoMarkOn={isAutoMarkOn}
-                                            onNumberToggle={!isAutoMarkOn ? (number) => handleNumberToggle(cardNumber, number) : undefined}
-                                        />
+                                        <div key={cardNumber} className="w-full flex flex-col items-center">
+                                            <CartellaCard
+                                                id={cardNumber}
+                                                card={card}
+                                                called={isAutoMarkOn ? calledNumbers : markedNumbers}
+                                                isPreview={false}
+                                                showHeader={true}
+                                                isAutoMarkOn={isAutoMarkOn}
+                                                onNumberToggle={!isAutoMarkOn ? (number) => handleNumberToggle(cardNumber, number) : undefined}
+                                            />
+                                            <div className="mt-2 text-xs font-semibold text-white/70">
+                                                Board number {cardNumber}
+                                            </div>
+                                        </div>
+
                                     );
                                 })}
                             </div>
@@ -830,7 +835,7 @@ export default function GameLayout({
                             onClick={handleManualBingo}
                             className={`action-button bingo-button game-bingo-button ${isManualClaiming ? 'loading' : ''}`}
                             disabled={!connected || !currentGameId || claimedBingoRef.current || gameState.phase !== 'running'}
-                            style={{ width: 'auto', paddingLeft: '5.75rem', paddingRight: '5.75rem' }}
+                            style={{ width: 'auto', paddingLeft: '7.75rem', paddingRight: '7.75rem' }}
                         >
                             <div className="button-content">
                                 <span className="button-text">BINGO!</span>
