@@ -139,44 +139,44 @@ class WalletService {
                 wallet = await this.createWallet(userId);
             }
 
-            // Check if main wallet has enough
-            if (wallet.main >= amount) {
-                // Use main wallet
-                const result = await this.updateBalance(userId, { main: -amount });
+            const main = Number(wallet.main || 0);
+            const play = Number(wallet.play || 0);
 
-                // Create transaction record
-                const transaction = new Transaction({
-                    userId,
-                    type: 'game_bet',
-                    amount: -amount,
-                    description: `Game bet: ETB ${amount} (from main wallet)`,
-                    gameId,
-                    balanceBefore: result.balanceBefore,
-                    balanceAfter: result.balanceAfter
-                });
-                await transaction.save();
-
-                return { wallet: result.wallet, transaction, source: 'main' };
-            } else if (wallet.play >= amount) {
-                // Use play wallet
-                const result = await this.updateBalance(userId, { play: -amount });
-
-                // Create transaction record
-                const transaction = new Transaction({
-                    userId,
-                    type: 'game_bet',
-                    amount: -amount,
-                    description: `Game bet: ETB ${amount} (from play wallet)`,
-                    gameId,
-                    balanceBefore: result.balanceBefore,
-                    balanceAfter: result.balanceAfter
-                });
-                await transaction.save();
-
-                return { wallet: result.wallet, transaction, source: 'play' };
-            } else {
+            // Support paying from main+play combined (main first, remainder from play)
+            if (main + play < amount) {
                 throw new Error('INSUFFICIENT_FUNDS');
             }
+
+            const mainDeduct = Math.min(main, amount);
+            const playDeduct = Math.max(0, amount - mainDeduct);
+
+            const balanceUpdates = {
+                ...(mainDeduct > 0 ? { main: -mainDeduct } : {}),
+                ...(playDeduct > 0 ? { play: -playDeduct } : {})
+            };
+            const result = await this.updateBalance(userId, balanceUpdates);
+
+            const source =
+                mainDeduct > 0 && playDeduct > 0 ? 'main+play' : mainDeduct > 0 ? 'main' : 'play';
+
+            // Create transaction record (single record for the bet)
+            const description =
+                source === 'main+play'
+                    ? `Game bet: ETB ${amount} (ETB ${mainDeduct} main + ETB ${playDeduct} play)`
+                    : `Game bet: ETB ${amount} (from ${source} wallet)`;
+
+            const transaction = new Transaction({
+                userId,
+                type: 'game_bet',
+                amount: -amount,
+                description,
+                gameId,
+                balanceBefore: result.balanceBefore,
+                balanceAfter: result.balanceAfter
+            });
+            await transaction.save();
+
+            return { wallet: result.wallet, transaction, source };
         } catch (error) {
             console.error('Error processing game bet:', error);
             throw error;
