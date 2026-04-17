@@ -851,7 +851,7 @@ export default function GameLayout({
                                 className="user-cartelas-single"
                                 style={{
                                     background: '#cec2eb',
-                                    border: '2px solid #ffffff',
+                                    // border: '2px solid #ffffff',
                                     borderRadius: '12px',
                                     padding: '10px',
                                     boxSizing: 'border-box'
