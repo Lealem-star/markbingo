@@ -617,7 +617,7 @@ export default function GameLayout({
                         gap: '0.1rem',
                         padding: '0.15rem',
                         marginTop: '0.75rem',
-                        marginBottom: '15.5rem',
+                        marginBottom: '10.5rem',
                         marginRight: '0.15rem',
                         height: mainContentHeight,
                         maxHeight: (hasSingleCartela || isWatchMode) ? '420px' : '500px'
@@ -916,7 +916,7 @@ export default function GameLayout({
 
                 {/* Manual BINGO button for single cartela (below main content) */}
                 {hasSingleCartela && gameState.phase === 'running' && (
-                    <div className="mt-30 mb-4 flex justify-center">
+                    <div className="mt-20 mb-4 flex justify-center">
                         <button
                             onClick={handleManualBingo}
                             className={`action-button bingo-button game-bingo-button ${isManualClaiming ? 'loading' : ''}`}
