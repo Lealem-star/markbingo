@@ -529,18 +529,19 @@ export default function GameLayout({
     const hasSingleCartela = yourCards.length === 1;
     const isWatchMode = yourCards.length === 0;
     const statusText = startCountdown > 0 ? startCountdown : gamePhaseDisplay;
-    const shouldShowManualBingo = hasSingleCartela && gameState.phase === 'running';
-    // Keep the page non-scrollable: instead of scrolling the main content,
-    // shrink its height responsively on short devices.
+    // For a single cartela, keep a fixed main content height so the left BINGO grid can stretch
+    // and distribute numbers vertically (fills the empty space).
+    // Use responsive height on mobile; fixed 500px can cause the BINGO button
+    // to clip upward into the top control area on short screens.
     const mainContentHeight = (hasSingleCartela || isWatchMode)
-        ? 'clamp(280px, calc(100dvh - 330px), 420px)'
-        : 'clamp(320px, calc(100dvh - 180px), 500px)';
+        ? 'calc(100vh - 330px)'
+        : 'calc(100vh - 180px)';
     // Make left BINGO columns narrower and right side larger when showing single cartela,
     // otherwise keep 1:1 split.
     const gridTemplateColumns = (hasSingleCartela || isWatchMode) ? '0.8fr 1.2fr' : '1fr 1fr';
 
     return (
-        <div className="app-container relative overflow-x-hidden joy-bingo-bg">
+        <div className="app-container relative overflow-hidden joy-bingo-bg">
             {/* Alert Banners - Fixed at top, stacked vertically with animations */}
             {Array.isArray(alertBanners) && alertBanners.length > 0 && (
                 <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-2 space-y-2">
@@ -577,17 +578,7 @@ export default function GameLayout({
                 </div>
             )}
 
-            <div
-                className="max-w-md mx-auto px-3 py-3 relative z-10"
-                style={{
-                    minHeight: '100dvh',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    paddingBottom: shouldShowManualBingo
-                        ? 'calc(88px + env(safe-area-inset-bottom, 0px))'
-                        : undefined,
-                }}
-            >
+            <div className="max-w-md mx-auto px-3 py-3 relative z-10">
                 {/* Top Information Bar - Light Purple Style */}
                 <div
                     className="game-info-bar-light flex items-stretch rounded-lg flex-nowrap mobile-info-bar"
@@ -626,10 +617,10 @@ export default function GameLayout({
                         gap: '0.1rem',
                         padding: '0.15rem',
                         marginTop: '0.75rem',
-                        marginBottom: '0.75rem',
+                        marginBottom: '15.5rem',
                         marginRight: '0.15rem',
                         height: mainContentHeight,
-                        overflow: 'hidden',
+                        maxHeight: (hasSingleCartela || isWatchMode) ? '420px' : '500px'
                     }}>
                     {/* Left Card - BINGO Grid with Square Letters */}
                     <div
@@ -924,8 +915,8 @@ export default function GameLayout({
                 </div>
 
                 {/* Manual BINGO button for single cartela (below main content) */}
-                {shouldShowManualBingo && (
-                    <div className="manual-bingo-footer">
+                {hasSingleCartela && gameState.phase === 'running' && (
+                    <div className="mt-30 mb-4 flex justify-center">
                         <button
                             onClick={handleManualBingo}
                             className={`action-button bingo-button game-bingo-button ${isManualClaiming ? 'loading' : ''}`}
@@ -935,7 +926,7 @@ export default function GameLayout({
                                 claimedBingoRef.current ||
                                 gameState.phase !== 'running'
                             }
-                            style={{ width: 'min(92vw, 360px)' }}
+                            style={{ width: 'auto', paddingLeft: '7.75rem', paddingRight: '7.75rem' }}
                         >
                             <div className="button-content">
                                 <span className="button-text">BINGO!</span>
