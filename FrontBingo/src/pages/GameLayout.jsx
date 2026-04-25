@@ -912,7 +912,7 @@ export default function GameLayout({
 
                 {/* Manual BINGO button for single cartela (below main content) */}
                 {hasSingleCartela && gameState.phase === 'running' && (
-                    <div className="mt-4 mb-4 flex justify-center">
+                    <div className="mt-6 mb-4 flex justify-center">
                         <button
                             onClick={handleManualBingo}
                             className={`action-button bingo-button game-bingo-button ${isManualClaiming ? 'loading' : ''}`}
