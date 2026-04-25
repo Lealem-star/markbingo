@@ -529,19 +529,15 @@ export default function GameLayout({
     const hasSingleCartela = yourCards.length === 1;
     const isWatchMode = yourCards.length === 0;
     const statusText = startCountdown > 0 ? startCountdown : gamePhaseDisplay;
-    // For a single cartela, keep a fixed main content height so the left BINGO grid can stretch
-    // and distribute numbers vertically (fills the empty space).
-    // Use responsive height on mobile; fixed 500px can cause the BINGO button
-    // to clip upward into the top control area on short screens.
-    const mainContentHeight = (hasSingleCartela || isWatchMode)
-        ? 'calc(100vh - 330px)'
-        : 'calc(100vh - 180px)';
+    // Keep the main content in normal flow so controls below it remain responsive
+    // on different mobile viewport heights (no fixed viewport-dependent height).
+    const mainContentHeight = 'auto';
     // Make left BINGO columns narrower and right side larger when showing single cartela,
     // otherwise keep 1:1 split.
     const gridTemplateColumns = (hasSingleCartela || isWatchMode) ? '0.8fr 1.2fr' : '1fr 1fr';
 
     return (
-        <div className="app-container relative overflow-hidden joy-bingo-bg">
+        <div className="app-container relative joy-bingo-bg">
             {/* Alert Banners - Fixed at top, stacked vertically with animations */}
             {Array.isArray(alertBanners) && alertBanners.length > 0 && (
                 <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-2 space-y-2">
@@ -617,10 +613,10 @@ export default function GameLayout({
                         gap: '0.1rem',
                         padding: '0.15rem',
                         marginTop: '0.75rem',
-                        marginBottom: '12.5rem',
+                        marginBottom: '1rem',
                         marginRight: '0.15rem',
                         height: mainContentHeight,
-                        maxHeight: (hasSingleCartela || isWatchMode) ? '420px' : '500px'
+                        maxHeight: 'none'
                     }}>
                     {/* Left Card - BINGO Grid with Square Letters */}
                     <div
@@ -916,7 +912,7 @@ export default function GameLayout({
 
                 {/* Manual BINGO button for single cartela (below main content) */}
                 {hasSingleCartela && gameState.phase === 'running' && (
-                    <div className="mt-20 mb-4 flex justify-center">
+                    <div className="mt-4 mb-4 flex justify-center">
                         <button
                             onClick={handleManualBingo}
                             className={`action-button bingo-button game-bingo-button ${isManualClaiming ? 'loading' : ''}`}
