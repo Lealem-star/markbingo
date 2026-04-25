@@ -784,8 +784,7 @@ export default function GameLayout({
                             flexDirection: 'column',
                             gap: '0.75rem',
                             marginLeft: '0.25rem',
-                            height: '100%',
-                            justifyContent: 'space-between'
+                            justifyContent: 'flex-start'
                         }}
                     >
                         {/* Control Bar - Joy Bingo style STARTED pill (single box) */}
