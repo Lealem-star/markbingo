@@ -4,7 +4,7 @@ async function reauthenticateAndGetSession() {
         const apiBase = import.meta.env.VITE_API_URL ||
             (window.location.hostname === 'localhost'
                 ? 'http://localhost:3001'
-                : 'https://markbingo.com');
+                : 'https://fikirbingo.com');
         const initData = window?.Telegram?.WebApp?.initData;
 
         // Try Telegram auth first
@@ -36,7 +36,7 @@ export function getApiBase() {
     return import.meta.env.VITE_API_URL ||
         (window.location.hostname === 'localhost'
             ? 'http://localhost:3001'
-            : 'https://markbingo.com');
+            : 'https://fikirbingo.com');
 }
 
 export async function apiFetch(path, { method = 'GET', body, sessionId, headers = {}, timeoutMs = 10000 } = {}) {

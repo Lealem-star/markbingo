@@ -13,7 +13,7 @@ export default defineConfig({
   },
   define: {
     // Default to production domain over HTTPS; can be overridden by env vars
-    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://markbingo.com'),
-    'import.meta.env.VITE_WS_URL': JSON.stringify(process.env.VITE_WS_URL || 'wss://markbingo.com'),
+    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://fikirbingo.com'),
+    'import.meta.env.VITE_WS_URL': JSON.stringify(process.env.VITE_WS_URL || 'wss://fikirbingo.com'),
   }
 })

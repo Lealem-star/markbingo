@@ -58,8 +58,8 @@ mkdir -p /var/www/markbingo/Bingo-Back/logs
 echo "🔐 Setting up GitHub authentication..."
 if [ ! -f ~/.ssh/id_ed25519 ] && [ ! -f ~/.ssh/id_rsa ]; then
     echo "📝 Generating SSH key for GitHub..."
-    ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N "" -C "server@markbingo.com" 2>/dev/null || \
-    ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N "" -C "server@markbingo.com"
+    ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N "" -C "server@fikirbingo.com" 2>/dev/null || \
+    ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N "" -C "server@fikirbingo.com"
     
     echo ""
     echo "⚠️  IMPORTANT: Add this SSH key to your GitHub account!"
@@ -132,7 +132,7 @@ echo ""
 echo "Next steps:"
 echo "1. Configure environment variables in /var/www/markbingo/Bingo-Back/.env"
 echo "2. Configure Nginx (see nginx-config.conf or DEPLOYMENT_GUIDE.md)"
-echo "3. Setup SSL certificate: certbot --nginx -d markbingo.com -d www.markbingo.com"
+echo "3. Setup SSL certificate: certbot --nginx -d fikirbingo.com -d www.fikirbingo.com"
 echo "4. Start backend: cd /var/www/markbingo/Bingo-Back && pm2 start ecosystem.config.js && pm2 save"
 echo ""
 

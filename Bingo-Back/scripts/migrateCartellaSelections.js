@@ -7,7 +7,7 @@ async function migrateCartellaSelections() {
         console.log('🔄 Starting cartella selections migration...');
 
         // Connect to database
-        const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/fun-bingo';
+        const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://meseretlealem8_db_user:qQcXeixRvjx3v8ge@bestbingo.jpgieop.mongodb.net/?appName=bestbingo';
         await mongoose.connect(mongoURI);
         console.log('✅ Connected to MongoDB');
 

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
     try {
-        const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/fun-bingo';
+        const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://meseretlealem8_db_user:qQcXeixRvjx3v8ge@bestbingo.jpgieop.mongodb.net/?appName=bestbingo';
 
         const conn = await mongoose.connect(mongoURI, {
             serverSelectionTimeoutMS: 30000, // Increased to 30s for better reliability

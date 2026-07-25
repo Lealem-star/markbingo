@@ -343,7 +343,7 @@ router.post('/approve-image-deposit/:id', async (req, res) => {
 
         // Notify user via Telegram
         const BOT_TOKEN = process.env.BOT_TOKEN;
-        const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.com';
+        const WEBAPP_URL = process.env.WEBAPP_URL || 'https://fikirbingo.com';
         const userTelegramId = request.userId?.telegramId || request.telegramId;
         if (BOT_TOKEN && userTelegramId) {
             const text = `✅ Deposit Approved!\n\n💰 Amount: ETB ${depositAmount.toFixed(2)}\n✅ Credited to: Play Wallet\n\nYour balance has been updated. Good luck!`;
@@ -395,13 +395,13 @@ router.post('/reject-image-deposit/:id', async (req, res) => {
 
         // Notify user via Telegram
         const BOT_TOKEN = process.env.BOT_TOKEN;
-        const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.com';
+        const WEBAPP_URL = process.env.WEBAPP_URL || 'https://fikirbingo.com';
         const userTelegramId = request.userId?.telegramId || request.telegramId;
         if (BOT_TOKEN && userTelegramId) {
             const text = `❌ Deposit Denied\n\n📷 Your receipt image was reviewed.\n${reason ? `📄 Reason: ${reason}\n\n` : '\n'}If you believe this is a mistake, please contact support.`;
             const reply_markup = {
                 inline_keyboard: [
-                    [{ text: '💬 Contact Support', url: 'https://t.me/markbingosupport1' }],
+                    [{ text: '💬 Contact Support', url: 'https://t.me/Teddyarse' }],
                     [{ text: '🎮 Play Now', web_app: { url: WEBAPP_URL + '?stake=10' } }]
                 ]
             };

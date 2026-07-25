@@ -140,7 +140,7 @@ export function WebSocketProvider({ children }) {
             let wsBase = import.meta.env.VITE_WS_URL ||
                 (window.location.hostname === 'localhost'
                     ? 'ws://localhost:3001'
-                    : 'wss://markbingo.com');
+                    : 'wss://fikirbingo.com');
             wsBase = (wsBase || '').replace(/\/+$/, '');
             if (!/\/ws$/i.test(wsBase)) {
                 wsBase += '/ws';

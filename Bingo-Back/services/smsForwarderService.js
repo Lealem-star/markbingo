@@ -979,7 +979,7 @@ class SmsForwarderService {
     static async notifyUserDepositApproved(verification, depositResult, isAutoApproved = false) {
         try {
             const BOT_TOKEN = process.env.BOT_TOKEN;
-            const WEBAPP_URL = process.env.WEBAPP_URL || 'https://markbingo.com';
+            const WEBAPP_URL = process.env.WEBAPP_URL || 'https://fikirbingo.com';
             const userTelegramId = verification.userId?.telegramId;
 
             if (BOT_TOKEN && userTelegramId) {

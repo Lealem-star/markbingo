@@ -66,7 +66,7 @@ const WEBAPP_URL = process.env.WEBAPP_URL || '';
 
 // Middleware - CORS: allow frontend origins (production + local dev) so browser requests succeed
 const allowedOrigins = [
-    'https://markbingo.com',
+    'https://fikirbingo.com',
     'http://localhost:5173',
     'http://localhost:3000',
     'http://127.0.0.1:5173',
