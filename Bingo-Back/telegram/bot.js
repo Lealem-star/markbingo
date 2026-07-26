@@ -74,6 +74,30 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         const isHttpsWebApp = typeof WEBAPP_URL === 'string' && WEBAPP_URL.startsWith('https://');
         const webAppUrl = WEBAPP_URL;
 
+        function buildPlayMenu() {
+            const baseUrl = (webAppUrl || '').replace(/\/$/, '');
+            const play10Btn = isHttpsWebApp
+                ? { text: '🎮 PLAY | 10 ብር', web_app: { url: `${baseUrl}?stake=10` } }
+                : { text: '🎮 PLAY | 10 ብር', callback_data: 'play_stake_10' };
+            const superBingoBtn = isHttpsWebApp
+                ? { text: 'SuperBingo | 50 ብር', web_app: { url: `${baseUrl}?stake=50` } }
+                : { text: 'SuperBingo | 50 ብር', callback_data: 'play_stake_50' };
+            const bonusBtn = { text: '⚽ GoodBingo Bonus', callback_data: 'play_bonus' };
+
+            return {
+                text: '🕹️ *PLAY IN:*\nChoose a room to join the game:',
+                keyboard: {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [play10Btn],
+                            [superBingoBtn],
+                            [bonusBtn]
+                        ]
+                    }
+                }
+            };
+        }
+
         // JWT secret for generating tokens
         const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_here_change_this';
 
@@ -98,9 +122,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                     { command: 'support', description: 'Contact Support' },
                     { command: 'instruction', description: 'Instruction' },
                     { command: 'invite', description: 'Invite' },
-                    { command: 'agent', description: 'Register As Agent' },
-                    { command: 'invitesubagent', description: 'Invite Sub-Agent' },
-                    { command: 'sale', description: 'Sale' }
+                    { command: 'history', description: 'History' }
                 ]);
 
                 if (isHttpsWebApp) {
@@ -271,9 +293,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                     { command: 'support', description: 'Contact Support' },
                     { command: 'instruction', description: 'Instruction' },
                     { command: 'invite', description: 'Invite' },
-                    { command: 'agent', description: 'Register As Agent' },
-                    { command: 'invitesubagent', description: 'Invite Sub-Agent' },
-                    { command: 'sale', description: 'Sale' }
+                    { command: 'history', description: 'History' }
                 ];
 
                 // Select commands based on role
@@ -359,10 +379,10 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 registered = !!(user && (user.isRegistered || user.phone));
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '👋 Welcome to BestBingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
+                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nGoodBingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
                     const photoPath = path.join(__dirname, '..', 'static', 'lb.png');
                     const photo = fs.existsSync(photoPath) ? { source: fs.createReadStream(photoPath) } : (WEBAPP_URL || '').replace(/\/$/, '') + '/lb.png';
-                    return ctx.replyWithPhoto(photo, { caption: regText, reply_markup: regKeyboard.reply_markup });
+                    return ctx.replyWithPhoto(photo, { caption: regText, reply_markup: regKeyboard.reply_markup, parse_mode: 'Markdown' });
                 }
                 const welcomeText = `👋 Welcome to BestBingo! Choose an Option below.`;
                 const playBtn = isHttpsWebApp
@@ -827,31 +847,12 @@ Thank you for your dedication! 🙏`;
 
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '👋 Welcome to BestBingo!\n\n📝 Please complete registration to continue.\n\n📱 Tap "Share Contact" below to provide your phone number.';
-                    return ctx.reply(regText, regKeyboard);
+                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nGoodBingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
+                    return ctx.reply(regText, { ...regKeyboard, parse_mode: 'Markdown' });
                 }
 
-                // Registered user - show Play-10 button like design in screenshot
-                if (isHttpsWebApp) {
-                    const keyboard = {
-                        reply_markup: {
-                            inline_keyboard: [
-                                [{ text: '🎮 Play-10', web_app: { url: webAppUrl + '?stake=10' } }]
-                            ]
-                        }
-                    };
-                    return ctx.reply('🍀 Best of luck on your gaming adventure!\n\n🎮 Play-10', keyboard);
-                } else {
-                    // Fallback if no HTTPS web app URL
-                    const keyboard = {
-                        reply_markup: {
-                            inline_keyboard: [
-                                [{ text: '🎮 Play-10', callback_data: 'play' }]
-                            ]
-                        }
-                    };
-                    return ctx.reply('🍀 Best of luck on your gaming adventure!\n\nTo play BestBingo, tap Play-10 below.', keyboard);
-                }
+                const { text: playText, keyboard: playKeyboard } = buildPlayMenu();
+                return ctx.reply(playText, { ...playKeyboard, parse_mode: 'Markdown' });
             } catch {
                 return ctx.reply('❌ Database unavailable. Please try again later.');
             }
@@ -930,7 +931,7 @@ Thank you for your dedication! 🙏`;
                 if (typeof withdrawalStates !== 'undefined' && withdrawalStates instanceof Map) {
                     withdrawalStates.set(userId, 'awaiting_amount');
                 }
-                ctx.reply('Please enter the amount you wish to withdraw.');
+                ctx.reply('📥 *ገንዘብ ያውጡ (Withdraw Funds)*\n\nእባክዎ የሚያወጡትን የገንዘብ መጠን ያስገቡ (Enter amount to withdraw):', { parse_mode: 'Markdown' });
             } catch (e) {
                 ctx.reply('❌ Could not start withdrawal. Please try again.');
             }
@@ -957,7 +958,7 @@ Thank you for your dedication! 🙏`;
             const howToPlayText = `የቢንጎ ጨዋታ ህጎች
 
 መጫወቻ ካርድ
-ጨዋታውን ለመጀመር ከሚመጣልን ከ1-400 የመጫወቻ ካርድ ውስጥ አንዱን እንመርጣለን
+ጨዋታውን ለመጀመር ከሚመጣልን ከ1-900 የመጫወቻ ካርድ ውስጥ አንዱን እንመርጣለን
 የመጫወቻ ካርዱ ላይ በቀይ ቀለም የተመረጡ ቁጥሮች የሚያሳዩት መጫወቻ ካርድ በሌላ ተጫዋች መመረጡን ነው
 የመጫወቻ ካርድ ስንነካው ከታች በኩል ካርድ ቁጥሩ የሚይዘዉን መጫወቻ ካርድ ያሳየናል
 ወደ ጨዋታው ለመግባት የምንፈልገዉን ካርድ ከመረጥን ለምዝገባ የተሰጠው ሰኮንድ ዜሮ ሲሆን
@@ -994,22 +995,46 @@ Thank you for your dedication! 🙏`;
             }
         });
 
-        bot.command('agent', async (ctx) => {
-            return ctx.reply('Register As Agent is not available yet. Please contact support if you need agent access.', {
-                reply_markup: { inline_keyboard: [[{ text: 'Contact Support', url: 'https://t.me/Teddyarse' }]] }
-            });
-        });
+        bot.command('history', async (ctx) => {
+            try {
+                if (!(await ensureNotBlocked(ctx))) return;
+                const user = await UserService.getUserByTelegramId(String(ctx.from.id));
+                if (!user) {
+                    return ctx.reply('❌ User not found. Please use /start to register.');
+                }
 
-        bot.command('invitesubagent', async (ctx) => {
-            return ctx.reply('Invite Sub-Agent is not available yet. Please contact support for assistance.', {
-                reply_markup: { inline_keyboard: [[{ text: 'Contact Support', url: 'https://t.me/Teddyarse' }]] }
-            });
-        });
+                const { transactions } = await WalletService.getTransactionHistory(user._id, null, 10);
+                if (!transactions || transactions.length === 0) {
+                    return ctx.reply('📜 *Transaction History*\n\nNo transactions yet.', { parse_mode: 'Markdown' });
+                }
 
-        bot.command('sale', async (ctx) => {
-            return ctx.reply('Sale is not available yet. Please contact support for assistance.', {
-                reply_markup: { inline_keyboard: [[{ text: 'Contact Support', url: 'https://t.me/Teddyarse' }]] }
-            });
+                const typeLabels = {
+                    deposit: '💰 Deposit',
+                    withdrawal: '💸 Withdrawal',
+                    game_bet: '🎮 Game Bet',
+                    game_win: '🏆 Game Win',
+                    bonus: '🎁 Bonus',
+                    refund: '↩️ Refund',
+                    wallet_transfer: '🔄 Transfer',
+                    invite_reward: '🔗 Invite Reward',
+                    registration_bonus: '🎉 Registration Bonus',
+                    admin_adjustment: '⚙️ Adjustment'
+                };
+
+                const lines = transactions.map((tx, i) => {
+                    const label = typeLabels[tx.type] || `📝 ${tx.type}`;
+                    const amount = Number(tx.amount) || 0;
+                    const sign = amount >= 0 ? '+' : '';
+                    const date = tx.createdAt ? new Date(tx.createdAt).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '';
+                    return `${i + 1}. ${label}\n   ${sign}${amount.toFixed(2)} ETB · ${tx.status}\n   ${date}`;
+                });
+
+                const message = `📜 *Transaction History*\n\n${lines.join('\n\n')}`;
+                return ctx.reply(message, { parse_mode: 'Markdown' });
+            } catch (error) {
+                console.error('History command error:', error);
+                return ctx.reply('❌ Error loading history. Please try again.');
+            }
         });
 
         // Admin: manual daily report trigger (optional date: YYYY-MM-DD)
@@ -1327,25 +1352,38 @@ Thank you for your dedication! 🙏`;
 
         bot.action('play', async (ctx) => {
             if (!(await requireRegistration(ctx))) return;
+            ctx.answerCbQuery('🎮 Opening game...');
+            const { text, keyboard } = buildPlayMenu();
+            ctx.reply(text, { ...keyboard, parse_mode: 'Markdown' });
+        });
 
+        bot.action('play_stake_10', async (ctx) => {
+            if (!(await requireRegistration(ctx))) return;
+            ctx.answerCbQuery('🎮 Opening game...');
+            const { text, keyboard } = buildPlayMenu();
+            ctx.reply(text, { ...keyboard, parse_mode: 'Markdown' });
+        });
+
+        bot.action('play_stake_50', async (ctx) => {
+            if (!(await requireRegistration(ctx))) return;
             if (isHttpsWebApp) {
-                // Open web app directly
-                ctx.answerCbQuery('🎮 Opening game...');
-                const keyboard = {
+                ctx.answerCbQuery('🎮 Opening SuperBingo...');
+                const baseUrl = (webAppUrl || '').replace(/\/$/, '');
+                return ctx.reply('🕹️ *SuperBingo | 50 ብር*\nTap below to join the game:', {
+                    parse_mode: 'Markdown',
                     reply_markup: {
-                        inline_keyboard: [
-                            [{ text: '🎮 Play-10', web_app: { url: webAppUrl + '?stake=10' } }],
-                            [{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]
-                        ]
+                        inline_keyboard: [[{ text: 'SuperBingo | 50 ብር', web_app: { url: `${baseUrl}?stake=50` } }]]
                     }
-                };
-                ctx.reply('🎮 Ready to play! Click the button below to start:', keyboard);
-            } else {
-                ctx.answerCbQuery('🎮 Opening game...');
-                const keyboard = { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] };
-                const note = '\n\n⚠️ Web App button hidden because Telegram requires HTTPS. Set WEBAPP_URL in .env to an https URL.';
-                ctx.reply('🎮 To play Bingo, please use our web app:' + note, { reply_markup: keyboard });
+                });
             }
+            ctx.answerCbQuery('⚠️ HTTPS required');
+            ctx.reply('⚠️ Web App requires HTTPS. Set WEBAPP_URL in .env to an https URL.');
+        });
+
+        bot.action('play_bonus', async (ctx) => {
+            if (!(await requireRegistration(ctx))) return;
+            ctx.answerCbQuery('GoodBingo Bonus coming soon');
+            ctx.reply('⚽ GoodBingo Bonus is coming soon. Please try the 10 ብር room for now.');
         });
 
 
@@ -1431,7 +1469,7 @@ Thank you for your dedication! 🙏`;
             const howToPlayText = `የቢንጎ ጨዋታ ህጎች
 
 መጫወቻ ካርድ
-ጨዋታውን ለመጀመር ከሚመጣልን ከ1-400 የመጫወቻ ካርድ ውስጥ አንዱን እንመርጣለን
+ጨዋታውን ለመጀመር ከሚመጣልን ከ1-900 የመጫወቻ ካርድ ውስጥ አንዱን እንመርጣለን
 የመጫወቻ ካርዱ ላይ በቀይ ቀለም የተመረጡ ቁጥሮች የሚያሳዩት መጫወቻ ካርድ በሌላ ተጫዋች መመረጡን ነው
 የመጫወቻ ካርድ ስንነካው ከታች በኩል ካርድ ቁጥሩ የሚይዘዉን መጫወቻ ካርድ ያሳየናል
 ወደ ጨዋታው ለመግባት የምንፈልገዉን ካርድ ከመረጥን ለምዝገባ የተሰጠው ሰኮንድ ዜሮ ሲሆን
@@ -1461,7 +1499,7 @@ Thank you for your dedication! 🙏`;
                 if (typeof withdrawalStates !== 'undefined' && withdrawalStates instanceof Map) {
                     withdrawalStates.set(userId, 'awaiting_amount');
                 }
-                ctx.reply('Please enter the amount you wish to withdraw.');
+                ctx.reply('📥 *ገንዘብ ያውጡ (Withdraw Funds)*\n\nእባክዎ የሚያወጡትን የገንዘብ መጠን ያስገቡ (Enter amount to withdraw):', { parse_mode: 'Markdown' });
             } catch (error) {
                 console.error('Withdraw action error:', error);
                 ctx.reply('❌ Could not start withdrawal. Please try again.');
@@ -1472,7 +1510,7 @@ Thank you for your dedication! 🙏`;
             if (!(await requireRegistration(ctx))) return;
             ctx.answerCbQuery('💰 Withdrawal request...');
             withdrawalStates.set(String(ctx.from.id), 'awaiting_amount');
-            ctx.reply('Please enter the amount you wish to withdraw.');
+            ctx.reply('📥 *ገንዘብ ያውጡ (Withdraw Funds)*\n\nእባክዎ የሚያወጡትን የገንዘብ መጠን ያስገቡ (Enter amount to withdraw):', { parse_mode: 'Markdown' });
         });
 
         // Withdrawal method selection handlers

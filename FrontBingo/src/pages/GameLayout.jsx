@@ -9,6 +9,19 @@ import '../styles/bingo-balls.css';
 import '../styles/action-buttons.css';
 
 const MISSED_BINGO_MSG = 'ይቅርታ የማሸነፍ እድልዎ አልፏል';
+const INVALID_BINGO_MSG = 'Invalid BINGO! No winning pattern yet.';
+
+function getBallLetter(number) {
+    if (number <= 15) return 'B';
+    if (number <= 30) return 'I';
+    if (number <= 45) return 'N';
+    if (number <= 60) return 'G';
+    return 'O';
+}
+
+function formatBallLabel(number) {
+    return `${getBallLetter(number)}-${number}`;
+}
 
 export default function GameLayout({
     stake,
@@ -166,18 +179,15 @@ export default function GameLayout({
         }
     }, [currentGameId]);
 
-    // Detect missed BINGO window: had winning pattern before latest call, did not claim
+    // Detect missed BINGO window for any active cartela
     useEffect(() => {
-        if (gameState.phase !== 'running' || yourCards.length !== 1) {
+        if (gameState.phase !== 'running' || yourCards.length === 0) {
             setMissedClaimWindow(false);
             setMissedPatternCalledSnapshot(null);
             return;
         }
-        const card = yourCards[0]?.card;
-        if (!card) return;
 
         const len = calledNumbers.length;
-
         if (calledLenEvalRef.current < 0) {
             calledLenEvalRef.current = len;
             return;
@@ -186,7 +196,8 @@ export default function GameLayout({
         if (len > calledLenEvalRef.current) {
             for (let i = calledLenEvalRef.current + 1; i <= len; i++) {
                 const prevCalled = calledNumbers.slice(0, i - 1);
-                if (checkBingoPattern(card, prevCalled) && !claimedBingoRef.current) {
+                const hadWinningBoard = yourCards.some(({ card }) => checkBingoPattern(card, prevCalled));
+                if (hadWinningBoard && !claimedBingoRef.current) {
                     setMissedClaimWindow(true);
                     setMissedPatternCalledSnapshot([...prevCalled]);
                     break;
@@ -218,8 +229,34 @@ export default function GameLayout({
         });
     }, [isAutoMarkOn, missedClaimWindow]);
 
-    // Manual BINGO claim button handler (single cartela)
-    const handleManualBingo = useCallback(() => {
+    const getMarkedNumbersForCard = useCallback((cardNumber) => {
+        if (isAutoMarkOn) return calledNumbers;
+        const marksSet = manuallyMarkedNumbers[cardNumber];
+        return marksSet ? Array.from(marksSet) : [];
+    }, [isAutoMarkOn, calledNumbers, manuallyMarkedNumbers]);
+
+    const cardHasValidBingo = useCallback((cardNumber, card) => {
+        if (!card || !Array.isArray(calledNumbers) || calledNumbers.length === 0) {
+            return false;
+        }
+        if (!checkBingoPattern(card, calledNumbers)) {
+            return false;
+        }
+        if (!isAutoMarkOn) {
+            const marks = manuallyMarkedNumbers[cardNumber];
+            if (!marks || marks.size === 0) {
+                return false;
+            }
+            for (const n of marks) {
+                if (n !== 0 && !calledNumbers.includes(n)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }, [calledNumbers, isAutoMarkOn, manuallyMarkedNumbers]);
+
+    const handleCardBingo = useCallback((cardNumber, card) => {
         if (!connected || gameState.phase !== 'running' || !currentGameId) {
             return;
         }
@@ -228,6 +265,7 @@ export default function GameLayout({
             setAlertBanners(prev =>
                 prev.includes(MISSED_BINGO_MSG) ? prev : [...prev, MISSED_BINGO_MSG]
             );
+            showError(MISSED_BINGO_MSG);
             return;
         }
 
@@ -235,34 +273,47 @@ export default function GameLayout({
             return;
         }
 
+        if (!cardHasValidBingo(cardNumber, card)) {
+            const errorMsg = 'Invalid BINGO! ትክክለኛ አልሆነም።';
+            setAlertBanners(prev => (prev.includes(errorMsg) ? prev : [...prev, errorMsg]));
+            showError(INVALID_BINGO_MSG);
+            return;
+        }
+
         try {
             setIsManualClaiming(true);
-            console.log('📨 Manual BINGO claim sent by user');
             claimedBingoRef.current = true;
-            // Strict manual mode: send only the numbers the user actually marked on this card
-            let payload = {};
-            if (!isAutoMarkOn && yourCards.length === 1) {
-                const { cardNumber } = yourCards[0] || {};
-                const marksSet = manuallyMarkedNumbers[cardNumber];
-                const marks = marksSet ? Array.from(marksSet) : [];
-                payload = { cardNumber, markedNumbers: marks };
-            }
+            const marks = getMarkedNumbersForCard(cardNumber);
+            const payload = isAutoMarkOn
+                ? { cardNumber }
+                : { cardNumber, markedNumbers: marks };
             const result = claimBingo(payload);
             if (!result) {
-                console.warn('Manual BINGO claim send failed');
                 claimedBingoRef.current = false;
                 showError('Failed to send BINGO claim. Please try again.');
             } else {
                 showSuccess('BINGO claim sent! Waiting for confirmation...');
             }
         } catch (error) {
-            console.error('Error sending manual BINGO claim:', error);
+            console.error('Error sending BINGO claim:', error);
             claimedBingoRef.current = false;
             showError('Failed to send BINGO claim. Please try again.');
         } finally {
             setIsManualClaiming(false);
         }
-    }, [claimBingo, connected, currentGameId, gameState.phase, isManualClaiming, missedClaimWindow, showError, showSuccess]);
+    }, [
+        cardHasValidBingo,
+        claimBingo,
+        connected,
+        currentGameId,
+        gameState.phase,
+        getMarkedNumbersForCard,
+        isAutoMarkOn,
+        isManualClaiming,
+        missedClaimWindow,
+        showError,
+        showSuccess
+    ]);
 
     // NO automatic winning or auto-claim: players must always tap the BINGO button.
 
@@ -526,18 +577,14 @@ export default function GameLayout({
 
     // Determine game phase display
     const gamePhaseDisplay = (gameState.phase === 'running' || gameState.phase === 'playing') ? 'STARTED' : gameState.phase === 'registration' ? 'REGISTRATION' : 'WAITING';
-    const hasSingleCartela = yourCards.length === 1;
-    const isWatchMode = yourCards.length === 0;
-    const statusText = startCountdown > 0 ? startCountdown : gamePhaseDisplay;
-    // Keep the main content in normal flow so controls below it remain responsive
-    // on different mobile viewport heights (no fixed viewport-dependent height).
+    const hasPlayableCartelas = yourCards.length >= 1 && yourCards.length <= 2;
+    const hasTwoCartelas = yourCards.length === 2;
+    const roomLabel = Number(stake) === 50 ? 'VIP' : `${stake || 10} ETB`;
     const mainContentHeight = 'auto';
-    // Make left BINGO columns narrower and right side larger when showing single cartela,
-    // otherwise keep 1:1 split.
-    const gridTemplateColumns = (hasSingleCartela || isWatchMode) ? '0.8fr 1.2fr' : '1fr 1fr';
+    const gridTemplateColumns = '0.72fr 1.28fr';
 
     return (
-        <div className="app-container relative joy-bingo-bg">
+        <div className="app-container relative game-layout-page">
             {/* Alert Banners - Fixed at top, stacked vertically with animations */}
             {Array.isArray(alertBanners) && alertBanners.length > 0 && (
                 <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-2 space-y-2">
@@ -574,35 +621,24 @@ export default function GameLayout({
                 </div>
             )}
 
-            <div className="max-w-md mx-auto px-3 py-3 relative z-10">
-                {/* Top Information Bar - Light Purple Style */}
-                <div
-                    className="game-info-bar-light flex items-stretch rounded-lg flex-nowrap mobile-info-bar"
-                    style={{ marginBottom: '1rem' }}
-                >
-                    <div className="info-box flex-1">
-                        <div className="info-label">Derash</div>
-                        <div className="info-value">{currentPrizePool || 0}</div>
+            <div className="game-layout-shell">
+                <header className="game-layout-header">
+                    <div className="gl-stat">
+                        <span className="gl-stat-label">DERASH</span>
+                        <span className="gl-stat-value gl-stat-green">{currentPrizePool || 0} ETB</span>
                     </div>
-                    <div className="info-box flex-1">
-                        <div className="info-label">Players</div>
-                        <div className="info-value">{currentPlayersCount || 0}</div>
+                    <div className="gl-stat">
+                        <span className="gl-stat-label">BALLS</span>
+                        <span className="gl-stat-value">{calledNumbers.length}/75</span>
                     </div>
-                    <div className="info-box flex-1">
-                        <div className="info-label">Bet</div>
-                        <div className="info-value">{stake || 0}</div>
+                    <div className="gl-stat">
+                        <span className="gl-stat-label">PLAYERS</span>
+                        <span className="gl-stat-value gl-stat-yellow">{currentPlayersCount || 0}</span>
                     </div>
-                    <div className="info-box flex-1">
-                        <div className="info-label">Call</div>
-                        <div className="info-value">{calledNumbers.length || 0}</div>
+                    <div className={`gl-current-ball gl-ball-${currentNumber ? getBallLetter(currentNumber).toLowerCase() : 'empty'}`}>
+                        {currentNumber ? formatBallLabel(currentNumber) : '--'}
                     </div>
-                    <div className="info-box flex-1">
-                        <div className="info-label">Game Nº</div>
-                        <div className="info-value truncate">{currentGameId ? currentGameId.replace('LB', '') : '1'}</div>
-                    </div>
-                </div>
-
-
+                </header>
 
                 {/* Main Content Area - Mobile-First 2 Column Layout */}
                 <div
@@ -777,48 +813,14 @@ export default function GameLayout({
                     </div>
 
                     {/* Right Side - Joy Bingo Style */}
-                    <div
-                        className="right-side-container"
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '0.75rem',
-                            marginLeft: '0.25rem',
-                            justifyContent: 'flex-start'
-                        }}
-                    >
-                        {/* Control Bar - Joy Bingo style STARTED pill (single box) */}
-                        <div className="game-controls-bar">
-                            {startCountdown > 0 ? (
-                                <div className="countdown-circle">
-                                    <div className="countdown-glow"></div>
-                                    <span className="countdown-number">
-                                        {startCountdown}
-                                    </span>
-                                </div>
-                            ) : (
-                                <span className="game-status-text-small">
-                                    {gamePhaseDisplay}
-                                </span>
-                            )}
-                        </div>
+                    <div className="right-side-container game-layout-right">
+                        {startCountdown > 0 && (
+                            <div className="gl-countdown-pill">
+                                <span className="gl-countdown-num">{startCountdown}</span>
+                                <span className="gl-countdown-label">{gamePhaseDisplay}</span>
+                            </div>
+                        )}
 
-                        {/* Current Call Bar */}
-                        <div className="current-call-bar">
-                            <span className="current-call-label">Current Call</span>
-                            {currentNumber ? (
-                                <div className="current-call-ball">
-                                    {(() => {
-                                        const letter = currentNumber <= 15 ? 'B' : currentNumber <= 30 ? 'I' : currentNumber <= 45 ? 'N' : currentNumber <= 60 ? 'G' : 'O';
-                                        return `${letter}-${currentNumber}`;
-                                    })()}
-                                </div>
-                            ) : (
-                                <div className="current-call-ball waiting">--</div>
-                            )}
-                        </div>
-
-                        {/* Recently Called Numbers - Joy Bingo style: empty placeholder before calls, then circular buttons in row */}
                         <div className={`recent-numbers-joy ${calledNumbers.length === 0 ? 'recent-numbers-empty' : ''}`}>
                             {calledNumbers.length === 0 ? (
                                 <span className="recent-numbers-placeholder">—</span>
@@ -829,7 +831,7 @@ export default function GameLayout({
                                         : calledNumbers.slice(-3);
                                     if (recent.length === 0) recent = calledNumbers.slice(-3);
                                     return recent.map((n, index) => {
-                                        const letter = n <= 15 ? 'B' : n <= 30 ? 'I' : n <= 45 ? 'N' : n <= 60 ? 'G' : 'O';
+                                        const letter = getBallLetter(n);
                                         return (
                                             <div key={`recent-${n}-${index}`} className={`recent-number-circle recent-number-${letter.toLowerCase()}`}>
                                                 {`${letter}${n}`}
@@ -840,32 +842,22 @@ export default function GameLayout({
                             )}
                         </div>
 
-                        {/* Single Cartela or Watch Mode - Render in Right Column */}
-                        {yourCards.length === 1 ? (
-                            <div
-                                className="user-cartelas-single"
-                                style={{
-                                    background: '#cec2eb',
-                                    // border: '2px solid #ffffff',
-                                    borderRadius: '12px',
-                                    padding: '10px',
-                                    boxSizing: 'border-box'
-                                }}
-                            >
+                        {hasPlayableCartelas ? (
+                            <div className={hasTwoCartelas ? 'user-cartelas-stack' : 'user-cartelas-single-play'}>
                                 {yourCards.map(({ cardNumber, card }) => {
-                                    // Determine which numbers to show as marked
-                                    const markedNumbers = isAutoMarkOn 
-                                        ? calledNumbers 
+                                    const markedNumbers = isAutoMarkOn
+                                        ? calledNumbers
                                         : (manuallyMarkedNumbers[cardNumber] ? Array.from(manuallyMarkedNumbers[cardNumber]) : []);
-                                    
+                                    const bingoReady = cardHasValidBingo(cardNumber, card);
+
                                     return (
-                                        <div key={cardNumber} className="w-full flex flex-col items-center gap-8">
+                                        <div key={cardNumber} className="cartela-play-panel">
                                             <CartellaCard
                                                 id={cardNumber}
                                                 card={card}
                                                 called={isAutoMarkOn ? calledNumbers : markedNumbers}
                                                 isPreview={false}
-                                                showHeader={true}
+                                                showHeader={!hasTwoCartelas}
                                                 isAutoMarkOn={isAutoMarkOn}
                                                 onNumberToggle={
                                                     !isAutoMarkOn && !missedClaimWindow
@@ -878,61 +870,48 @@ export default function GameLayout({
                                                         : null
                                                 }
                                             />
-                                            <div className="text-xs font-semibold text-white/70 shrink-0 mt-2">
-                                                Board number {cardNumber}
-                                            </div>
+                                            {gameState.phase === 'running' && (
+                                                <button
+                                                    type="button"
+                                                    className={`cartela-bingo-btn ${bingoReady ? 'cartela-bingo-btn--ready' : ''} ${isManualClaiming ? 'loading' : ''}`}
+                                                    onClick={() => handleCardBingo(cardNumber, card)}
+                                                    disabled={
+                                                        !connected ||
+                                                        !currentGameId ||
+                                                        claimedBingoRef.current ||
+                                                        isManualClaiming ||
+                                                        missedClaimWindow
+                                                    }
+                                                >
+                                                    <span className="cartela-bingo-text">BINGO!</span>
+                                                    <span className="cartela-bingo-id">#{cardNumber}</span>
+                                                </button>
+                                            )}
                                         </div>
-
                                     );
                                 })}
                             </div>
-                        ) : yourCards.length === 0 ? (
-                            <div
-                                className="user-cartelas-single"
-                                style={{
-                                    background: '#cec2eb',
-                                    border: '2px solid #ffffff',
-                                    borderRadius: '12px',
-                                    padding: '10px',
-                                    boxSizing: 'border-box'
-                                }}
-                            >
-                                <div className="watch-mode-indicator">
-                                    <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                    <p className="waiting-message-text font-semibold">Watch Only</p>
-                                    <p className="waiting-message-text text-sm mt-1 opacity-90">የዚህ ዙር ጨዋታ ተጀምሯል። አዲስ ዙር እስኪጀምር እዚሁ ይጠብቁ</p>
-                                </div>
+                        ) : (
+                            <div className="game-watch-panel">
+                                <div className="game-watch-hourglass" aria-hidden="true">⏳</div>
+                                <h2 className="game-watch-title">GAME IN PROGRESS</h2>
+                                <p className="game-watch-subtitle">PLEASE WAIT FOR THE NEXT BUYING ROUND TO JOIN.</p>
                             </div>
-                        ) : null}
+                        )}
                     </div>
                 </div>
 
-                {/* Manual BINGO button for single cartela (below main content) */}
-                {hasSingleCartela && gameState.phase === 'running' && (
-                    <div className="mt-10 mb-4 flex justify-center">
-                        <button
-                            onClick={handleManualBingo}
-                            className={`action-button bingo-button game-bingo-button ${isManualClaiming ? 'loading' : ''}`}
-                            disabled={
-                                !connected ||
-                                !currentGameId ||
-                                claimedBingoRef.current ||
-                                gameState.phase !== 'running'
-                            }
-                            style={{ width: 'auto', paddingLeft: '7.75rem', paddingRight: '7.75rem' }}
-                        >
-                            <div className="button-content">
-                                <span className="button-text">BINGO!</span>
-                            </div>
-                        </button>
-                    </div>
-                )}
-
-                {/* Single-cartela mode: no multi-cartela layout below columns */}
-
-                {/* <BottomNav current="game" onNavigate={onNavigate} /> */}
+                <footer className="game-layout-footer">
+                    <span className="gl-room-label">ROOM {roomLabel}</span>
+                    <button
+                        type="button"
+                        className="gl-refresh-btn"
+                        onClick={handleRefresh}
+                        disabled={isRefreshing}
+                    >
+                        {isRefreshing ? '...' : 'REFRESH'}
+                    </button>
+                </footer>
 
             </div>
         </div>

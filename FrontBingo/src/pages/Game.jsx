@@ -73,7 +73,11 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
                         <div className="grid grid-cols-1 gap-6 mt-8 max-w-sm mx-auto">
                             <button onClick={() => joinStake(10)} className="stake-btn stake-green ">
                                 <div className="play-icon-small">▶</div>
-                                <span>Play 10</span>
+                                <span>PLAY | 10 ብር</span>
+                            </button>
+                            <button onClick={() => joinStake(50)} className="stake-btn stake-purple ">
+                                <div className="play-icon-small">▶</div>
+                                <span>SuperBingo | 50 ብር</span>
                             </button>
                         </div>
                     </div>

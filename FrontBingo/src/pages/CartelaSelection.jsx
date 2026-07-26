@@ -6,6 +6,8 @@ import { useAuth } from '../lib/auth/AuthProvider';
 import { useToast } from '../contexts/ToastContext';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
+const MAX_CARTELAS_PER_PLAYER = 2;
+
 export default function CartelaSelection({ onNavigate, onResetToGame, stake, onCartelaSelected, onGameIdUpdate }) {
     const { sessionId } = useAuth();
     const { showError, showSuccess, showWarning } = useToast();
@@ -306,7 +308,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             showWarning('Not Enough Player');
         }
         if (lastEvent.type === 'selection_rejected' && lastEvent.payload?.reason === 'LIMIT_REACHED') {
-            showError('You can select only 1 cartela.');
+            showError(`You can select up to ${MAX_CARTELAS_PER_PLAYER} cartelas.`);
         }
     }, [lastEvent, showWarning, showError]);
 
@@ -342,6 +344,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
 
         // Create new timers for alerts that don't have one yet
         alertBanners.forEach((alertMsg) => {
+            if (alertMsg === 'LOW BALANCE') {
+                return;
+            }
             if (!alertTimersRef.current.has(alertMsg)) {
                 const timer = setTimeout(() => {
                     setAlertBanners(prev => prev.filter(msg => msg !== alertMsg));
@@ -429,25 +434,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             return;
         }
 
-        // Max 1 cartela per user: if already selected, switch to new one (deselect old, select new)
-        if (selectedNumbers.length >= 1) {
-            const currentCard = selectedNumbers[0];
-            if (currentCard === cardNum) return; // same card, toggle handled above
-            const isTakenByOthers = gameState.takenCards.some(taken => Number(taken) === cardNum);
-            if (isTakenByOthers) {
-                const takenMsg = 'ተይዟል ሌላ ᭭ምረጡ';
-                setAlertBanners(prev => (prev.includes(takenMsg) ? prev : [...prev, takenMsg]));
-                showError(takenMsg);
-                return;
-            }
-            try {
-                deselectCartella(currentCard);
-                selectCartella(cardNum);
-                showSuccess(`Cartella #${cardNum} selected! Waiting for game to start...`);
-            } catch (err) {
-                console.error('Error switching cartella:', err);
-                showError('Failed to switch cartela. Please try again.');
-            }
+        // Max cartelas per player
+        if (selectedNumbers.length >= MAX_CARTELAS_PER_PLAYER) {
+            showError(`You can select up to ${MAX_CARTELAS_PER_PLAYER} cartelas.`);
             return;
         }
 
@@ -457,7 +446,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         const hasBalance = totalBalance >= needed;
 
         if (!hasBalance) {
-            const msg = `Insufficient fund`;
+            const msg = totalBalance <= 0 ? 'LOW BALANCE' : 'Insufficient fund';
 
             // Add banner to stack (like image showing multiple banners)
             setAlertBanners(prev => [...prev, msg]);
@@ -543,6 +532,46 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const selectedCards = selectedNumbers
         .map(n => ({ number: n, card: cards[n - 1] }))
         .filter(x => x.card);
+    const soldCount = Array.isArray(gameState.takenCards) ? gameState.takenCards.length : 0;
+    const balanceTotal = (wallet.main || 0) + (wallet.play || 0);
+    const roomLabel = Number(stake) === 50 ? 'VIP' : `${stake} ETB`;
+
+    const renderSelectionSlot = (slotIndex) => {
+        const entry = selectedCards[slotIndex];
+        if (entry) {
+            return (
+                <div key={`slot-${slotIndex}`} className="cartela-slot cartela-slot-filled">
+                    <button
+                        type="button"
+                        className="cartela-slot-remove"
+                        onClick={() => handleCardSelect(entry.number)}
+                        aria-label={`Remove cartela ${entry.number}`}
+                    >
+                        ×
+                    </button>
+                    <div className="cartela-slot-meta">
+                        <span className="cartela-slot-id">#{entry.number}</span>
+                        <span className="cartela-slot-live">LIVE</span>
+                    </div>
+                    <div className="cartela-slot-card">
+                        <CartellaCard
+                            id={entry.number}
+                            card={entry.card}
+                            called={gameState.calledNumbers || []}
+                            isPreview={true}
+                        />
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div key={`slot-${slotIndex}`} className="cartela-slot cartela-slot-empty">
+                <span className="cartela-slot-plus">+</span>
+                <span className="cartela-slot-empty-label">SLOT {slotIndex + 1} EMPTY</span>
+            </div>
+        );
+    };
 
     // If we aren't ready to render the grid yet, show the loading animation instead of a blank screen.
     const cardsReady = Array.isArray(cards) && cards.length > 0;
@@ -658,14 +687,14 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     }
 
     return (
-        <div className="app-container relative joy-bingo-bg">
+        <div className="app-container relative joy-bingo-bg cartela-selection-page">
             {/* Alert Banners - Fixed at top, stacked vertically with animations */}
             {Array.isArray(alertBanners) && alertBanners.length > 0 && (
                 <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-2 space-y-2">
                     {alertBanners.map((alertMsg, index) => (
                         <div 
                             key={index} 
-                            className="alert-banner-appeal animate-slide-in"
+                            className={`alert-banner-appeal animate-slide-in ${alertMsg === 'LOW BALANCE' ? 'alert-banner-low-balance' : ''}`}
                             style={{ animationDelay: `${index * 0.1}s` }}
                         >
                             {/* Icon on the left */}
@@ -695,41 +724,33 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 </div>
             )}
 
-            <header className="p-4 mb-0">
-                {/* Second Row: Wallet info and Timer - White boxes style */}
-                <div className="game-info-bar-light flex items-stretch rounded-lg flex-nowrap mobile-info-bar" style={{ marginBottom: '1rem' }}>
-                    {/* Timer - Joy Bingo style: leftmost, large orange number, no label */}
-                    <div className="info-box info-box-timer flex-1 flex items-center justify-center">
-                        <span className="timer-value">{timerSeconds}s</span>
+            <header className="cartela-selection-header">
+                <div className="cartela-status-badges">
+                    <div className="cs-badge cs-badge-room">
+                        <span className="cs-badge-label">ROOM</span>
+                        <span className="cs-badge-value">{roomLabel}</span>
                     </div>
-                    <div className="info-box flex-1">
-                        <div className="info-label">Wallet</div>
-                        <div className="info-value">
-                            {walletLoading ? '...' : ((wallet.main || 0) + (wallet.play || 0)).toLocaleString()}
-                        </div>
+                    <div className="cs-badge cs-badge-sold">
+                        <span className="cs-badge-label">SOLD</span>
+                        <span className="cs-badge-value">{soldCount}</span>
                     </div>
-                    <div className="info-box flex-1">
-                        <div className="info-label">Stake</div>
-                        <div className="info-value">{stake}</div>
+                    <div className="cs-badge cs-badge-time">
+                        <span className="cs-badge-label cs-time-label">TIME</span>
+                        <span className="cs-badge-value">{timerSeconds}s</span>
                     </div>
-                    {/* Only show Players count during registration phase, not during running games */}
-                    {gameState.phase === 'registration' && (
-                        <div className="info-box flex-1">
-                            <div className="info-label">Players</div>
-                            <div className="info-value">{gameState.playersCount || 0}</div>
-                        </div>
-                    )}
+                    <div className="cs-badge cs-badge-balance">
+                        <span className="cs-badge-label">BALANCE</span>
+                        <span className="cs-badge-value">
+                            {walletLoading ? '...' : `${balanceTotal.toFixed(2)} ETB`}
+                        </span>
+                    </div>
                 </div>
-
-
-                
             </header>
 
-            <main className="p-4 mt-2 pb-6 flex flex-col gap-4">
-                {/* Number Selection Grid - Inside Scrollable Box */}
-                <div className="mx-4 mb-6">
-                    <div className="cartela-grid-scrollable rounded-lg p-4 max-h-[320px] min-h-[260px] overflow-y-auto" style={{ background: '#cfade0' }}>
-                        <div className="cartela-numbers-grid">
+            <main className="cartela-selection-main">
+                <div className="cartela-grid-panel">
+                    <div className="cartela-grid-scrollable cartela-grid-scrollable-v2">
+                        <div className="cartela-numbers-grid cartela-numbers-grid-8">
                             {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
                                 // Ensure type consistency for comparison (convert to number)
                                 const cartelaNum = Number(cartelaNumber);
@@ -743,22 +764,20 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                                     ? gameState.takenCards.some(taken => Number(taken) === cartelaNum)
                                     : false; // Hide taken cards for newcomers during running game
                                     
-                                const isSelected = selectedNumbers.includes(cartelaNum);
                                 const takenByMe = selectedNumbers.includes(cartelaNum);
+                                const isSelected = takenByMe;
+                                const isSold = isTaken && !takenByMe;
+
+                                let btnClass = 'cartela-normal-light';
+                                if (isSelected) btnClass = 'cartela-selected-light';
+                                else if (isSold) btnClass = 'cartela-sold-light';
 
                                 return (
                                     <button
                                         key={cartelaNumber}
+                                        type="button"
                                         onClick={() => handleCardSelect(cartelaNum)}
-                                        disabled={false} // Don't disable based on taken - click handler will show wait message
-                                        className={`cartela-number-btn-light ${isTaken
-                                            ? (takenByMe
-                                                ? 'cartela-selected-light'
-                                                : 'cartela-taken-light')
-                                            : (isSelected
-                                                ? 'cartela-selected-light'
-                                                : 'cartela-normal-light')
-                                            }`}
+                                        className={`cartela-number-btn-light ${btnClass}`}
                                         title={`Cartella #${cartelaNumber}`}
                                     >
                                         {cartelaNumber}
@@ -769,35 +788,11 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                     </div>
                 </div>
 
-
-                {/* Selected Cartella Preview (single cartela) */}
-                {/* Only show preview during registration phase or if user has cards in running game */}
-                {selectedCards.length > 0 && (gameState.phase === 'registration' || (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0)) && (
-                    <div style={{ marginTop: '40px' }}>
-                        {/* <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">Your Selected Cartella</h3> */}
-                        <div className="rounded-lg p-2">
-                            <div style={{ display: 'flex', justifyContent: 'center', width: '100%', boxSizing: 'border-box' }}>
-                                {selectedCards.slice(0, 1).map(({ number, card }) => (
-                                    <CartellaCard
-                                        key={number}
-                                        id={number}
-                                        card={card}
-                                        called={gameState.calledNumbers || []}
-                                        selectedNumber={null}
-                                        isPreview={true}
-                                    />
-                                ))}
-                            </div>
-                            {/* <div className="text-center text-sm text-gray-700 mt-3">
-                                🎫 {selectedNumbers.map(n => `Cartella #${n}`).join('  |  ')}
-                            </div> */}
-                        </div>
-                    </div>
-                )}
-                
+                <div className="cartela-slots-row">
+                    {renderSelectionSlot(0)}
+                    {renderSelectionSlot(1)}
+                </div>
             </main>
-
-            {/* <BottomNav current="game" onNavigate={onNavigate} /> */}
         </div>
     );
 }

@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useWebSocket } from '../contexts/WebSocketContext';
-import { useAuth } from '../lib/auth/AuthProvider';
 import CartellaCard from '../components/CartellaCard';
 
 function cardDataFromWinner(winner) {
@@ -45,16 +44,98 @@ function dedupeWinningCartelas(winners) {
     return out;
 }
 
-export default function Winner({ onNavigate, onResetToGame }) {
-    const { gameState } = useWebSocket();
-    const { sessionId } = useAuth();
-    const [countdown, setCountdown] = useState(0);
+function getWinnerDisplayName(winner) {
+    return (
+        winner.name ||
+        winner.playerName ||
+        winner.firstName ||
+        (winner.cartelaNumber ? `Cartella #${winner.cartelaNumber}` : 'Winner')
+    );
+}
 
-    // Server-synchronized countdown timer - uses only server's nextRegistrationStart timestamp
+function uniqueWinnersByUser(winners) {
+    const out = [];
+    const seen = new Set();
+    for (const w of winners) {
+        const key =
+            w.userId ||
+            w.sessionId ||
+            (w.user && w.user.id) ||
+            getWinnerDisplayName(w);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(w);
+    }
+    return out;
+}
+
+function WinnerAnnouncement({ names }) {
+    if (!names.length) return null;
+
+    if (names.length === 1) {
+        return (
+            <p className="winner-announcement">
+                <span className="winner-announcement-names">{names[0]}</span>
+                <span className="winner-announcement-suffix"> has won!</span>
+            </p>
+        );
+    }
+
+    if (names.length === 2) {
+        return (
+            <p className="winner-announcement">
+                <span className="winner-announcement-names">{names[0]} and {names[1]}</span>
+                <span className="winner-announcement-suffix"> have won!</span>
+            </p>
+        );
+    }
+
+    return (
+        <p className="winner-announcement">
+            <span className="winner-announcement-names">{names[0]} and {names.length - 1} others</span>
+            <span className="winner-announcement-suffix"> have won!</span>
+        </p>
+    );
+}
+
+function WinnerModalShell({ children, countdown, initialCountdown }) {
+    const progress =
+        initialCountdown > 0
+            ? Math.min(100, Math.max(0, ((initialCountdown - countdown) / initialCountdown) * 100))
+            : 100;
+
+    return (
+        <div className="winner-page">
+            <div className="winner-backdrop" aria-hidden="true" />
+            <div className="winner-modal">
+                {children}
+                <div className="winner-next-round">
+                    <div
+                        className="winner-next-round-fill"
+                        style={{ width: `${progress}%` }}
+                    />
+                    <span className="winner-next-round-text">
+                        NEXT ROUND: {countdown > 0 ? `${countdown}S` : '0S'}
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default function Winner({ onNavigate }) {
+    const { gameState } = useWebSocket();
+    const [countdown, setCountdown] = useState(0);
+    const [carouselIndex, setCarouselIndex] = useState(0);
+    const initialCountdownRef = useRef(0);
+
     useEffect(() => {
         const updateCountdown = () => {
             if (gameState.nextRegistrationStart) {
                 const remaining = Math.max(0, Math.ceil((gameState.nextRegistrationStart - Date.now()) / 1000));
+                if (initialCountdownRef.current === 0 && remaining > 0) {
+                    initialCountdownRef.current = remaining;
+                }
                 setCountdown(remaining);
             } else {
                 setCountdown(0);
@@ -63,11 +144,9 @@ export default function Winner({ onNavigate, onResetToGame }) {
 
         updateCountdown();
         const interval = setInterval(updateCountdown, 1000);
-
         return () => clearInterval(interval);
     }, [gameState.nextRegistrationStart]);
 
-    // Navigate when backend starts new registration
     useEffect(() => {
         if (gameState.phase === 'registration') {
             onNavigate?.('cartela-selection');
@@ -76,226 +155,140 @@ export default function Winner({ onNavigate, onResetToGame }) {
 
     const winners = gameState.winners || [];
     const displayWinners = dedupeWinningCartelas(winners);
-    const isMultiCartelas = displayWinners.length > 1;
+    const uniqueWinners = uniqueWinnersByUser(winners);
+    const winnerNames = uniqueWinners.map(getWinnerDisplayName);
+    const gameCalled = Array.isArray(gameState.calledNumbers) ? gameState.calledNumbers : [];
 
-    // Check if current user is a winner
-    const isCurrentUserWinner = sessionId && winners.some(w =>
-        w.userId === sessionId ||
-        w.sessionId === sessionId ||
-        (w.user && w.user.id && w.user.id.toString() === sessionId?.toString())
+    const totalPrizePool = gameState.prizePool || 0;
+    const prizePerWinner =
+        uniqueWinners.length > 0
+            ? Math.floor(totalPrizePool / uniqueWinners.length)
+            : 0;
+
+    const goToSlide = useCallback(
+        (index) => {
+            if (displayWinners.length === 0) return;
+            const next = ((index % displayWinners.length) + displayWinners.length) % displayWinners.length;
+            setCarouselIndex(next);
+        },
+        [displayWinners.length]
     );
 
-    // Handle case when no winners (shouldn't happen, but handle gracefully)
-    const hasWinners = winners.length > 0;
+    useEffect(() => {
+        if (carouselIndex >= displayWinners.length) {
+            setCarouselIndex(0);
+        }
+    }, [carouselIndex, displayWinners.length]);
 
-    // Show "no winner" state if no winners data
-    if (!hasWinners) {
+    if (winners.length === 0) {
         return (
-            <div className="app-container flex items-center justify-center min-h-screen py-4 px-4" style={{ background: '#cfade0' }}>
-                <div className="w-full max-w-md">
-                    {/* Main Card Container with Light Purple Background */}
-                    <div className="rounded-2xl overflow-hidden shadow-2xl flex flex-col gap-4" style={{ background: '#cfade0' }}>
-                        {/* Large Orange BINGO! Banner */}
-                        <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-6 shrink-0 rounded-xl mx-2 mt-2" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
-                            <div className="text-center">
-                                <h1 className="text-white font-extrabold text-5xl md:text-6xl tracking-wider mb-2 drop-shadow-lg">
-                                    BINGO!
-                                </h1>
-                                <div className="flex items-center justify-center gap-3">
-                                    <div className="px-4 py-2 rounded-lg bg-gray-500 border-2 border-gray-600 flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{ backgroundColor: '#6b7280', borderColor: '#4b5563', padding: '0.5rem 1rem' }}>
-                                        🎯
-                                    </div>
-                                    <p className="text-white text-lg md:text-xl font-semibold">
-                                        No Winner This Game
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Countdown Section - Orange Background with Large Number */}
-                        <div className="px-4 pb-4 shrink-0">
-                            <div className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 py-3" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
-                                <div className="text-center">
-                                    <div className="text-white text-sm font-semibold mb-1">
-                                        አዲስ ጭዋታ ለመጀመር
-                                    </div>
-                                    <div className="text-white font-extrabold text-4xl md:text-5xl tracking-wider drop-shadow-lg leading-none">
-                                        {countdown > 0 ? countdown : '0'}
-                                    </div>
-                                    <div className="text-white text-xs font-medium mt-1 opacity-90">
-                                        {countdown > 0 ? (
-                                            <>Auto-starting next game in {countdown} second{countdown !== 1 ? 's' : ''}</>
-                                        ) : (
-                                            <>Navigating to next game...</>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+            <WinnerModalShell countdown={countdown} initialCountdown={initialCountdownRef.current}>
+                <header className="winner-modal-header">
+                    <div className="winner-count">
+                        <span className="winner-count-num">0</span>
+                        <span className="winner-count-label">አሸናፊዎች</span>
                     </div>
+                </header>
+                <p className="winner-announcement">
+                    <span className="winner-announcement-suffix">No winner this round.</span>
+                </p>
+                <div className="winner-pool-box">
+                    <span className="winner-pool-label">TOTAL PRIZE POOL</span>
+                    <span className="winner-pool-value">{totalPrizePool} ETB</span>
                 </div>
-            </div>
+                <div className="winner-watch-panel">
+                    <p className="winner-watch-text">Please wait for the next buying round.</p>
+                </div>
+            </WinnerModalShell>
         );
     }
 
-
-    // Get winner name/identifier for each winner
-    const getWinnerDisplayName = (winner) =>
-        winner.name ||
-        winner.playerName ||
-        winner.firstName ||
-        (winner.cartelaNumber ? `Cartella #${winner.cartelaNumber}` : 'Winner');
-
-    // Build a unique winner list by user identity (userId / sessionId),
-    // falling back to display name if needed
-    const uniqueWinners = [];
-    const seenKeys = new Set();
-
-    winners.forEach((w) => {
-        const key =
-            w.userId ||
-            w.sessionId ||
-            (w.user && w.user.id) ||
-            getWinnerDisplayName(w);
-
-        if (!seenKeys.has(key)) {
-            seenKeys.add(key);
-            uniqueWinners.push(w);
-        }
-    });
-
-    const winnerNames = uniqueWinners.map(getWinnerDisplayName);
-
-    const gameCalled = Array.isArray(gameState.calledNumbers) ? gameState.calledNumbers : [];
+    const activeWinner = displayWinners[carouselIndex] || displayWinners[0];
+    const activeCardData = cardDataFromWinner(activeWinner);
+    const activeCalled = calledNumbersForWinner(activeWinner, gameCalled);
+    const activeBoardNumber = activeWinner?.cartelaNumber || activeWinner?.cardId || 'N/A';
+    const activeLabel = getWinnerDisplayName(activeWinner);
+    const hasCarousel = displayWinners.length > 1;
 
     return (
-        <div className="app-container flex items-center justify-center min-h-screen py-4 px-4" style={{ background: '#cfade0' }}>
-            <div className="w-full max-w-md">
-                {/* Main Card Container with Light Purple Background */}
-                <div className="rounded-2xl overflow-hidden shadow-2xl flex flex-col gap-4">
-                    {/* Large Orange BINGO! Banner */}
-                    <div className="w-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-6 shrink-0 rounded-xl mx-2 mt-2" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
-                        <div className="text-center">
-                            <h1 className="text-white font-extrabold text-5xl md:text-6xl tracking-wider mb-2 drop-shadow-lg">
-                                BINGO!
-                            </h1>
-                            <div className="flex flex-col items-center justify-center gap-1">
-                                {winnerNames.slice(0, 3).map((name, idx) => (
-                                    <div key={`${name}-${idx}`} className="flex items-center justify-center gap-3">
-                                        <div
-                                            className="px-4 py-2 rounded-lg bg-green-500 border-2 border-green-600 flex items-center justify-center text-white font-bold text-lg shadow-lg max-w-[220px] truncate"
-                                            style={{ backgroundColor: '#22c55e', borderColor: '#16a34a', padding: '0.5rem 1rem' }}
-                                        >
-                                            {name}
-                                        </div>
-                                        <p className="text-white text-lg md:text-xl font-semibold">
-                                            has won the game!
-                                        </p>
-                                    </div>
-                                ))}
-                                {winnerNames.length > 3 && (
-                                    <p className="text-white text-lg font-semibold opacity-90">
-                                        +{winnerNames.length - 3} more
-                                    </p>
-                                )}
-                            </div>
-                        </div>
+        <WinnerModalShell countdown={countdown} initialCountdown={initialCountdownRef.current}>
+            <header className="winner-modal-header">
+                <div className="winner-count">
+                    <span className="winner-count-num">{uniqueWinners.length}</span>
+                    <span className="winner-count-label">አሸናፊዎች</span>
+                </div>
+                <div className="winner-prize-share">{prizePerWinner} ETB</div>
+            </header>
+
+            <WinnerAnnouncement names={winnerNames} />
+
+            <div className="winner-pool-box">
+                <span className="winner-pool-label">TOTAL PRIZE POOL</span>
+                <span className="winner-pool-value">{totalPrizePool} ETB</span>
+            </div>
+
+            <div className="winner-card-carousel">
+                <div className="winner-card-frame">
+                    <div className="winner-card-frame-header">
+                        <span className="winner-card-id">CARD #{activeBoardNumber}</span>
+                        <span className="winner-card-name">{activeLabel}</span>
                     </div>
 
-                    {/* Card Section with Light Purple Background */}
-                    <div className="p-4 shrink-0">
-                        <div
-                            className={isMultiCartelas ? 'max-h-[min(58vh,520px)] overflow-y-auto overflow-x-hidden pr-1 -mr-1' : ''}
-                            style={isMultiCartelas ? { WebkitOverflowScrolling: 'touch' } : undefined}>
-                            <div className={`flex flex-col items-center ${isMultiCartelas ? 'gap-8 pb-2' : ''}`}>
-                                {displayWinners.map((w, idx) => {
-                                    const cardData = cardDataFromWinner(w);
-                                    const calledNumbers = calledNumbersForWinner(w, gameCalled);
-                                    const boardNumber = w.cartelaNumber || w.cardId || 'N/A';
-                                    const label = getWinnerDisplayName(w);
-                                    return (
-                                        <div
-                                            key={`${String(w.userId)}-${boardNumber}-${idx}`}
-                                            className="w-full flex flex-col items-center shrink-0"
-                                        >
-                                            {isMultiCartelas && (
-                                                <p className="text-purple-900 text-sm font-bold mb-2 text-center w-full">
-                                                    {label}
-                                                    <span className="text-purple-600 font-semibold"> · Board {boardNumber}</span>
-                                                </p>
-                                            )}
-                                            <div className="w-full" style={{ padding: '15px 30px', boxSizing: 'border-box' }}>
-                                                <div
-                                                    className="w-full flex flex-col items-center justify-center"
-                                                    style={{
-                                                        background: '#cec2eb',
-                                                        border: '2px solid #ffffff',
-                                                        borderRadius: '12px',
-                                                        padding: '8px',
-                                                        boxSizing: 'border-box'
-                                                    }}
-                                                >
-                                                    {cardData ? (
-                                                        <CartellaCard
-                                                            id={boardNumber}
-                                                            card={cardData}
-                                                            called={calledNumbers}
-                                                            isPreview={false}
-                                                            showWinningPattern={true}
-                                                            showHeader={true}
-                                                        />
-                                                    ) : (
-                                                        <div
-                                                            className="text-center p-8 rounded-xl border-2 border-purple-200/50 shadow-md w-full max-w-xs"
-                                                            style={{ background: '#cec2eb' }}
-                                                        >
-                                                            <div className="text-3xl mb-2">🏆</div>
-                                                            <div className="text-purple-700 text-sm font-semibold mb-1">
-                                                                Cartella #{boardNumber}
-                                                            </div>
-                                                            <div className="text-gray-600 text-xs mt-2">
-                                                                Card preview not available
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {!isMultiCartelas && (
-                                                        <div className="text-center mt-2 w-full">
-                                                            <p className="text-purple-800 text-sm font-semibold">
-                                                                Board number {boardNumber}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                    <div className="winner-card-body">
+                        {activeCardData ? (
+                            <CartellaCard
+                                id={activeBoardNumber}
+                                card={activeCardData}
+                                called={activeCalled}
+                                isPreview={false}
+                                showWinningPattern={true}
+                                showHeader={false}
+                            />
+                        ) : (
+                            <div className="winner-card-fallback">
+                                <div className="winner-card-fallback-icon">🏆</div>
+                                <div className="winner-card-fallback-title">Cartella #{activeBoardNumber}</div>
+                                <div className="winner-card-fallback-sub">Card preview not available</div>
                             </div>
-                        </div>
+                        )}
+
+                        {hasCarousel && (
+                            <>
+                                <button
+                                    type="button"
+                                    className="winner-carousel-prev"
+                                    onClick={() => goToSlide(carouselIndex - 1)}
+                                    aria-label="Previous winning card"
+                                >
+                                    ‹
+                                </button>
+                                <button
+                                    type="button"
+                                    className="winner-carousel-next"
+                                    onClick={() => goToSlide(carouselIndex + 1)}
+                                    aria-label="Next winning card"
+                                >
+                                    ›
+                                </button>
+                            </>
+                        )}
                     </div>
 
-                    {/* Countdown Section - Orange Background with Large Number */}
-                    <div className="px-3 pb-3 shrink-0">
-                        <div
-                            className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600"
-                            style={{
-                                background: 'linear-gradient(to right, #f97316, #ea580c)',
-                                minHeight: '72px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <div className="text-white font-extrabold text-5xl md:text-6xl tracking-wider drop-shadow-lg leading-none">
-                                {countdown > 0 ? countdown : '0'}
-                            </div>
+                    {hasCarousel && (
+                        <div className="winner-carousel-dots">
+                            {displayWinners.map((w, idx) => (
+                                <button
+                                    key={`${String(w.userId)}-${w.cartelaNumber}-${idx}`}
+                                    type="button"
+                                    className={`winner-carousel-dot ${idx === carouselIndex ? 'is-active' : ''}`}
+                                    onClick={() => goToSlide(idx)}
+                                    aria-label={`Show card ${idx + 1}`}
+                                />
+                            ))}
                         </div>
-                    </div>
-
+                    )}
                 </div>
             </div>
-        </div>
+        </WinnerModalShell>
     );
-
-
 }

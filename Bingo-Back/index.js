@@ -149,7 +149,7 @@ connectDB().catch((error) => {
 const wss = new WebSocketServer({ noServer: true });
 
 // --- Simple in-memory rooms with auto-cycling phases ---
-const stakes = [10];
+const stakes = [10, 50];
 // Multi-room per stake: stake -> [room, room, ...]
 const rooms = new Map();
 
@@ -229,8 +229,8 @@ function makeRoom(stake) {
         calledNumbers: [],
         cartellas: new Map(), // userId -> cartella
         winners: [],
-        takenCards: new Set(), // numbers chosen during registration (1-100)
-        userCardSelections: new Map(), // userId -> [cardNumber] (max 1)
+        takenCards: new Set(), // numbers chosen during registration (1-900)
+        userCardSelections: new Map(), // userId -> [cardNumber] (max 2)
         // Prevent duplicate announce/payout and manage call timer lifecycle
         announceProcessed: false,
         callTimerId: null,
@@ -1141,7 +1141,7 @@ async function toAnnounce(room) {
 }
 
 function getPredefinedCartella(cardNumber) {
-    // Card numbers are 1-100, array index is 0-99
+    // Card numbers are 1-900, array index is 0-899
     const cardIndex = cardNumber - 1;
     if (cardIndex >= 0 && cardIndex < BingoCards.cards.length) {
         return BingoCards.cards[cardIndex];
@@ -1487,11 +1487,11 @@ wss.on('connection', async (ws, request) => {
                         return;
                     }
 
-                    // Max 1 cartela per user
-                    if (selections.length >= 1) {
+                    // Max 2 cartelas per user
+                    if (selections.length >= 2) {
                         ws.send(JSON.stringify({
                             type: 'selection_rejected',
-                            payload: { reason: 'LIMIT_REACHED', limit: 1, cardNumber, selections }
+                            payload: { reason: 'LIMIT_REACHED', limit: 2, cardNumber, selections }
                         }));
                         return;
                     }
