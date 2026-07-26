@@ -5421,19 +5421,44 @@ body {
 }
 
 /* GameLayout — reference light theme (screenshots 2 & 3) */
-.game-layout-page {
-    background: #c5cad4 !important;
+body.game-layout-active,
+html.game-layout-active,
+body.game-layout-active #root,
+body.game-layout-active .App {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
     min-height: 100vh;
+    background: #dbe3ef;
+    overflow-x: hidden;
+}
+
+.game-layout-page {
+    background: #dbe3ef !important;
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 !important;
     color: #111827;
+    box-sizing: border-box;
 }
 
 .app-container.game-layout-page {
-    background: #c5cad4 !important;
+    background: #dbe3ef !important;
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 .game-layout-shell {
-    max-width: 28rem;
-    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
