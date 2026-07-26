@@ -579,9 +579,7 @@ export default function GameLayout({
     const gamePhaseDisplay = (gameState.phase === 'running' || gameState.phase === 'playing') ? 'STARTED' : gameState.phase === 'registration' ? 'REGISTRATION' : 'WAITING';
     const hasPlayableCartelas = yourCards.length >= 1 && yourCards.length <= 2;
     const hasTwoCartelas = yourCards.length === 2;
-    const roomLabel = Number(stake) === 50 ? 'VIP' : `${stake || 10} ETB`;
-    const mainContentHeight = 'auto';
-    const gridTemplateColumns = '0.72fr 1.28fr';
+    const roomLabel = Number(stake) === 50 ? 'VIP 💰💰' : `${stake || 10} ETB`;
 
     return (
         <div className="app-container relative game-layout-page">
@@ -622,52 +620,29 @@ export default function GameLayout({
             )}
 
             <div className="game-layout-shell">
-                <header className="game-layout-header">
-                    <div className="gl-stat">
-                        <span className="gl-stat-label">DERASH</span>
-                        <span className="gl-stat-value gl-stat-green">{currentPrizePool || 0} ETB</span>
-                    </div>
-                    <div className="gl-stat">
-                        <span className="gl-stat-label">BALLS</span>
-                        <span className="gl-stat-value">{calledNumbers.length}/75</span>
-                    </div>
-                    <div className="gl-stat">
-                        <span className="gl-stat-label">PLAYERS</span>
-                        <span className="gl-stat-value gl-stat-yellow">{currentPlayersCount || 0}</span>
-                    </div>
+                <div className="game-layout-header-wrap">
+                    <header className="game-layout-header">
+                        <div className="gl-stat">
+                            <span className="gl-stat-label">DERASH</span>
+                            <span className="gl-stat-value gl-stat-green">{currentPrizePool || 0} ETB</span>
+                        </div>
+                        <div className="gl-stat">
+                            <span className="gl-stat-label">BALLS</span>
+                            <span className="gl-stat-value">{calledNumbers.length}/75</span>
+                        </div>
+                        <div className="gl-stat">
+                            <span className="gl-stat-label">PLAYERS</span>
+                            <span className="gl-stat-value gl-stat-yellow">{currentPlayersCount || 0}</span>
+                        </div>
+                    </header>
                     <div className={`gl-current-ball gl-ball-${currentNumber ? getBallLetter(currentNumber).toLowerCase() : 'empty'}`}>
                         {currentNumber ? formatBallLabel(currentNumber) : '--'}
                     </div>
-                </header>
+                </div>
 
-                {/* Main Content Area - Mobile-First 2 Column Layout */}
-                <div
-                    className="main-content-area mobile-first-grid"
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns,
-                        gap: '0.1rem',
-                        padding: '0.15rem',
-                        marginTop: '0.75rem',
-                        marginBottom: '1rem',
-                        marginRight: '0.15rem',
-                        height: mainContentHeight,
-                        maxHeight: 'none'
-                    }}>
-                    {/* Left Card - BINGO Grid with Square Letters */}
-                    <div
-                        className="bingo-grid-container"
-                        style={{
-                            height: '100%',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div
-                            className="grid grid-cols-5 gap-1"
-                            style={{
-                                height: '100%'
-                            }}
-                        >
+                <div className="game-layout-main">
+                    <div className="bingo-grid-container gl-master-board">
+                        <div className="grid grid-cols-5 gap-1 gl-master-grid">
                             {/* B Column - Yellow */}
                             <div className="space-y-1" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                                 <div className="bingo-letter-square bingo-letter-b">
@@ -685,11 +660,8 @@ export default function GameLayout({
                                     return (
                                         <button
                                             key={n}
+                                            type="button"
                                             className={`bingo-number-btn ${className}`}
-                                            style={{
-                                                flex: '1',
-                                                minHeight: '20px'
-                                            }}
                                         >
                                             {n}
                                         </button>
@@ -713,11 +685,8 @@ export default function GameLayout({
                                     return (
                                         <button
                                             key={n}
+                                            type="button"
                                             className={`bingo-number-btn ${className}`}
-                                            style={{
-                                                flex: '1',
-                                                minHeight: '20px'
-                                            }}
                                         >
                                             {n}
                                         </button>
@@ -741,11 +710,8 @@ export default function GameLayout({
                                     return (
                                         <button
                                             key={n}
+                                            type="button"
                                             className={`bingo-number-btn ${className}`}
-                                            style={{
-                                                flex: '1',
-                                                minHeight: '20px'
-                                            }}
                                         >
                                             {n}
                                         </button>
@@ -769,11 +735,8 @@ export default function GameLayout({
                                     return (
                                         <button
                                             key={n}
+                                            type="button"
                                             className={`bingo-number-btn ${className}`}
-                                            style={{
-                                                flex: '1',
-                                                minHeight: '20px'
-                                            }}
                                         >
                                             {n}
                                         </button>
@@ -797,11 +760,8 @@ export default function GameLayout({
                                     return (
                                         <button
                                             key={n}
+                                            type="button"
                                             className={`bingo-number-btn ${className}`}
-                                            style={{
-                                                flex: '1',
-                                                minHeight: '20px'
-                                            }}
                                         >
                                             {n}
                                         </button>
@@ -851,13 +811,13 @@ export default function GameLayout({
                                     const bingoReady = cardHasValidBingo(cardNumber, card);
 
                                     return (
-                                        <div key={cardNumber} className="cartela-play-panel">
+                                        <div key={cardNumber} className="gl-cartela-card-wrap">
                                             <CartellaCard
                                                 id={cardNumber}
                                                 card={card}
                                                 called={isAutoMarkOn ? calledNumbers : markedNumbers}
                                                 isPreview={false}
-                                                showHeader={!hasTwoCartelas}
+                                                showHeader={true}
                                                 isAutoMarkOn={isAutoMarkOn}
                                                 onNumberToggle={
                                                     !isAutoMarkOn && !missedClaimWindow
@@ -902,14 +862,17 @@ export default function GameLayout({
                 </div>
 
                 <footer className="game-layout-footer">
-                    <span className="gl-room-label">ROOM {roomLabel}</span>
+                    <div className="gl-room-block">
+                        <span className="gl-room-label">ROOM</span>
+                        <span className="gl-room-value">{roomLabel}</span>
+                    </div>
                     <button
                         type="button"
                         className="gl-refresh-btn"
                         onClick={handleRefresh}
                         disabled={isRefreshing}
                     >
-                        {isRefreshing ? '...' : 'REFRESH'}
+                        {isRefreshing ? '...' : '↻ REFRESH'}
                     </button>
                 </footer>
 
