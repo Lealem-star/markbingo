@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import CartelaSelection from './pages/CartelaSelection.jsx';
 import GameLayout from './pages/GameLayout.jsx';
 import Winner from './pages/Winner.jsx';
+import Bonus from './pages/Bonus.jsx';
 import { AuthProvider } from './lib/auth/AuthProvider.jsx';
 import { ToastProvider, useToast } from './contexts/ToastContext.jsx';
 import { WebSocketProvider, useWebSocket } from './contexts/WebSocketContext.jsx';
@@ -200,6 +201,11 @@ function AppContent() {
       console.log('⏭️ Skipping auto-navigation: no stake selected');
       return; // Only auto-navigate if we have a stake selected
     }
+
+    if (currentPage === 'bonus') {
+      console.log('⏭️ Skipping auto-navigation: on bonus page');
+      return;
+    }
     
     const targetPage = determineGamePage();
     console.log('🎯 Determined target page:', targetPage, {
@@ -269,12 +275,15 @@ function AppContent() {
     const checkUrlParams = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const isAdmin = urlParams.get('admin') === 'true';
+      const pageParam = urlParams.get('page');
       const stakeParam = urlParams.get('stake');
 
-      console.log('URL parameters check:', { isAdmin, stakeParam }); // Debug log
+      console.log('URL parameters check:', { isAdmin, pageParam, stakeParam }); // Debug log
 
       if (isAdmin) {
         setCurrentPage('admin');
+      } else if (pageParam === 'bonus') {
+        setCurrentPage('bonus');
       } else {
         setCurrentPage('game');
 
@@ -411,6 +420,8 @@ function AppContent() {
         return <Profile onNavigate={handleNavigate} />;
       case 'winner':
         return <Winner onNavigate={handleNavigate} onResetToGame={handleResetToGame} />;
+      case 'bonus':
+        return <Bonus onNavigate={handleNavigate} />;
       default:
         console.log('Default case - rendering Game component');
         return <Game onNavigate={handleNavigate} onStakeSelected={handleStakeSelected} selectedStake={selectedStake} />;

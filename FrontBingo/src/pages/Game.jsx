@@ -79,6 +79,10 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
                                 <div className="play-icon-small">▶</div>
                                 <span>SuperBingo | 50 ብር</span>
                             </button>
+                            <button onClick={() => onNavigate?.('bonus')} className="stake-btn stake-bonus">
+                                <div className="play-icon-small">⚽</div>
+                                <span>GoodBingo Bonus</span>
+                            </button>
                         </div>
                     </div>
 

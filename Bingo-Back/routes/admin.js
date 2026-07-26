@@ -8,6 +8,7 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const WalletService = require('../services/walletService');
+const BonusService = require('../services/bonusService');
 const InviteService = require('../services/inviteService');
 const { getDepositTotalsBetween } = require('../utils/depositTotals');
 const { authMiddleware } = require('./auth');
@@ -1264,6 +1265,91 @@ router.get('/stats/wallets/total-play', adminMiddleware, async (req, res) => {
         res.json({ totalPlay });
     } catch (error) {
         console.error('Error calculating total play wallet:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
+// --- GoodBingo Bonus (match prediction) ---
+
+router.get('/bonus/matches', adminMiddleware, async (req, res) => {
+    try {
+        const matches = await BonusService.listAdminMatches();
+        res.json({ matches });
+    } catch (error) {
+        console.error('Admin bonus list error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
+router.post('/bonus/matches', adminMiddleware, async (req, res) => {
+    try {
+        const { team1Name, team1Flag, team2Name, team2Flag, closesAt, openImmediately } = req.body || {};
+        if (!team1Name || !team2Name || !closesAt) {
+            return res.status(400).json({ error: 'MISSING_FIELDS' });
+        }
+        const match = await BonusService.createMatch(
+            { team1Name, team1Flag, team2Name, team2Flag, closesAt, openImmediately: !!openImmediately },
+            req.userId
+        );
+        res.status(201).json({ match });
+    } catch (error) {
+        if (error.message === 'ANOTHER_MATCH_OPEN') {
+            return res.status(409).json({ error: 'ANOTHER_MATCH_OPEN' });
+        }
+        if (error.message === 'INVALID_CLOSES_AT') {
+            return res.status(400).json({ error: 'INVALID_CLOSES_AT' });
+        }
+        console.error('Admin bonus create error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
+router.patch('/bonus/matches/:id/open', adminMiddleware, async (req, res) => {
+    try {
+        const match = await BonusService.openMatch(req.params.id);
+        res.json({ match });
+    } catch (error) {
+        if (error.message === 'ANOTHER_MATCH_OPEN') {
+            return res.status(409).json({ error: 'ANOTHER_MATCH_OPEN' });
+        }
+        if (error.message === 'MATCH_NOT_FOUND') {
+            return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+        }
+        console.error('Admin bonus open error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
+router.patch('/bonus/matches/:id/lock', adminMiddleware, async (req, res) => {
+    try {
+        const match = await BonusService.lockMatch(req.params.id);
+        res.json({ match });
+    } catch (error) {
+        if (error.message === 'MATCH_NOT_FOUND') {
+            return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+        }
+        console.error('Admin bonus lock error:', error);
+        res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    }
+});
+
+router.post('/bonus/matches/:id/settle', adminMiddleware, async (req, res) => {
+    try {
+        const { finalScore1, finalScore2 } = req.body || {};
+        const match = await BonusService.settleMatch(req.params.id, finalScore1, finalScore2);
+        res.json({ match });
+    } catch (error) {
+        const code = error.message;
+        const statusMap = {
+            MATCH_NOT_FOUND: 404,
+            ALREADY_SETTLED: 409,
+            MATCH_CANCELLED: 400,
+            INVALID_SCORE: 400
+        };
+        if (statusMap[code]) {
+            return res.status(statusMap[code]).json({ error: code });
+        }
+        console.error('Admin bonus settle error:', error);
         res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
     }
 });

@@ -118,6 +118,64 @@ class NotificationService {
             return false;
         }
     }
+
+    static async notifyBonusWin(userId, {
+        team1Name,
+        team1Flag,
+        team2Name,
+        team2Flag,
+        finalScore1,
+        finalScore2,
+        predictedScore1,
+        predictedScore2,
+        payout
+    }) {
+        try {
+            const WEBAPP_URL = (process.env.WEBAPP_URL || 'https://fikirbingo.com').replace(/\/$/, '');
+            const user = await User.findById(userId).lean();
+            if (!user) return false;
+
+            const isBot = await WalletService.isBotUser(userId);
+            if (isBot) return false;
+
+            const payoutAmount = Number(payout) || 0;
+            const text = [
+                '⚽ GoodBingo Bonus — You Won!',
+                '',
+                `${team1Flag || '🏳️'} ${team1Name} ${finalScore1} - ${finalScore2} ${team2Name} ${team2Flag || '🏳️'}`,
+                '',
+                `🎯 Your prediction: ${predictedScore1} - ${predictedScore2} ✓`,
+                `💰 Payout: +${payoutAmount} ETB`,
+                '',
+                '🎉 Congratulations!'
+            ].join('\n');
+
+            const reply_markup = {
+                inline_keyboard: [
+                    [{ text: '⚽ GoodBingo Bonus', web_app: { url: `${WEBAPP_URL}?page=bonus` } }],
+                    [{ text: '💼 Check Balance', callback_data: 'balance' }]
+                ]
+            };
+
+            const BOT_TOKEN = process.env.BOT_TOKEN;
+            if (!user.telegramId || !BOT_TOKEN) return false;
+
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: String(user.telegramId),
+                    text,
+                    reply_markup
+                })
+            }).catch(() => { });
+
+            return true;
+        } catch (error) {
+            console.error('Bonus win notification error:', error);
+            return false;
+        }
+    }
 }
 
 module.exports = NotificationService;

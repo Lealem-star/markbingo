@@ -82,7 +82,9 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
             const superBingoBtn = isHttpsWebApp
                 ? { text: 'SuperBingo | 50 ብር', web_app: { url: `${baseUrl}?stake=50` } }
                 : { text: 'SuperBingo | 50 ብር', callback_data: 'play_stake_50' };
-            const bonusBtn = { text: '⚽ GoodBingo Bonus', callback_data: 'play_bonus' };
+            const bonusBtn = isHttpsWebApp
+                ? { text: '⚽ GoodBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }
+                : { text: '⚽ GoodBingo Bonus', callback_data: 'play_bonus' };
 
             return {
                 text: '🕹️ *PLAY IN:*\nChoose a room to join the game:',
@@ -1378,8 +1380,18 @@ Thank you for your dedication! 🙏`;
 
         bot.action('play_bonus', async (ctx) => {
             if (!(await requireRegistration(ctx))) return;
-            ctx.answerCbQuery('GoodBingo Bonus coming soon');
-            ctx.reply('⚽ GoodBingo Bonus is coming soon. Please try the 10 ብር room for now.');
+            if (isHttpsWebApp) {
+                const baseUrl = (webAppUrl || '').replace(/\/$/, '');
+                ctx.answerCbQuery('Opening GoodBingo Bonus…');
+                return ctx.reply('⚽ *GoodBingo Bonus* — predict the exact match score!', {
+                    parse_mode: 'Markdown',
+                    reply_markup: {
+                        inline_keyboard: [[{ text: '⚽ Open GoodBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }]]
+                    }
+                });
+            }
+            ctx.answerCbQuery('HTTPS required for web app');
+            ctx.reply('⚠️ Web App requires HTTPS. Set WEBAPP_URL in .env to an https URL.');
         });
 
 

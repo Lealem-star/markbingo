@@ -336,6 +336,81 @@ body {
     color: rgba(255, 255, 255, 0.5);
 }
 
+.admin-subtitle {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+    margin: -0.75rem 0 0.5rem;
+    line-height: 1.4;
+}
+
+.admin-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    outline: none;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.admin-input:focus {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5);
+    border-color: rgba(245, 158, 11, 0.5);
+}
+
+.admin-form-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.admin-form-row .admin-form-group {
+    flex: 1;
+}
+
+.admin-form-group-narrow {
+    max-width: 5.5rem;
+}
+
+.admin-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.85rem;
+}
+
+.admin-bonus-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.admin-bonus-settle {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.admin-score-input {
+    width: 3.25rem;
+    padding: 0.4rem 0.5rem;
+    text-align: center;
+}
+
+.admin-btn-sm {
+    padding: 0.45rem 0.75rem !important;
+    font-size: 0.8rem !important;
+}
+
+.admin-status-draft { background: rgba(156, 163, 175, 0.25); }
+.admin-status-open { background: rgba(34, 197, 94, 0.25); }
+.admin-status-locked { background: rgba(234, 179, 8, 0.25); }
+.admin-status-settled { background: rgba(59, 130, 246, 0.25); }
+.admin-status-cancelled { background: rgba(239, 68, 68, 0.25); }
+
 .admin-checkbox-group {
     display: flex;
     align-items: center;
@@ -5930,4 +6005,350 @@ body {
     font-weight: 800;
     letter-spacing: 0.06em;
     color: #111827;
+}
+
+/* GoodBingo Bonus — match prediction */
+.bonus-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+    color: #fff;
+    padding-bottom: 2rem;
+}
+
+.bonus-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1rem 0.75rem;
+}
+
+.bonus-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bonus-logo-icon {
+    font-size: 1.75rem;
+}
+
+.bonus-logo-text {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.bonus-logo-good {
+    color: #facc15;
+}
+
+.bonus-back-btn {
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e5e7eb;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+}
+
+.bonus-back-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.bonus-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.bonus-main {
+    max-width: 24rem;
+    margin: 0 auto;
+    padding: 0 0.85rem;
+}
+
+.bonus-loading {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.bonus-active-section {
+    margin-bottom: 1.25rem;
+}
+
+.bonus-empty-card,
+.bonus-active-card {
+    background: #111827;
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    border-top: 4px solid #facc15;
+    border-radius: 16px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+}
+
+.bonus-empty-icon {
+    font-size: 2rem;
+    margin-bottom: 0.35rem;
+}
+
+.bonus-empty-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin: 0 0 0.35rem;
+}
+
+.bonus-empty-text {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.bonus-active-teams {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.bonus-vs {
+    color: #facc15;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.bonus-active-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.65rem;
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin-bottom: 0.85rem;
+}
+
+.bonus-predict-form {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 0.85rem;
+}
+
+.bonus-predict-prompt {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0 0 0.65rem;
+    color: #e5e7eb;
+}
+
+.bonus-score-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+}
+
+.bonus-score-stepper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.bonus-score-label {
+    font-size: 0.65rem;
+    color: #9ca3af;
+    max-width: 5.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bonus-score-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.bonus-score-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.bonus-score-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.bonus-score-value {
+    min-width: 1.5rem;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.bonus-score-dash {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #facc15;
+    padding-top: 1rem;
+}
+
+.bonus-closes-at {
+    font-size: 0.65rem;
+    color: #9ca3af;
+    margin: 0 0 0.65rem;
+}
+
+.bonus-submit-btn {
+    width: 100%;
+    padding: 0.65rem;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #facc15 0%, #eab308 100%);
+    color: #111827;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.bonus-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.bonus-prediction-locked {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 0.85rem;
+}
+
+.bonus-prediction-title {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin: 0 0 0.25rem;
+}
+
+.bonus-prediction-score {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #4ade80;
+    margin: 0;
+}
+
+.bonus-prediction-note {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin: 0.35rem 0 0;
+}
+
+.bonus-locked-msg {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    padding-top: 0.5rem;
+}
+
+.bonus-history-heading {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #facc15;
+    margin: 0 0 0.65rem;
+}
+
+.bonus-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    max-height: 22rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.bonus-history-card {
+    background: rgba(17, 24, 39, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem;
+}
+
+.bonus-history-card-top,
+.bonus-history-card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+}
+
+.bonus-history-status {
+    color: #e5e7eb;
+    font-weight: 600;
+}
+
+.bonus-history-pool {
+    color: #facc15;
+    font-weight: 800;
+}
+
+.bonus-history-matchup {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0.55rem 0;
+}
+
+.bonus-history-team {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+.bonus-history-team-right {
+    text-align: right;
+}
+
+.bonus-history-score {
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 999px;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.bonus-history-payout {
+    color: #4ade80;
+    font-weight: 700;
+}
+
+.bonus-history-no-winners {
+    color: #9ca3af;
+    font-size: 0.65rem;
+}
+
+.bonus-history-empty {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    text-align: center;
+    padding: 1rem;
+}
+
+.stake-bonus {
+    background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
 }

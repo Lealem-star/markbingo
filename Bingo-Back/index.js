@@ -54,6 +54,7 @@ const walletRoutes = require('./routes/wallet');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 const generalRoutes = require('./routes/general');
+const bonusRoutes = require('./routes/bonus');
 const smsForwarderRoutes = require('./routes/smsForwarder');
 const smsWebhookRoutes = require('./routes/smsWebhook');
 console.log('✅ Routes loaded');
@@ -131,6 +132,7 @@ app.use('/user', userRoutes); // Keep for backward compatibility
 app.use('/api/user', userRoutes); // Mount under /api/user to match frontend apiFetch behavior
 app.use('/api/admin', adminRoutes); // Mount under /api/admin to match frontend apiFetch behavior
 app.use('/admin', adminRoutes); // Also mount at /admin for backward compatibility
+app.use('/api/bonus', bonusRoutes);
 app.use('/sms-forwarder', smsForwarderRoutes);
 app.use('/sms-webhook', smsWebhookRoutes);
 
