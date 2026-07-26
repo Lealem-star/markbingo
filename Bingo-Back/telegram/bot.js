@@ -113,16 +113,14 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         (async () => {
             try {
                 await bot.telegram.setMyCommands([
-                    { command: 'start', description: 'Start' },
-                    { command: 'register', description: 'Register' },
                     { command: 'play', description: 'Play' },
+                    { command: 'balance', description: 'Balance' },
                     { command: 'deposit', description: 'Deposit' },
                     { command: 'withdraw', description: 'Withdraw' },
-                    { command: 'balance', description: 'Balance' },
-                    { command: 'support', description: 'Contact Support' },
+                    { command: 'history', description: 'History' },
                     { command: 'instruction', description: 'Instruction' },
-                    { command: 'invite', description: 'Invite' },
-                    { command: 'history', description: 'History' }
+                    { command: 'support', description: 'Contact Support' },
+                    { command: 'register', description: 'Register' }
                 ]);
 
                 if (isHttpsWebApp) {
@@ -284,16 +282,14 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 ];
 
                 const userCommands = [
-                    { command: 'start', description: 'Start' },
-                    { command: 'register', description: 'Register' },
                     { command: 'play', description: 'Play' },
+                    { command: 'balance', description: 'Balance' },
                     { command: 'deposit', description: 'Deposit' },
                     { command: 'withdraw', description: 'Withdraw' },
-                    { command: 'balance', description: 'Balance' },
-                    { command: 'support', description: 'Contact Support' },
+                    { command: 'history', description: 'History' },
                     { command: 'instruction', description: 'Instruction' },
-                    { command: 'invite', description: 'Invite' },
-                    { command: 'history', description: 'History' }
+                    { command: 'support', description: 'Contact Support' },
+                    { command: 'register', description: 'Register' }
                 ];
 
                 // Select commands based on role
