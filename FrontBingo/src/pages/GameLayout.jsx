@@ -4,7 +4,6 @@ import { useWebSocket } from '../contexts/WebSocketContext';
 import { useAuth } from '../lib/auth/AuthProvider';
 import { useToast } from '../contexts/ToastContext';
 import { playNumberSound, preloadNumberSounds } from '../lib/audio/numberSounds';
-import BottomNav from '../components/BottomNav';
 import '../styles/bingo-balls.css';
 import '../styles/action-buttons.css';
 
@@ -650,10 +649,11 @@ export default function GameLayout({
                 </div>
 
                 <div className="game-layout-main">
-                    <div className="bingo-grid-container gl-master-board">
-                        <div className="grid grid-cols-5 gap-1 gl-master-grid">
-                            {/* B Column - Yellow */}
-                            <div className="space-y-1" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <div className="game-layout-left-col">
+                        <div className="bingo-grid-container gl-master-board">
+                        <div className="grid grid-cols-5 gl-master-grid">
+                            {/* B Column */}
+                            <div className="gl-master-col">
                                 <div className="bingo-letter-square bingo-letter-b">
                                     <span>B</span>
                                 </div>
@@ -679,7 +679,7 @@ export default function GameLayout({
                             </div>
 
                             {/* I Column - Green */}
-                            <div className="space-y-1" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="gl-master-col">
                                 <div className="bingo-letter-square bingo-letter-i">
                                     <span>I</span>
                                 </div>
@@ -704,7 +704,7 @@ export default function GameLayout({
                             </div>
 
                             {/* N Column - Purple */}
-                            <div className="space-y-1" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="gl-master-col">
                                 <div className="bingo-letter-square bingo-letter-n">
                                     <span>N</span>
                                 </div>
@@ -729,7 +729,7 @@ export default function GameLayout({
                             </div>
 
                             {/* G Column - Red */}
-                            <div className="space-y-1" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="gl-master-col">
                                 <div className="bingo-letter-square bingo-letter-g">
                                     <span>G</span>
                                 </div>
@@ -754,7 +754,7 @@ export default function GameLayout({
                             </div>
 
                             {/* O Column - Pink/Magenta */}
-                            <div className="space-y-1" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="gl-master-col">
                                 <div className="bingo-letter-square bingo-letter-o">
                                     <span>O</span>
                                 </div>
@@ -779,9 +779,26 @@ export default function GameLayout({
                             </div>
 
                         </div>
+                        </div>
+
+                        <div className="gl-left-footer">
+                            <div className="gl-left-footer-top">
+                                <span className="gl-left-footer-room">ROOM</span>
+                                <button
+                                    type="button"
+                                    className="gl-refresh-btn"
+                                    onClick={handleRefresh}
+                                    disabled={isRefreshing}
+                                >
+                                    <span className="gl-refresh-icon" aria-hidden="true">↻</span>
+                                    {isRefreshing ? '...' : 'REFRESH'}
+                                </button>
+                            </div>
+                            <div className="gl-left-footer-vip">{roomLabel}</div>
+                        </div>
                     </div>
 
-                    {/* Right Side - Joy Bingo Style */}
+                    {/* Right Side */}
                     <div className="right-side-container game-layout-right">
                         {startCountdown > 0 && (
                             <div className="gl-countdown-pill">
@@ -869,21 +886,6 @@ export default function GameLayout({
                         )}
                     </div>
                 </div>
-
-                <footer className="game-layout-footer">
-                    <div className="gl-room-block">
-                        <span className="gl-room-label">ROOM</span>
-                        <span className="gl-room-value">{roomLabel}</span>
-                    </div>
-                    <button
-                        type="button"
-                        className="gl-refresh-btn"
-                        onClick={handleRefresh}
-                        disabled={isRefreshing}
-                    >
-                        {isRefreshing ? '...' : '↻ REFRESH'}
-                    </button>
-                </footer>
 
             </div>
         </div>

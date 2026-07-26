@@ -5551,32 +5551,47 @@ body.game-layout-active .App {
     background: linear-gradient(180deg, #dbe3ef 0%, #eef2f7 55%, #f4f6fa 100%);
 }
 
-.game-layout-page .gl-master-board {
+.game-layout-left-col {
+    display: flex;
+    flex-direction: column;
+    background: #eef1f5;
+    min-height: 0;
+    min-width: 0;
+}
+
+.game-layout-page .bingo-grid-container.gl-master-board {
     background: #eef1f5;
     border: none;
     border-radius: 0;
-    padding: 0.35rem 0.2rem 0.35rem 0.35rem;
-    overflow: hidden;
+    padding: 0.35rem 0.25rem 0.25rem 0.35rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
 }
 
 .game-layout-page .gl-master-grid {
-    height: 100%;
+    gap: 5px;
+    align-items: start;
 }
 
-.game-layout-page .gl-master-grid > div {
+.game-layout-page .gl-master-col {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 5px;
+    min-width: 0;
 }
 
 .game-layout-page .bingo-letter-square {
     width: 100%;
-    height: 1.15rem;
-    min-height: 1.15rem;
-    border-radius: 4px;
-    font-size: 0.65rem;
+    aspect-ratio: 1;
+    height: auto;
+    min-height: 0;
+    border-radius: 5px;
+    font-size: 0.62rem;
     font-weight: 800;
-    margin: 0 0 2px;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .game-layout-page .bingo-letter-b { background: #2563eb; }
@@ -5586,13 +5601,17 @@ body.game-layout-active .App {
 .game-layout-page .bingo-letter-o { background: #8b5cf6; }
 
 .game-layout-page .bingo-number-btn {
-    border: none;
-    border-radius: 3px;
-    font-size: 0.58rem;
+    border: 1px solid #dde1e8;
+    border-radius: 5px;
+    font-size: 0.62rem;
     font-weight: 700;
-    min-height: 1.05rem;
-    flex: 1;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    aspect-ratio: 1;
+    width: 100%;
+    min-height: 0;
+    flex: none;
+    padding: 0;
+    cursor: default;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .game-layout-page .bingo-number-default {
@@ -5608,15 +5627,70 @@ body.game-layout-active .App {
 .game-layout-page .bingo-number-btn.current-number {
     background: #22c55e;
     color: #fff;
+    border-color: #16a34a;
     animation: none;
     transform: none;
 }
 
-.game-layout-page .gl-master-grid > div {
+.gl-left-footer {
+    flex-shrink: 0;
+    background: #1a202c;
+    border-radius: 10px 10px 0 0;
+    margin: 0 0.2rem 0 0.3rem;
+    padding: 0.45rem 0.5rem 0.55rem;
+}
+
+.gl-left-footer-top {
     display: flex;
-    flex-direction: column;
-    height: 100%;
-    gap: 2px;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.gl-left-footer-room {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.gl-left-footer-vip {
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.02em;
+}
+
+.gl-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.28rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid #4b5563;
+    background: rgba(255, 255, 255, 0.1);
+    color: #e5e7eb;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.gl-refresh-icon {
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+.gl-refresh-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.gl-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .game-layout-right {
@@ -5689,7 +5763,7 @@ body.game-layout-active .App {
 }
 
 .user-cartelas-stack {
-    gap: 0.45rem;
+    gap: 1rem;
 }
 
 .gl-cartela-card-wrap {
@@ -5728,13 +5802,13 @@ body.game-layout-active .App {
 .game-layout-page .gl-cartela-card-wrap .cartela-letter-g { background: #22c55e; }
 .game-layout-page .gl-cartela-card-wrap .cartela-letter-o { background: #8b5cf6; }
 
-.game-layout-page .gl-cartela-card-wrap .cartela-numbers {
-    gap: 4px;
+.game-layout-page .gl-cartela-card-wrap .cartela-row {
+    column-gap: 5px;
+    row-gap: 5px;
 }
 
-.game-layout-page .gl-cartela-card-wrap .cartela-row {
-    column-gap: 4px;
-    row-gap: 4px;
+.game-layout-page .gl-cartela-card-wrap .cartela-numbers {
+    gap: 5px;
 }
 
 .game-layout-page .gl-cartela-card-wrap .cartela-cell {
@@ -5863,63 +5937,14 @@ body.game-layout-active .App {
     line-height: 1.35;
 }
 
-.game-layout-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    background: #1a202c;
-    padding: 0.55rem 0.75rem;
-    margin-top: 0;
-}
-
-.gl-room-block {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-}
-
-.gl-room-label {
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: #9ca3af;
-    text-transform: uppercase;
-}
-
-.gl-room-value {
-    font-size: 0.78rem;
-    font-weight: 800;
-    color: #fff;
-    letter-spacing: 0.03em;
-}
-
-.gl-refresh-btn {
-    padding: 0.35rem 0.65rem;
-    border-radius: 6px;
-    border: 1px solid #4b5563;
-    background: transparent;
-    color: #d1d5db;
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    transition: background 0.15s ease;
-}
-
-.gl-refresh-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.gl-refresh-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
 @media (max-width: 360px) {
     .game-layout-page .bingo-number-btn {
-        font-size: 0.52rem;
-        min-height: 0.95rem;
+        font-size: 0.5rem;
+    }
+
+    .game-layout-page .gl-master-grid,
+    .game-layout-page .gl-master-col {
+        gap: 3px;
     }
 
     .gl-current-ball {
