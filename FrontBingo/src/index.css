@@ -2569,15 +2569,15 @@ body {
     margin-top: 16px;
 }
 
-/* Mobile-first Cartela Selection Layout - Joy Bingo style: 9 per row, reduced gap to avoid overflow */
+/* Mobile-first Cartela Selection Layout - 8 numbers per row */
 .cartela-numbers-grid {
     display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    gap: 6px;
-    padding: 10px 12px;
-    margin: 0 12px 20px;
-    background: #f3f4f6;
-    border-radius: 16px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    padding: 4px;
+    margin: 0;
+    background: #f9fafb;
+    border-radius: 10px;
 }
 
 .cartela-grid-scrollable {
@@ -2592,10 +2592,15 @@ body {
     max-width: 480px;
     margin: 0 auto;
     background: #ffffff;
+    padding-bottom: 8px;
+}
+
+.app-container.cartela-selection-page {
+    padding-bottom: 8px;
 }
 
 .cartela-selection-header {
-    padding: 12px 14px 0;
+    padding: 6px 8px 0;
 }
 
 .cartela-status-badges {
@@ -2605,8 +2610,8 @@ body {
 }
 
 .cs-badge {
-    border-radius: 14px;
-    padding: 8px 6px;
+    border-radius: 10px;
+    padding: 6px 4px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -2652,8 +2657,8 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 12px 14px 16px;
-    gap: 12px;
+    padding: 6px 8px 10px;
+    gap: 8px;
     min-height: 0;
 }
 
@@ -2663,22 +2668,29 @@ body {
 }
 
 .cartela-grid-scrollable-v2 {
-    background: #d1d5db;
-    border-radius: 18px;
+    background: #e5e7eb;
+    border-radius: 10px;
     border: none;
     max-height: min(52vh, 420px);
-    min-height: 260px;
+    min-height: 240px;
     overflow-y: auto;
-    padding: 10px;
+    padding: 4px;
 }
 
 .cartela-numbers-grid-8 {
+    display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
-    gap: 8px;
+    gap: 4px;
     padding: 0;
     margin: 0;
     background: transparent;
     border-radius: 0;
+}
+
+.cartela-numbers-grid-8 .cartela-number-btn-light {
+    height: 28px;
+    font-size: 12px;
+    border-radius: 8px;
 }
 
 .cartela-number-btn-light.cartela-sold-light {
@@ -2697,7 +2709,7 @@ body {
 .cartela-slots-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
@@ -2802,15 +2814,21 @@ body {
 
 @media (max-width: 380px) {
     .cartela-status-badges {
-        gap: 6px;
+        gap: 4px;
     }
 
     .cs-badge-value {
-        font-size: 11px;
+        font-size: 10px;
     }
 
     .cartela-numbers-grid-8 {
-        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 3px;
+    }
+
+    .cartela-numbers-grid-8 .cartela-number-btn-light {
+        height: 26px;
+        font-size: 11px;
+        border-radius: 6px;
     }
 }
 
@@ -2904,10 +2922,10 @@ body {
 /* Mobile responsive adjustments */
 @media (max-width: 480px) {
     .cartela-numbers-grid {
-        grid-template-columns: repeat(9, 1fr);
-        gap: 5px;
-        padding: 8px 10px;
-        margin: 0 10px 20px;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 3px;
+        padding: 4px;
+        margin: 0;
     }
 
     .cartela-number-btn {

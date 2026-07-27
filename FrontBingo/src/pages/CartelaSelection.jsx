@@ -690,7 +690,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         <div className="app-container relative joy-bingo-bg cartela-selection-page">
             {/* Alert Banners - Fixed at top, stacked vertically with animations */}
             {Array.isArray(alertBanners) && alertBanners.length > 0 && (
-                <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-2 space-y-2">
+                <div className="fixed top-0 left-0 right-0 z-50 px-2 pt-1 space-y-1">
                     {alertBanners.map((alertMsg, index) => (
                         <div 
                             key={index} 
@@ -750,7 +750,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             <main className="cartela-selection-main">
                 <div className="cartela-grid-panel">
                     <div className="cartela-grid-scrollable cartela-grid-scrollable-v2">
-                        <div className="cartela-numbers-grid cartela-numbers-grid-8">
+                        <div className="cartela-numbers-grid-8">
                             {Array.from({ length: cards.length }, (_, i) => i + 1).map((cartelaNumber) => {
                                 // Ensure type consistency for comparison (convert to number)
                                 const cartelaNum = Number(cartelaNumber);
