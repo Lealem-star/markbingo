@@ -1973,7 +1973,7 @@ Thank you for your dedication! 🙏`;
             const userId = String(ctx.from.id);
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using inline code for the Telebirr account so it is tap‑to‑copy, and a code block for the instructions
-            const telebirrMessage = `የ Telebirr አካውንት (Eyob Mengist): \`0965139561\`
+            const telebirrMessage = `የ Telebirr አካውንት (Adisse Fentaw): \`0965139561\`
 
 መመሪያ
 
@@ -2013,7 +2013,7 @@ Thank you for your dedication! 🙏`;
             depositStates.set(userId, 'awaiting_receipt');
             ctx.answerCbQuery('📱 Telebirr deposit...');
             // Using code block formatting to create a styled box effect
-            const telebirrMessage = `የ Telebirr አካውንት (Eyob Mengist)
+            const telebirrMessage = `የ Telebirr አካውንት (Adisse Fentaw)
 
 \`\`\`
 0965139561
@@ -2068,7 +2068,7 @@ Thank you for your dedication! 🙏`;
         // Copy button handlers
         bot.action('copy_telebirr', (ctx) => {
             ctx.answerCbQuery('📋 Telebirr number copied!');
-            ctx.reply('📱 Telebirr Number (Eyob Mengist):\n\n```\n0965139561\n```\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
+            ctx.reply('📱 Telebirr Number (Adisse Fentaw):\n\n```\n0965139561\n```\n\n💡 Tap and hold to select, then copy!', { parse_mode: 'Markdown' });
         });
         // Temporarily disabled - Commercial Bank copy handler
         // bot.action('copy_commercial', (ctx) => {
@@ -2085,7 +2085,7 @@ Thank you for your dedication! 🙏`;
         bot.action('deposit_cbe', (ctx) => {
             const userId = String(ctx.from.id);
             ctx.answerCbQuery('💳 CBE Birr deposit...');
-            const cbeMessage = `💳 CBE Birr Deposit\n\n📋 Agent Details:\n👤 Account Holder: Eyob Mengist\n💳 CBE Birr: \`091 951 5953\`\n🏦 Bank: Commercial Bank of Ethiopia\n\nመመሪያ\n\n\`\`\`\n1. Open CBE Birr app ወይም አጭር ቁጥር 847 ይጠቀሙ\n2. Select "Send Money"\n3. Enter agent number: 091 951 5953\n4. Enter the amount you want to deposit\n5. Complete the transaction\n6. ከCBEBirr የሚደርስዎትን የአጭር መልዕክት (SMS) ሙሉ በሙሉ ኮፒ አድርጉ ወይም ስክሪንሻት ይውሰዱ እና በቦቱ ላይ ያስገቡ\n\`\`\`\n\nየሚያጋጥማቹ የክፍያ ችግር ካለ @Teddyarse  በዚ ሳፖርት ማዉራት ይችላሉ`;
+            const cbeMessage = `💳 CBE Birr Deposit\n\n📋 Agent Details:\n👤 Account Holder: Melat Denberu\n💳 CBE Birr: \`091 951 5953\`\n🏦 Bank: Commercial Bank of Ethiopia\n\nመመሪያ\n\n\`\`\`\n1. Open CBE Birr app ወይም አጭር ቁጥር 847 ይጠቀሙ\n2. Select "Send Money"\n3. Enter agent number: 091 951 5953\n4. Enter the amount you want to deposit\n5. Complete the transaction\n6. ከCBEBirr የሚደርስዎትን የአጭር መልዕክት (SMS) ሙሉ በሙሉ ኮፒ አድርጉ ወይም ስክሪንሻት ይውሰዱ እና በቦቱ ላይ ያስገቡ\n\`\`\`\n\nየሚያጋጥማቹ የክፍያ ችግር ካለ @Teddyarse  በዚ ሳፖርት ማዉራት ይችላሉ`;
             if (typeof depositStates !== 'undefined' && depositStates instanceof Map) {
                 depositStates.set(userId, 'awaiting_receipt');
             }
