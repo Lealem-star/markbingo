@@ -5727,7 +5727,7 @@ body.game-layout-active .App {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-top: -8px;
+    margin-top: -16px;
     width: 100%;
     align-self: stretch;
     padding: 0;
