@@ -6898,3 +6898,328 @@ body.game-layout-active .App {
 .cartela-selection-page {
     background: #ffffff !important;
 }
+
+/* Admin panel — light theme (readable on #E1E8F0 / white cards) */
+.admin-layout-page {
+    background: #E1E8F0;
+    color: #111827;
+}
+
+.admin-layout-page .admin-container,
+.admin-layout-page .admin-stats-container,
+.admin-layout-page .admin-balance-container {
+    color: #111827;
+}
+
+.admin-layout-page .admin-card,
+.admin-layout-page .admin-post-card,
+.admin-layout-page .admin-stats-card,
+.admin-layout-page .admin-stats-table-container,
+.admin-layout-page .admin-user-editor,
+.admin-layout-page .admin-user-results-table {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    color: #111827;
+}
+
+.admin-layout-page .admin-post-card:hover,
+.admin-layout-page .admin-table-row:hover {
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+}
+
+.admin-layout-page .admin-title {
+    background: linear-gradient(to right, #d97706, #ea580c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.admin-layout-page .admin-section-title,
+.admin-layout-page .admin-stats-table-title {
+    color: #111827;
+}
+
+.admin-layout-page .admin-label,
+.admin-layout-page .admin-checkbox-label,
+.admin-layout-page .admin-checkbox-row,
+.admin-layout-page .admin-post-type,
+.admin-layout-page .admin-user-editor-name,
+.admin-layout-page .admin-user-result-name {
+    color: #111827;
+}
+
+.admin-layout-page .admin-subtitle,
+.admin-layout-page .admin-post-date,
+.admin-layout-page .admin-post-file,
+.admin-layout-page .admin-post-caption,
+.admin-layout-page .admin-file-selected,
+.admin-layout-page .admin-user-editor-tags,
+.admin-layout-page .admin-user-editor-wallet,
+.admin-layout-page .admin-user-result-username,
+.admin-layout-page .admin-adjustment-slot label {
+    color: #4b5563;
+}
+
+.admin-layout-page .admin-input,
+.admin-layout-page .admin-select,
+.admin-layout-page .admin-textarea,
+.admin-layout-page .admin-user-search-input,
+.admin-layout-page .admin-user-editor-reason,
+.admin-layout-page .admin-adjustment-controls input,
+.admin-layout-page .admin-score-input {
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid #cbd5e1;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.admin-layout-page .admin-textarea::placeholder,
+.admin-layout-page .admin-user-search-input::placeholder,
+.admin-layout-page .admin-user-editor-reason::placeholder {
+    color: #9ca3af;
+}
+
+.admin-layout-page .admin-file-input {
+    background: #ffffff;
+    color: transparent !important;
+    border: 1px solid #cbd5e1;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.admin-layout-page .admin-checkbox-group {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+.admin-layout-page .admin-checkbox {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+}
+
+.admin-layout-page .admin-empty-state,
+.admin-layout-page .admin-user-empty-state {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+}
+
+.admin-layout-page .admin-empty-title {
+    color: #111827;
+}
+
+.admin-layout-page .admin-empty-subtitle {
+    color: #6b7280;
+}
+
+.admin-layout-page .admin-stats-label {
+    color: #374151;
+    opacity: 1;
+}
+
+.admin-layout-page .admin-stats-value-amber,
+.admin-layout-page .admin-table-cell-amber,
+.admin-layout-page .admin-stats-table-cell-right,
+.admin-layout-page .admin-table-header-item,
+.admin-layout-page .admin-stats-table-header-item {
+    color: #b45309;
+}
+
+.admin-layout-page .admin-stats-value-green,
+.admin-layout-page .admin-table-cell-green {
+    color: #15803d;
+}
+
+.admin-layout-page .admin-stats-value-blue,
+.admin-layout-page .admin-table-cell-blue {
+    color: #1d4ed8;
+}
+
+.admin-layout-page .admin-stats-value-purple {
+    color: #6d28d9;
+}
+
+.admin-layout-page .admin-stats-value-yellow {
+    color: #a16207;
+}
+
+.admin-layout-page .admin-stats-subtitle {
+    color: #6b7280;
+}
+
+.admin-layout-page .admin-table-header {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+}
+
+.admin-layout-page .admin-table-row,
+.admin-layout-page .admin-stats-table-row {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #111827;
+}
+
+.admin-layout-page .admin-table-cell,
+.admin-layout-page .admin-stats-table-cell,
+.admin-layout-page .admin-user-result-row {
+    color: #111827;
+}
+
+.admin-layout-page .admin-user-results-header {
+    background: #f3f4f6;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-layout-page .admin-user-result-row:nth-child(even) {
+    background: #f9fafb;
+}
+
+.admin-layout-page .admin-user-result-row:hover,
+.admin-layout-page .admin-user-result-row-active {
+    background: #fef3c7;
+}
+
+.admin-layout-page .admin-user-search-indicator {
+    background: #fce7f3;
+    border: 1px solid #f9a8d4;
+    color: #9d174d;
+}
+
+.admin-layout-page .admin-adjustment-controls button,
+.admin-layout-page .admin-adjust-reset {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #111827;
+}
+
+.admin-layout-page .admin-adjustment-controls button:hover,
+.admin-layout-page .admin-adjust-reset:hover {
+    background: #e5e7eb;
+}
+
+.admin-layout-page .admin-feedback-success {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.admin-layout-page .admin-feedback-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+.admin-layout-page .admin-status-draft { background: #f3f4f6; color: #374151; }
+.admin-layout-page .admin-status-open { background: #dcfce7; color: #166534; }
+.admin-layout-page .admin-status-locked { background: #fef3c7; color: #92400e; }
+.admin-layout-page .admin-status-settled { background: #dbeafe; color: #1e40af; }
+.admin-layout-page .admin-status-cancelled { background: #fee2e2; color: #991b1b; }
+
+.admin-layout-page .admin-status-badge {
+    color: inherit;
+}
+
+.admin-layout-page .admin-status-active {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.admin-layout-page .admin-status-inactive {
+    background: #f3f4f6;
+    color: #4b5563;
+    border-color: #d1d5db;
+}
+
+.admin-layout-page .admin-status-pending {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
+.admin-layout-page .admin-status-completed {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.admin-layout-page .admin-status-cancelled,
+.admin-layout-page .admin-status-failed {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+.admin-layout-page .admin-stats-empty {
+    color: #6b7280;
+}
+
+.admin-layout-page .admin-submit-button,
+.admin-layout-page .admin-button {
+    background: linear-gradient(to right, #f59e0b, #f97316);
+    color: #ffffff;
+}
+
+.admin-layout-page .admin-submit-button:disabled,
+.admin-layout-page .admin-button:disabled {
+    opacity: 0.55;
+}
+
+.admin-layout-page .admin-user-edit-button {
+    background: #fce7f3;
+    border: 1px solid #f9a8d4;
+    color: #9d174d;
+}
+
+.admin-layout-page .admin-user-edit-button:hover {
+    background: #fbcfe8;
+}
+
+.admin-layout-page .admin-user-avatar {
+    background: #fce7f3;
+    color: #9d174d;
+}
+
+.admin-layout-page .admin-table-scroll::-webkit-scrollbar-track {
+    background: #e5e7eb;
+}
+
+.admin-layout-page .admin-table-scroll::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+}
+
+.admin-layout-page .admin-balance-button-inactive {
+    background: #ffffff;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.admin-layout-page .admin-balance-button-inactive:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.admin-layout-page .admin-balance-subtitle {
+    color: #6b7280;
+}
+
+.admin-layout-page .admin-balance-title {
+    color: #b45309;
+}
+
+.admin-layout-page .admin-stats-table-header {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+}
+
+.admin-layout-page .admin-post-date,
+.admin-layout-page .admin-post-file,
+.admin-layout-page .admin-post-caption {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}

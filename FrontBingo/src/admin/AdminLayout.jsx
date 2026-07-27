@@ -22,7 +22,7 @@ function AdminNav({ current, onNavigate }) {
                                 type="button"
                                 aria-current={current === t.key ? 'page' : undefined}
                                 onClick={() => onNavigate?.(t.key)}
-                                className={`appearance-none border-0 outline-none px-4 py-2 flex flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200 ${current === t.key ? 'bg-pink-400/20 text-white shadow-inner ring-1 ring-pink-300/30' : 'text-pink-300 hover:text-white/90 hover:bg-pink-400/10'}`}
+                                className={`appearance-none border-0 outline-none px-4 py-2 flex flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200 ${current === t.key ? 'bg-gray-900 text-white shadow-sm ring-1 ring-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}
                             >
                                 <span aria-hidden className="text-[18px] leading-none">{t.icon}</span>
                                 <span className="leading-none">{t.label}</span>
@@ -181,7 +181,7 @@ export default function AdminLayout({ onNavigate }) {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900">
+        <div className="admin-layout-page min-h-screen">
             <header className="p-4">
                 <div className="app-header">
                     <div className="app-logo">
