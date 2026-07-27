@@ -829,7 +829,7 @@ export default function GameLayout({
                         </div>
 
                         <div className="gl-left-footer">
-                            <div className="gl-left-footer-top">
+                            <div className="gl-left-footer-row">
                                 <span className="gl-left-footer-room">ROOM</span>
                                 <button
                                     type="button"
@@ -847,32 +847,34 @@ export default function GameLayout({
 
                     {/* Right Side */}
                     <div className="right-side-container game-layout-right">
-                        {startCountdown > 0 && (
-                            <div className="gl-countdown-pill">
-                                <span className="gl-countdown-num">{startCountdown}</span>
-                                <span className="gl-countdown-label">{gamePhaseDisplay}</span>
-                            </div>
-                        )}
-
-                        <div className={`recent-numbers-joy ${calledNumbers.length === 0 ? 'recent-numbers-empty' : ''}`}>
-                            {calledNumbers.length === 0 ? (
-                                <span className="recent-numbers-placeholder">—</span>
-                            ) : (
-                                (() => {
-                                    let recent = currentNumber
-                                        ? calledNumbers.filter((n) => n !== currentNumber).slice(-3)
-                                        : calledNumbers.slice(-3);
-                                    if (recent.length === 0) recent = calledNumbers.slice(-3);
-                                    return recent.map((n, index) => {
-                                        const letter = getBallLetter(n);
-                                        return (
-                                            <div key={`recent-${n}-${index}`} className={`recent-number-circle recent-number-${letter.toLowerCase()}`}>
-                                                {`${letter}${n}`}
-                                            </div>
-                                        );
-                                    });
-                                })()
+                        <div className="gl-right-top">
+                            {startCountdown > 0 && (
+                                <div className="gl-countdown-pill">
+                                    <span className="gl-countdown-num">{startCountdown}</span>
+                                    <span className="gl-countdown-label">{gamePhaseDisplay}</span>
+                                </div>
                             )}
+
+                            <div className={`recent-numbers-joy ${calledNumbers.length === 0 ? 'recent-numbers-empty' : ''}`}>
+                                {calledNumbers.length === 0 ? (
+                                    <span className="recent-numbers-placeholder">—</span>
+                                ) : (
+                                    (() => {
+                                        let recent = currentNumber
+                                            ? calledNumbers.filter((n) => n !== currentNumber).slice(-3)
+                                            : calledNumbers.slice(-3);
+                                        if (recent.length === 0) recent = calledNumbers.slice(-3);
+                                        return recent.map((n, index) => {
+                                            const letter = getBallLetter(n);
+                                            return (
+                                                <div key={`recent-${n}-${index}`} className={`recent-number-circle recent-number-${letter.toLowerCase()}`}>
+                                                    {`${letter}${n}`}
+                                                </div>
+                                            );
+                                        });
+                                    })()
+                                )}
+                            </div>
                         </div>
 
                         {hasPlayableCartelas ? (
