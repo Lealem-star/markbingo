@@ -492,7 +492,7 @@ export default function GameLayout({
     if (isRefreshing) {
         return (
             <div className="app-container game-layout-page flex items-center justify-center">
-                <div className="text-center text-white">
+                <div className="text-center text-gray-900">
                     <div className="relative">
                         <div className="animate-spin rounded-full h-16 w-16 border-4 border-white/20 border-t-white mx-auto mb-4"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -513,7 +513,7 @@ export default function GameLayout({
     if (!currentGameId && !connected && !isRefreshing) {
         return (
             <div className="app-container game-layout-page flex items-center justify-center">
-                <div className="text-center text-white">
+                <div className="text-center text-gray-900">
                     <div className="text-2xl mb-4">🎮</div>
                     <div className="text-lg mb-2">Connecting to game...</div>
                     <div className="text-sm text-gray-300 mb-4">Please wait while we connect to the game</div>
@@ -541,7 +541,7 @@ export default function GameLayout({
     if (!currentGameId && connected && (gameState.phase === 'waiting' || gameState.phase === 'running')) {
         return (
             <div className="app-container game-layout-page flex items-center justify-center">
-                <div className="text-center text-white">
+                <div className="text-center text-gray-900">
                     <div className="relative">
                         <div className="animate-spin rounded-full h-16 w-16 border-4 border-white/20 border-t-white mx-auto mb-4"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -565,7 +565,7 @@ export default function GameLayout({
     if (!currentGameId && connected) {
         return (
             <div className="app-container game-layout-page flex items-center justify-center">
-                <div className="text-center text-white">
+                <div className="text-center text-gray-900">
                     <div className="relative">
                         <div className="animate-spin rounded-full h-16 w-16 border-4 border-white/20 border-t-white mx-auto mb-4"></div>
                         <div className="absolute inset-0 flex items-center justify-center">

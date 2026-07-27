@@ -429,7 +429,7 @@ export function AuthProvider({ children }) {
     if (isLoading) {
         console.log('AuthProvider: Showing loading screen');
         return (
-            <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#e6e6fa' }}>
+            <div className="min-h-screen flex items-center justify-center p-4 bg-white text-gray-900">
                 <div className="text-center w-full max-w-sm">
                     {/* Animated BestBingo Logo - Mobile First */}
                     <div className="relative mb-6 mx-auto w-fit">
@@ -446,7 +446,7 @@ export function AuthProvider({ children }) {
                         </div>
                     </div>
 
-                    <div className="text-base sm:text-lg font-semibold mb-3 text-white px-4">Authenticating user...</div>
+                    <div className="text-base sm:text-lg font-semibold mb-3 text-gray-900 px-4">Authenticating user...</div>
 
                     {/* Animated dots */}
                     <div className="flex justify-center space-x-2">

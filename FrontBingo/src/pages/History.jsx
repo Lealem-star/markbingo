@@ -88,7 +88,7 @@ export default function History({ onNavigate }) {
     };
 
     return (
-        <div className="min-h-screen overflow-y-auto pb-28" style={{ backgroundColor: '#e6e6fa' }}>
+        <div className="min-h-screen overflow-y-auto pb-28 bg-white text-gray-900">
             <header className="p-6 pt-16">
                 <h1 className="text-2xl font-extrabold text-gray-800">Game History</h1>
             </header>
@@ -128,7 +128,7 @@ export default function History({ onNavigate }) {
                         <div className="text-gray-700 text-sm">Loading game history...</div>
                     </div>
                 ) : games.length === 0 ? (
-                    <div className="rounded-2xl p-8 border-2 border-purple-200/50 bg-white/60 backdrop-blur-sm text-center shadow-md">
+                    <div className="rounded-2xl p-8 border-2 border-gray-200 bg-white text-center shadow-md">
                         <div className="text-gray-600">No games yet</div>
                     </div>
                 ) : (

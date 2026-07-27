@@ -42,24 +42,24 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
     if (!selectedStake) {
         console.log('Rendering initial screen - no stake selected');
         return (
-            <div className="min-h-screen" style={{ position: 'relative', backgroundColor: '#e6e6fa' }}>
+            <div className="min-h-screen bg-white text-gray-900" style={{ position: 'relative' }}>
                 <header className="p-4">
                     <div className="app-header">
                         <div className="app-logo">
                             <div className="logo-circle">
                                 <img src={lbLogo} alt="BestBingo Logo" className="logo-image" />
                             </div>
-                            <span className="app-title" style={{ color: '#facc15' }}>BestBingo</span>
+                            <span className="app-title">BestBingo</span>
                         </div>
                         <button className="rules-button" onClick={() => onNavigate?.('rules')}>
                             <span className="rules-icon">❓</span>
                             <span>Rules</span>
                         </button>
                     </div>
-                    <h1 className="text-center text-3xl md:text-4xl font-extrabold leading-tight mt-6 text-white">
+                    <h1 className="text-center text-3xl md:text-4xl font-extrabold leading-tight mt-6 text-gray-900">
                         Welcome to BestBingo
                     </h1>
-                    <div className="text-center text-white mt-4">
+                    <div className="text-center text-gray-700 mt-4">
                         <p>Choose your stake amount to start playing</p>
                     </div>
                 </header>
@@ -180,11 +180,11 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
     // The parent should route to cartela-selection instead
     console.log('Game component rendered with selectedStake:', selectedStake, '- this should not happen');
     return (
-        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#e6e6fa' }}>
-            <div className="text-center text-white">
+        <div className="min-h-screen flex items-center justify-center bg-white text-gray-900">
+            <div className="text-center">
                 <div className="text-6xl mb-4">⚠️</div>
                 <h1 className="text-2xl font-bold mb-4">Navigation Error</h1>
-                <p className="text-white/80 mb-6">You have a stake selected but are on the wrong page.</p>
+                <p className="text-gray-700 mb-6">You have a stake selected but are on the wrong page.</p>
                 <button 
                     onClick={() => onNavigate?.('cartela-selection')} 
                     className="px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-700 transition-colors"

@@ -454,12 +454,12 @@ function AppContent() {
   return (
     <div className="App">
       {pageContent || (
-        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#e6e6fa' }}>
-          <div className="text-center text-white">
+        <div className="min-h-screen flex items-center justify-center bg-white text-gray-900">
+          <div className="text-center">
             <div className="text-6xl mb-4">⚠️</div>
             <h1 className="text-2xl font-bold mb-4">Loading Error</h1>
-            <p className="text-white/80 mb-6">Something went wrong. Please refresh the page.</p>
-            <div className="bg-red-900/30 rounded-lg p-4 mb-4 text-left text-sm">
+            <p className="text-gray-700 mb-6">Something went wrong. Please refresh the page.</p>
+            <div className="bg-gray-100 rounded-lg p-4 mb-4 text-left text-sm text-gray-900">
               <p><strong>Current Page:</strong> {currentPage}</p>
               <p><strong>Selected Stake:</strong> {selectedStake || 'none'}</p>
               <p><strong>Connected:</strong> {connected ? 'yes' : 'no'}</p>

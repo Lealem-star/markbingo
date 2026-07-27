@@ -122,8 +122,8 @@ export default function AdminLayout({ onNavigate }) {
 
     if (isAdmin === null) {
         return (
-            <div className="min-h-screen" style={{ backgroundColor: '#e6e6fa' }}>
-                <div className="max-w-md mx-auto p-4 text-white text-center">
+            <div className="min-h-screen bg-white text-gray-900">
+                <div className="max-w-md mx-auto p-4 text-center">
                     <div className="mt-20">
                         {/* Animated BestBingo Logo */}
                         <div className="relative mb-6">
@@ -134,20 +134,20 @@ export default function AdminLayout({ onNavigate }) {
                             />
                             {/* Search animation overlay */}
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin"></div>
                             </div>
                         </div>
 
                         <div className="text-lg font-semibold mb-2">Searching for admin access...</div>
-                        <div className="text-sm text-white/60 mb-4">
+                        <div className="text-sm text-gray-500 mb-4">
                             {window.Telegram?.WebApp?.initData ? 'Telegram WebApp detected' : 'Direct browser access'}
                         </div>
 
                         {/* Animated dots */}
                         <div className="flex justify-center space-x-1">
-                            <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         </div>
 
                         {/* Removed debug hint */}
@@ -159,12 +159,12 @@ export default function AdminLayout({ onNavigate }) {
 
     if (!isAdmin) {
         return (
-            <div className="min-h-screen" style={{ backgroundColor: '#e6e6fa' }}>
-                <div className="max-w-md mx-auto p-4 text-white text-center">
+            <div className="min-h-screen bg-white text-gray-900">
+                <div className="max-w-md mx-auto p-4 text-center">
                     <div className="mt-20">
                         <div className="text-6xl mb-4">🚫</div>
                         <h2 className="text-xl font-bold mb-2">Access Denied</h2>
-                        <p className="text-white/80 mb-6">You don't have admin privileges to access this panel.</p>
+                        <p className="text-gray-600 mb-6">You don't have admin privileges to access this panel.</p>
 
                         {/* Removed debug information block */}
 
