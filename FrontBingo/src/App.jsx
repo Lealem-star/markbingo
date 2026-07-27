@@ -7,7 +7,6 @@ import Wallet from './pages/Wallet';
 import Profile from './pages/Profile';
 import CartelaSelection from './pages/CartelaSelection.jsx';
 import GameLayout from './pages/GameLayout.jsx';
-import Winner from './pages/Winner.jsx';
 import Bonus from './pages/Bonus.jsx';
 import { AuthProvider } from './lib/auth/AuthProvider.jsx';
 import { ToastProvider, useToast } from './contexts/ToastContext.jsx';
@@ -122,10 +121,10 @@ function AppContent() {
       return 'game-layout';
     }
 
-    // If we have a game in announce phase (finished), go to winner page
+    // If we have a game in announce phase (finished), stay on game layout — Winner shows as overlay
     if (gameState.phase === 'announce' && gameState.gameId) {
-      console.log('→ Routing to winner (game finished)');
-      return 'winner';
+      console.log('→ Routing to game-layout (game finished, winner overlay)');
+      return 'game-layout';
     }
 
     // If we have a stake and game is in registration, go to cartela selection
@@ -222,7 +221,7 @@ function AppContent() {
     
     const shouldNavigate = 
       (isGameStartingOrRunning && currentPage !== 'game-layout') ||
-      (isGameFinished && currentPage !== 'winner');
+      (isGameFinished && currentPage !== 'game-layout');
     
     console.log('🤔 Should navigate?', shouldNavigate, {
       phase: gameState.phase,
@@ -239,7 +238,7 @@ function AppContent() {
     if (shouldNavigate) {
       console.log('✅ NAVIGATING! Auto-navigating based on game state:', {
         from: currentPage,
-        to: isGameStartingOrRunning ? 'game-layout' : 'winner',
+        to: 'game-layout',
         phase: gameState.phase,
         gameId: gameState.gameId,
         hasCards: Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0,
@@ -264,7 +263,7 @@ function AppContent() {
         // If no cards/selections, that's fine - GameLayout will show watch mode
       }
       
-      setCurrentPage(isGameStartingOrRunning ? 'game-layout' : 'winner');
+      setCurrentPage('game-layout');
     } else {
       console.log('⏸️ Not navigating - conditions not met');
     }
@@ -363,7 +362,6 @@ function AppContent() {
           const messages = {
             'game-layout': '🎮 Returning to your active game!',
             'cartela-selection': '🎫 Taking you to cartella selection',
-            'winner': '🏆 Showing game results'
           };
           showSuccess(messages[targetPage] || 'Taking you to your game');
         }
@@ -419,7 +417,14 @@ function AppContent() {
       case 'profile':
         return <Profile onNavigate={handleNavigate} />;
       case 'winner':
-        return <Winner onNavigate={handleNavigate} onResetToGame={handleResetToGame} />;
+        return (
+          <GameLayout
+            onNavigate={handleNavigate}
+            onResetToGame={handleResetToGame}
+            stake={selectedStake}
+            selectedCartelas={selectedCartelas}
+          />
+        );
       case 'bonus':
         return <Bonus onNavigate={handleNavigate} />;
       default:

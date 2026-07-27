@@ -98,14 +98,14 @@ function WinnerAnnouncement({ names }) {
     );
 }
 
-function WinnerModalShell({ children, countdown, initialCountdown }) {
+function WinnerModalShell({ children, countdown, initialCountdown, overlay = false }) {
     const progress =
         initialCountdown > 0
             ? Math.min(100, Math.max(0, ((initialCountdown - countdown) / initialCountdown) * 100))
             : 100;
 
     return (
-        <div className="winner-page">
+        <div className={`winner-page${overlay ? ' winner-page--overlay' : ''}`} role="dialog" aria-modal="true">
             <div className="winner-backdrop" aria-hidden="true" />
             <div className="winner-modal">
                 {children}
@@ -123,7 +123,7 @@ function WinnerModalShell({ children, countdown, initialCountdown }) {
     );
 }
 
-export default function Winner({ onNavigate }) {
+export default function Winner({ onNavigate, overlay = false }) {
     const { gameState } = useWebSocket();
     const [countdown, setCountdown] = useState(0);
     const [carouselIndex, setCarouselIndex] = useState(0);
@@ -182,7 +182,7 @@ export default function Winner({ onNavigate }) {
 
     if (winners.length === 0) {
         return (
-            <WinnerModalShell countdown={countdown} initialCountdown={initialCountdownRef.current}>
+            <WinnerModalShell countdown={countdown} initialCountdown={initialCountdownRef.current} overlay={overlay}>
                 <header className="winner-modal-header">
                     <div className="winner-count">
                         <span className="winner-count-num">0</span>
@@ -211,7 +211,7 @@ export default function Winner({ onNavigate }) {
     const hasCarousel = displayWinners.length > 1;
 
     return (
-        <WinnerModalShell countdown={countdown} initialCountdown={initialCountdownRef.current}>
+        <WinnerModalShell countdown={countdown} initialCountdown={initialCountdownRef.current} overlay={overlay}>
             <header className="winner-modal-header">
                 <div className="winner-count">
                     <span className="winner-count-num">{uniqueWinners.length}</span>

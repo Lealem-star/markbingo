@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import CartellaCard from '../components/CartellaCard';
+import Winner from './Winner';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import { useAuth } from '../lib/auth/AuthProvider';
 import { useToast } from '../contexts/ToastContext';
@@ -412,26 +413,32 @@ export default function GameLayout({
         }
     };
 
-    // Navigate to winner page when phase enters announce
-    useEffect(() => {
-        if (gameState.phase === 'announce' && !isRefreshing) {
-            // Show winner announcement
-            const winners = gameState.winners || [];
-            if (winners.length > 0) {
-                const winnerNames = winners.map(w => w.name || 'Player').join(', ');
-                if (winners.some(w => w.userId === sessionId)) {
-                    showSuccess(`🎉 Congratulations! You won! ${winners.length > 1 ? `(Shared with ${winners.length - 1} other${winners.length > 2 ? 's' : ''})` : ''}`);
-                } else {
-                    showSuccess(`🏆 Game Over! Winner${winners.length > 1 ? 's' : ''}: ${winnerNames}`);
-                }
-            } else {
-                showSuccess('🏆 Game Over!');
-            }
+    const announceToastGameIdRef = useRef(null);
 
-            // Navigate to winner page for all users
-            onNavigate?.('winner');
+    // Toast when a round ends (Winner overlay shows on this screen — no page navigation)
+    useEffect(() => {
+        if (gameState.phase !== 'announce' || isRefreshing) return;
+        if (announceToastGameIdRef.current === currentGameId) return;
+        announceToastGameIdRef.current = currentGameId;
+
+        const winners = gameState.winners || [];
+        if (winners.length > 0) {
+            const winnerNames = winners.map(w => w.name || 'Player').join(', ');
+            if (winners.some(w => w.userId === sessionId)) {
+                showSuccess(`🎉 Congratulations! You won! ${winners.length > 1 ? `(Shared with ${winners.length - 1} other${winners.length > 2 ? 's' : ''})` : ''}`);
+            } else {
+                showSuccess(`🏆 Game Over! Winner${winners.length > 1 ? 's' : ''}: ${winnerNames}`);
+            }
+        } else {
+            showSuccess('🏆 Game Over!');
         }
-    }, [gameState.phase, gameState.winners, sessionId, onNavigate, isRefreshing, showSuccess]);
+    }, [gameState.phase, gameState.winners, sessionId, isRefreshing, showSuccess, currentGameId]);
+
+    useEffect(() => {
+        if (gameState.phase === 'registration') {
+            announceToastGameIdRef.current = null;
+        }
+    }, [gameState.phase]);
 
     // Timeout mechanism for when gameId is not available
     useEffect(() => {
@@ -950,6 +957,10 @@ export default function GameLayout({
                 </div>
 
             </div>
+
+            {gameState.phase === 'announce' && (
+                <Winner onNavigate={onNavigate} overlay />
+            )}
         </div>
     );
 }
