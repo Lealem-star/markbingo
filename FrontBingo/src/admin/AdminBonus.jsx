@@ -7,6 +7,12 @@ function defaultClosesAtLocal() {
     return d.toISOString().slice(0, 16);
 }
 
+function matchStatusLabel(status) {
+    if (status === 'locked') return 'ዝግ';
+    if (status === 'settled') return 'ተጠናቋል';
+    return status;
+}
+
 export default function AdminBonus() {
     const [matches, setMatches] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -197,7 +203,7 @@ export default function AdminBonus() {
                                             {m.team1Flag} {m.team1Name} vs {m.team2Name} {m.team2Flag}
                                         </div>
                                         <span className={`admin-status-badge admin-status-${m.status}`}>
-                                            {m.status}
+                                            {matchStatusLabel(m.status)}
                                         </span>
                                     </div>
                                     <div className="admin-post-caption">
@@ -224,7 +230,7 @@ export default function AdminBonus() {
                                                 disabled={!!busyId}
                                                 onClick={() => runAction(m.id, 'lock')}
                                             >
-                                                Lock
+                                                ዝግ
                                             </button>
                                         )}
                                         {(m.status === 'locked' || m.status === 'open') && (
@@ -258,7 +264,7 @@ export default function AdminBonus() {
                                                 />
                                                 <button
                                                     type="button"
-                                                    className="admin-action-btn admin-action-btn--primary admin-btn-sm"
+                                                    className="admin-action-btn admin-action-btn--primary admin-action-btn--settle admin-btn-sm"
                                                     disabled={!!busyId}
                                                     onClick={() =>
                                                         runAction(m.id, 'settle', {
@@ -267,7 +273,7 @@ export default function AdminBonus() {
                                                         })
                                                     }
                                                 >
-                                                    Settle
+                                                    የጨዋታ ውጤት
                                                 </button>
                                             </div>
                                         )}
