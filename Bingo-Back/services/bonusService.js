@@ -66,25 +66,35 @@ async function autoLockExpiredMatches() {
 }
 
 class BonusService {
-    static async getActiveMatch(userId = null) {
+    static async getActiveMatches(userId = null) {
         await autoLockExpiredMatches();
 
-        const match = await BonusMatch.findOne({ status: { $in: ['open', 'locked'] } })
+        const matches = await BonusMatch.find({ status: { $in: ['open', 'locked'] } })
             .sort({ opensAt: -1 });
 
-        if (!match) {
-            return null;
+        if (!matches.length) {
+            return [];
         }
 
-        let userPrediction = null;
+        let predictionsByMatchId = new Map();
         if (userId) {
-            userPrediction = await BonusPrediction.findOne({
-                matchId: match._id,
+            const predictions = await BonusPrediction.find({
+                matchId: { $in: matches.map((m) => m._id) },
                 userId
             });
+            predictionsByMatchId = new Map(
+                predictions.map((p) => [String(p.matchId), p])
+            );
         }
 
-        return formatMatchPublic(match, userPrediction);
+        return matches.map((match) =>
+            formatMatchPublic(match, predictionsByMatchId.get(String(match._id)) || null)
+        );
+    }
+
+    static async getActiveMatch(userId = null) {
+        const matches = await this.getActiveMatches(userId);
+        return matches[0] || null;
     }
 
     static async getHistory(limit = 20) {
@@ -114,13 +124,6 @@ class BonusService {
             createdBy: adminUserId || null
         });
 
-        if (match.status === 'open') {
-            const existingOpen = await BonusMatch.findOne({ status: 'open' });
-            if (existingOpen) {
-                throw new Error('ANOTHER_MATCH_OPEN');
-            }
-        }
-
         await match.save();
         return formatMatchPublic(match);
     }
@@ -130,11 +133,6 @@ class BonusService {
         const match = await BonusMatch.findById(matchId);
         if (!match) throw new Error('MATCH_NOT_FOUND');
         if (match.status !== 'draft') throw new Error('MATCH_NOT_OPENABLE');
-
-        const existingOpen = await BonusMatch.findOne({ status: 'open' });
-        if (existingOpen && existingOpen._id.toString() !== String(matchId)) {
-            throw new Error('ANOTHER_MATCH_OPEN');
-        }
 
         match.status = 'open';
         match.opensAt = new Date();

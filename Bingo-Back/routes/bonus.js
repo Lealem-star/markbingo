@@ -6,8 +6,8 @@ const router = express.Router();
 
 router.get('/active', authMiddleware, async (req, res) => {
     try {
-        const match = await BonusService.getActiveMatch(req.userId);
-        res.json({ match });
+        const matches = await BonusService.getActiveMatches(req.userId);
+        res.json({ matches, match: matches[0] || null });
     } catch (error) {
         console.error('Bonus active error:', error);
         res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });

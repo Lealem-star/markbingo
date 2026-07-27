@@ -68,7 +68,7 @@ export default function AdminBonus() {
             await load();
         } catch (err) {
             console.error('Create match failed:', err);
-            alert('Create failed. Another match may already be open.');
+            alert(err?.message?.includes('INVALID') ? 'Invalid close time.' : 'Could not create match. Please try again.');
         } finally {
             setBusyId(null);
         }
@@ -105,7 +105,7 @@ export default function AdminBonus() {
         <div className="admin-container admin-home-container">
             <div className="admin-card">
                 <h2 className="admin-title">⚽ GoodBingo Bonus</h2>
-                <p className="admin-subtitle">Create World Cup score predictions — 10 ETB entry, 80% pool split on exact score.</p>
+                <p className="admin-subtitle">Create World Cup score predictions — 10 ETB entry, 80% pool split on exact score. Multiple matches can be open at the same time.</p>
 
                 <form onSubmit={createMatch} className="admin-form">
                     <div className="admin-form-row">
@@ -165,8 +165,9 @@ export default function AdminBonus() {
                         />
                         Open for predictions immediately
                     </label>
-                    <button type="submit" className="admin-submit-button" disabled={busyId === 'create'}>
-                        {busyId === 'create' ? 'Creating…' : 'Create match'}
+                    <button type="submit" className="admin-create-match-btn" disabled={busyId === 'create'}>
+                        <span className="admin-create-match-btn-icon" aria-hidden="true">⚽</span>
+                        <span>{busyId === 'create' ? 'Creating match…' : 'Create match'}</span>
                     </button>
                 </form>
             </div>
@@ -209,7 +210,7 @@ export default function AdminBonus() {
                                         {m.status === 'draft' && (
                                             <button
                                                 type="button"
-                                                className="admin-submit-button admin-btn-sm"
+                                                className="admin-action-btn admin-action-btn--primary admin-btn-sm"
                                                 disabled={!!busyId}
                                                 onClick={() => runAction(m.id, 'open')}
                                             >
@@ -257,7 +258,7 @@ export default function AdminBonus() {
                                                 />
                                                 <button
                                                     type="button"
-                                                    className="admin-submit-button admin-btn-sm"
+                                                    className="admin-action-btn admin-action-btn--primary admin-btn-sm"
                                                     disabled={!!busyId}
                                                     onClick={() =>
                                                         runAction(m.id, 'settle', {
