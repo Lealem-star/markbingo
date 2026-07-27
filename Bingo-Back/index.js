@@ -157,6 +157,9 @@ const rooms = new Map();
 
 const FULL_NUMBER_POOL = Array.from({ length: 75 }, (_, i) => i + 1);
 
+/** How long the winner/results screen stays up before the next registration round opens. */
+const WINNER_ANNOUNCE_MS = 15000;
+
 // Bot fairness policy (Option B):
 // - allow bots to win up to BOT_WIN_STREAK_LIMIT consecutive games
 // - then block bot bingo claims for BOT_HUMAN_ALLOW_GAMES games
@@ -206,9 +209,9 @@ function cleanupEmptyRooms(stake) {
         if (room.players.size > 0) return true;
         if (room.phase === 'registration' || room.phase === 'running') return true;
         if (room.phase === 'announce') {
-            // Keep announce rooms for 10 seconds after game ends
+            // Keep announce rooms through the full winner display window
             const timeSinceAnnounce = now - (room.gameEndTime || 0);
-            return timeSinceAnnounce < 10000;
+            return timeSinceAnnounce < WINNER_ANNOUNCE_MS + 5000;
         }
         return false;
     });
@@ -1009,7 +1012,7 @@ async function toAnnounce(room) {
         calledNumbers: room.calledNumbers,
         called: room.calledNumbers,
         stake: room.stake,
-        nextStartAt: Date.now() + 5000
+        nextStartAt: Date.now() + WINNER_ANNOUNCE_MS
     }, room);
 
     // Process winnings
@@ -1139,7 +1142,7 @@ async function toAnnounce(room) {
         
         // Start new registration immediately
         await startRegistration(room);
-    }, 5000);
+    }, WINNER_ANNOUNCE_MS);
 }
 
 function getPredefinedCartella(cardNumber) {

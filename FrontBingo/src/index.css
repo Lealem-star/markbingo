@@ -2603,6 +2603,14 @@ body {
     padding: 6px 8px 0;
 }
 
+.cartela-selection-top {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #E1E8F0;
+}
+
 .cartela-status-badges {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2662,13 +2670,20 @@ body {
     min-height: 0;
 }
 
+.cartela-selection-preview {
+    flex: 0 0 auto;
+    background: #ffffff;
+    padding-top: 8px;
+}
+
 .cartela-grid-panel {
     flex: 1;
     min-height: 0;
+    padding: 6px 8px 8px;
 }
 
 .cartela-grid-scrollable-v2 {
-    background: #e5e7eb;
+    background: #E1E8F0;
     border-radius: 10px;
     border: none;
     max-height: min(52vh, 420px);
@@ -5427,12 +5442,12 @@ body.game-layout-active .App {
     width: 100%;
     max-width: 100%;
     min-height: 100vh;
-    background: #dbe3ef;
+    background: #E1E8F0;
     overflow-x: hidden;
 }
 
 .game-layout-page {
-    background: #dbe3ef !important;
+    background: #E1E8F0 !important;
     min-height: 100vh;
     width: 100%;
     max-width: 100%;
@@ -5443,7 +5458,7 @@ body.game-layout-active .App {
 }
 
 .app-container.game-layout-page {
-    background: #dbe3ef !important;
+    background: #E1E8F0 !important;
     min-height: 100vh;
     width: 100%;
     max-width: 100%;
@@ -5558,19 +5573,19 @@ body.game-layout-active .App {
     min-height: 0;
     align-items: stretch;
     overflow: hidden;
-    background: linear-gradient(180deg, #dbe3ef 0%, #eef2f7 55%, #f4f6fa 100%);
+    background: #E1E8F0;
 }
 
 .game-layout-left-col {
     display: flex;
     flex-direction: column;
-    background: #eef1f5;
+    background: #E1E8F0;
     min-height: 0;
     min-width: 0;
 }
 
 .game-layout-page .bingo-grid-container.gl-master-board {
-    background: #eef1f5;
+    background: #E1E8F0;
     border: none;
     border-radius: 0;
     padding: 0.35rem 0.25rem 0.25rem 0.35rem;

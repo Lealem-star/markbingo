@@ -724,30 +724,30 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 </div>
             )}
 
-            <header className="cartela-selection-header">
-                <div className="cartela-status-badges">
-                    <div className="cs-badge cs-badge-room">
-                        <span className="cs-badge-label">ROOM</span>
-                        <span className="cs-badge-value">{roomLabel}</span>
+            <div className="cartela-selection-top">
+                <header className="cartela-selection-header">
+                    <div className="cartela-status-badges">
+                        <div className="cs-badge cs-badge-room">
+                            <span className="cs-badge-label">ROOM</span>
+                            <span className="cs-badge-value">{roomLabel}</span>
+                        </div>
+                        <div className="cs-badge cs-badge-sold">
+                            <span className="cs-badge-label">SOLD</span>
+                            <span className="cs-badge-value">{soldCount}</span>
+                        </div>
+                        <div className="cs-badge cs-badge-time">
+                            <span className="cs-badge-label cs-time-label">TIME</span>
+                            <span className="cs-badge-value">{timerSeconds}s</span>
+                        </div>
+                        <div className="cs-badge cs-badge-balance">
+                            <span className="cs-badge-label">BALANCE</span>
+                            <span className="cs-badge-value">
+                                {walletLoading ? '...' : `${balanceTotal.toFixed(2)} ETB`}
+                            </span>
+                        </div>
                     </div>
-                    <div className="cs-badge cs-badge-sold">
-                        <span className="cs-badge-label">SOLD</span>
-                        <span className="cs-badge-value">{soldCount}</span>
-                    </div>
-                    <div className="cs-badge cs-badge-time">
-                        <span className="cs-badge-label cs-time-label">TIME</span>
-                        <span className="cs-badge-value">{timerSeconds}s</span>
-                    </div>
-                    <div className="cs-badge cs-badge-balance">
-                        <span className="cs-badge-label">BALANCE</span>
-                        <span className="cs-badge-value">
-                            {walletLoading ? '...' : `${balanceTotal.toFixed(2)} ETB`}
-                        </span>
-                    </div>
-                </div>
-            </header>
+                </header>
 
-            <main className="cartela-selection-main">
                 <div className="cartela-grid-panel">
                     <div className="cartela-grid-scrollable cartela-grid-scrollable-v2">
                         <div className="cartela-numbers-grid-8">
@@ -787,7 +787,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <main className="cartela-selection-main cartela-selection-preview">
                 <div className="cartela-slots-row">
                     {renderSelectionSlot(0)}
                     {renderSelectionSlot(1)}
