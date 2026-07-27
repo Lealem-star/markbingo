@@ -5544,7 +5544,8 @@ body.game-layout-active .App {
 .game-layout-main {
     display: grid;
     grid-template-columns: 0.36fr 0.64fr;
-    gap: 0;
+    column-gap: 10px;
+    row-gap: 0;
     flex: 1;
     min-height: 0;
     align-items: stretch;
