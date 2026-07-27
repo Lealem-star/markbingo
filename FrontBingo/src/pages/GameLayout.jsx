@@ -100,7 +100,6 @@ export default function GameLayout({
     const currentGameId = gameState.gameId;
     const yourCards = Array.isArray(gameState.yourCards) ? gameState.yourCards : [];
 
-
     // Sound control
     const [isSoundOn, setIsSoundOn] = useState(false);
     
@@ -115,6 +114,41 @@ export default function GameLayout({
     const [manuallyMarkedNumbers, setManuallyMarkedNumbers] = useState({});
     const [isManualClaiming, setIsManualClaiming] = useState(false);
     const [startCountdown, setStartCountdown] = useState(0);
+
+    /** Cartelas locked after a false BINGO claim — show "ታስሯል" banner. */
+    const [lockedCartelaIds, setLockedCartelaIds] = useState([]);
+
+    /** After a new number is drawn: user had a winning pattern on the previous call but did not tap BINGO. */
+    const [missedClaimWindow, setMissedClaimWindow] = useState(false);
+    /** Called numbers snapshot (before the ball that closed the claim window) — drives red pattern cells. */
+    const [missedPatternCalledSnapshot, setMissedPatternCalledSnapshot] = useState(null);
+
+    // Track if we've already claimed bingo for this game to prevent duplicate claims
+    const claimedBingoRef = useRef(false);
+    const lastGameIdRef = useRef(null);
+    const lastClaimCardRef = useRef(null);
+    const yourCardsRef = useRef([]);
+    const calledLenEvalRef = useRef(-1);
+
+    useEffect(() => {
+        yourCardsRef.current = yourCards;
+    }, [yourCards]);
+
+    const isCartelaLocked = useCallback(
+        (cardNumber) => lockedCartelaIds.includes(Number(cardNumber)),
+        [lockedCartelaIds]
+    );
+
+    const lockCartela = useCallback((cardNumber) => {
+        const id = Number(cardNumber);
+        setLockedCartelaIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+        setManuallyMarkedNumbers((prev) => {
+            if (!prev[id]) return prev;
+            const next = { ...prev };
+            delete next[id];
+            return next;
+        });
+    }, []);
     
     // Reset manually marked numbers when auto-mark is turned back ON
     useEffect(() => {
@@ -124,16 +158,6 @@ export default function GameLayout({
     }, [isAutoMarkOn]);
     
     // Single-cartela mode: no auto-mark forcing based on card count
-    
-    // Track if we've already claimed bingo for this game to prevent duplicate claims
-    const claimedBingoRef = useRef(false);
-    const lastGameIdRef = useRef(null);
-
-    /** After a new number is drawn: user had a winning pattern on the previous call but did not tap BINGO. */
-    const [missedClaimWindow, setMissedClaimWindow] = useState(false);
-    /** Called numbers snapshot (before the ball that closed the claim window) — drives red pattern cells. */
-    const [missedPatternCalledSnapshot, setMissedPatternCalledSnapshot] = useState(null);
-    const calledLenEvalRef = useRef(-1);
 
     // Connect to WebSocket when component mounts with stake
     useEffect(() => {
@@ -183,6 +207,8 @@ export default function GameLayout({
             calledLenEvalRef.current = -1;
             setMissedClaimWindow(false);
             setMissedPatternCalledSnapshot(null);
+            setLockedCartelaIds([]);
+            lastClaimCardRef.current = null;
             // Keep manually marked numbers when new game starts (don't clear them)
         }
     }, [currentGameId]);
@@ -217,8 +243,9 @@ export default function GameLayout({
 
     // Handle manual number marking/unmarking
     const handleNumberToggle = useCallback((cardNumber, number) => {
-        if (isAutoMarkOn) return; // Don't allow manual marking when auto-mark is ON
-        if (missedClaimWindow) return; // After missing BINGO window, no further manual marks this game
+        if (isAutoMarkOn) return;
+        if (missedClaimWindow) return;
+        if (isCartelaLocked(cardNumber)) return;
 
         setManuallyMarkedNumbers(prev => {
             const cardMarks = prev[cardNumber] || new Set();
@@ -235,7 +262,7 @@ export default function GameLayout({
                 [cardNumber]: newCardMarks
             };
         });
-    }, [isAutoMarkOn, missedClaimWindow]);
+    }, [isAutoMarkOn, missedClaimWindow, isCartelaLocked]);
 
     const getMarkedNumbersForCard = useCallback((cardNumber) => {
         if (isAutoMarkOn) return calledNumbers;
@@ -269,6 +296,10 @@ export default function GameLayout({
             return;
         }
 
+        if (isCartelaLocked(cardNumber)) {
+            return;
+        }
+
         if (missedClaimWindow) {
             setAlertBanners(prev =>
                 prev.includes(MISSED_BINGO_MSG) ? prev : [...prev, MISSED_BINGO_MSG]
@@ -282,6 +313,7 @@ export default function GameLayout({
         }
 
         if (!cardHasValidBingo(cardNumber, card)) {
+            lockCartela(cardNumber);
             const errorMsg = 'Invalid BINGO! ትክክለኛ አልሆነም።';
             setAlertBanners(prev => (prev.includes(errorMsg) ? prev : [...prev, errorMsg]));
             showError(INVALID_BINGO_MSG);
@@ -291,6 +323,7 @@ export default function GameLayout({
         try {
             setIsManualClaiming(true);
             claimedBingoRef.current = true;
+            lastClaimCardRef.current = cardNumber;
             const marks = getMarkedNumbersForCard(cardNumber);
             const payload = isAutoMarkOn
                 ? { cardNumber }
@@ -298,6 +331,7 @@ export default function GameLayout({
             const result = claimBingo(payload);
             if (!result) {
                 claimedBingoRef.current = false;
+                lastClaimCardRef.current = null;
                 showError('Failed to send BINGO claim. Please try again.');
             } else {
                 showSuccess('BINGO claim sent! Waiting for confirmation...');
@@ -305,6 +339,7 @@ export default function GameLayout({
         } catch (error) {
             console.error('Error sending BINGO claim:', error);
             claimedBingoRef.current = false;
+            lastClaimCardRef.current = null;
             showError('Failed to send BINGO claim. Please try again.');
         } finally {
             setIsManualClaiming(false);
@@ -317,7 +352,9 @@ export default function GameLayout({
         gameState.phase,
         getMarkedNumbersForCard,
         isAutoMarkOn,
+        isCartelaLocked,
         isManualClaiming,
+        lockCartela,
         missedClaimWindow,
         showError,
         showSuccess
@@ -433,24 +470,34 @@ export default function GameLayout({
             calledLenEvalRef.current = -1;
             setMissedClaimWindow(false);
             setMissedPatternCalledSnapshot(null);
+            setLockedCartelaIds([]);
+            lastClaimCardRef.current = null;
         }
     }, [gameState.phase]);
 
-    // Handle invalid BINGO claim: clear all manual marks as punishment, allow retry
+    // Handle invalid BINGO claim from server: clear marks and lock cartela with "ታስሯል"
     useEffect(() => {
         const handleBingoRejected = () => {
             claimedBingoRef.current = false;
             setManuallyMarkedNumbers({});
+
+            const cardToLock = lastClaimCardRef.current;
+            const fallbackIds = yourCardsRef.current.map(({ cardNumber }) => Number(cardNumber));
+            const idsToLock = cardToLock != null ? [Number(cardToLock)] : fallbackIds;
+
+            setLockedCartelaIds((prev) => [...new Set([...prev, ...idsToLock])]);
+            lastClaimCardRef.current = null;
+
             const errorMsg = 'Invalid BINGO! ትክክለኛ አልሆነም። ሁሉም ምልክቶችዎ ተሰርዘዋል።';
             setAlertBanners(prev => {
-                // Avoid duplicate messages
                 if (prev.includes(errorMsg)) return prev;
                 return [...prev, errorMsg];
             });
+            showError(INVALID_BINGO_MSG);
         };
         window.addEventListener('bingoRejected', handleBingoRejected);
         return () => window.removeEventListener('bingoRejected', handleBingoRejected);
-    }, []);
+    }, [showError]);
 
     // Auto-dismiss alerts after 3 seconds
     useEffect(() => {
@@ -835,38 +882,50 @@ export default function GameLayout({
                                         ? calledNumbers
                                         : (manuallyMarkedNumbers[cardNumber] ? Array.from(manuallyMarkedNumbers[cardNumber]) : []);
                                     const bingoReady = cardHasValidBingo(cardNumber, card);
+                                    const isLocked = isCartelaLocked(cardNumber);
 
                                     return (
-                                        <div key={cardNumber} className="gl-cartela-card-wrap">
-                                            <CartellaCard
-                                                id={cardNumber}
-                                                card={card}
-                                                called={isAutoMarkOn ? calledNumbers : markedNumbers}
-                                                isPreview={false}
-                                                showHeader={true}
-                                                isAutoMarkOn={isAutoMarkOn}
-                                                onNumberToggle={
-                                                    !isAutoMarkOn && !missedClaimWindow
-                                                        ? (number) => handleNumberToggle(cardNumber, number)
-                                                        : undefined
-                                                }
-                                                missedWinningCalledNumbers={
-                                                    missedClaimWindow && missedPatternCalledSnapshot
-                                                        ? missedPatternCalledSnapshot
-                                                        : null
-                                                }
-                                            />
+                                        <div key={cardNumber} className={`gl-cartela-card-wrap ${isLocked ? 'gl-cartela-locked' : ''}`}>
+                                            <div className="gl-cartela-card-body">
+                                                <CartellaCard
+                                                    id={cardNumber}
+                                                    card={card}
+                                                    called={isAutoMarkOn ? calledNumbers : markedNumbers}
+                                                    isPreview={false}
+                                                    showHeader={true}
+                                                    isAutoMarkOn={isAutoMarkOn}
+                                                    onNumberToggle={
+                                                        !isAutoMarkOn && !missedClaimWindow && !isLocked
+                                                            ? (number) => handleNumberToggle(cardNumber, number)
+                                                            : undefined
+                                                    }
+                                                    missedWinningCalledNumbers={
+                                                        missedClaimWindow && missedPatternCalledSnapshot
+                                                            ? missedPatternCalledSnapshot
+                                                            : null
+                                                    }
+                                                />
+                                                {isLocked && (
+                                                    <div className="cartela-lock-overlay" aria-hidden="true">
+                                                        <div className="cartela-lock-banner">ታስሯል</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {isLocked && (
+                                                <div className="cartela-lock-footer" aria-hidden="true">ታስሯል</div>
+                                            )}
                                             {gameState.phase === 'running' && (
                                                 <button
                                                     type="button"
-                                                    className={`cartela-bingo-btn ${bingoReady ? 'cartela-bingo-btn--ready' : ''} ${isManualClaiming ? 'loading' : ''}`}
+                                                    className={`cartela-bingo-btn ${bingoReady && !isLocked ? 'cartela-bingo-btn--ready' : ''} ${isManualClaiming ? 'loading' : ''} ${isLocked ? 'cartela-bingo-btn--locked' : ''}`}
                                                     onClick={() => handleCardBingo(cardNumber, card)}
                                                     disabled={
                                                         !connected ||
                                                         !currentGameId ||
                                                         claimedBingoRef.current ||
                                                         isManualClaiming ||
-                                                        missedClaimWindow
+                                                        missedClaimWindow ||
+                                                        isLocked
                                                     }
                                                 >
                                                     <span className="cartela-bingo-text">BINGO!</span>

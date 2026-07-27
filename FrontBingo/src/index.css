@@ -5769,6 +5769,54 @@ body.game-layout-active .App {
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
     overflow: hidden;
     width: 100%;
+    position: relative;
+}
+
+.gl-cartela-card-body {
+    position: relative;
+}
+
+.gl-cartela-locked .gl-cartela-card-body {
+    pointer-events: none;
+}
+
+.cartela-lock-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.cartela-lock-banner {
+    background: #374151;
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 800;
+    padding: 0.45rem 1.1rem;
+    border-radius: 10px;
+    transform: rotate(-10deg);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+}
+
+.cartela-lock-footer {
+    text-align: center;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: rgba(156, 163, 175, 0.5);
+    padding: 0.2rem 0 0.15rem;
+    letter-spacing: 0.04em;
+    line-height: 1;
+}
+
+.cartela-bingo-btn--locked {
+    background: #9ca3af !important;
+    opacity: 0.75;
+    cursor: not-allowed;
 }
 
 .game-layout-page .gl-cartela-card-wrap .cartela-card {
