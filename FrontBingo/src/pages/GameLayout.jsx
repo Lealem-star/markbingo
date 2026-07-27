@@ -707,8 +707,21 @@ export default function GameLayout({
                             <span className="gl-stat-value gl-stat-yellow">{currentPlayersCount || 0}</span>
                         </div>
                     </header>
-                    <div className={`gl-current-ball gl-ball-${currentNumber ? getBallLetter(currentNumber).toLowerCase() : 'empty'}`}>
-                        {currentNumber ? formatBallLabel(currentNumber) : '--'}
+                    <div
+                        className={`gl-current-ball gl-ball-${
+                            startCountdown > 0 && calledNumbers.length === 0
+                                ? 'countdown'
+                                : currentNumber
+                                    ? getBallLetter(currentNumber).toLowerCase()
+                                    : 'empty'
+                        }`}
+                        aria-live={startCountdown > 0 && calledNumbers.length === 0 ? 'polite' : undefined}
+                    >
+                        {startCountdown > 0 && calledNumbers.length === 0
+                            ? startCountdown
+                            : currentNumber
+                                ? formatBallLabel(currentNumber)
+                                : '--'}
                     </div>
                 </div>
 
@@ -866,32 +879,26 @@ export default function GameLayout({
                     <div className="right-side-container game-layout-right">
                         <div className="gl-right-top">
                             <div className="gl-call-strip">
-                                {startCountdown > 0 && calledNumbers.length === 0 ? (
-                                    <div className="gl-start-countdown" aria-live="polite">
-                                        {startCountdown}
-                                    </div>
-                                ) : (
-                                    <div className={`recent-numbers-joy gl-recent-numbers ${calledNumbers.length === 0 ? 'recent-numbers-empty' : ''}`}>
-                                        {calledNumbers.length === 0 ? (
-                                            <span className="recent-numbers-placeholder">—</span>
-                                        ) : (
-                                            (() => {
-                                                let recent = currentNumber
-                                                    ? calledNumbers.filter((n) => n !== currentNumber).slice(-3)
-                                                    : calledNumbers.slice(-3);
-                                                if (recent.length === 0) recent = calledNumbers.slice(-3);
-                                                return recent.map((n, index) => {
-                                                    const letter = getBallLetter(n);
-                                                    return (
-                                                        <div key={`recent-${n}-${index}`} className={`recent-number-circle recent-number-${letter.toLowerCase()}`}>
-                                                            {`${letter}${n}`}
-                                                        </div>
-                                                    );
-                                                });
-                                            })()
-                                        )}
-                                    </div>
-                                )}
+                                <div className={`recent-numbers-joy gl-recent-numbers ${calledNumbers.length === 0 ? 'recent-numbers-empty' : ''}`}>
+                                    {calledNumbers.length === 0 ? (
+                                        <span className="recent-numbers-placeholder">—</span>
+                                    ) : (
+                                        (() => {
+                                            let recent = currentNumber
+                                                ? calledNumbers.filter((n) => n !== currentNumber).slice(-3)
+                                                : calledNumbers.slice(-3);
+                                            if (recent.length === 0) recent = calledNumbers.slice(-3);
+                                            return recent.map((n, index) => {
+                                                const letter = getBallLetter(n);
+                                                return (
+                                                    <div key={`recent-${n}-${index}`} className={`recent-number-circle recent-number-${letter.toLowerCase()}`}>
+                                                        {`${letter}${n}`}
+                                                    </div>
+                                                );
+                                            });
+                                        })()
+                                    )}
+                                </div>
                             </div>
                         </div>
 

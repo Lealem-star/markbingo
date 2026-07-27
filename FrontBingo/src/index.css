@@ -5540,6 +5540,14 @@ body.game-layout-active .App {
 .game-layout-page .gl-ball-g { background: #22c55e; color: #fff; }
 .game-layout-page .gl-ball-o { background: #8b5cf6; color: #fff; }
 .game-layout-page .gl-ball-empty { background: #4b5563; color: #fff; font-size: 0.85rem; }
+.game-layout-page .gl-ball-countdown {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #fff;
+    font-size: 2.15rem;
+    font-weight: 900;
+    border-color: #ffedd5;
+    box-shadow: 0 4px 20px rgba(234, 88, 12, 0.45);
+}
 
 .game-layout-main {
     display: grid;
@@ -6093,6 +6101,10 @@ body.game-layout-active .App {
         height: 4.35rem;
         font-size: 0.88rem;
         right: 0.25rem;
+    }
+
+    .game-layout-page .gl-ball-countdown {
+        font-size: 1.85rem;
     }
 
     .gl-right-top {
