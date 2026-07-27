@@ -122,7 +122,6 @@ export default function CartellaCard({
     showWinningPattern = false,
     /** When set, cells in the winning pattern at this call snapshot are shown in red (missed BINGO window). */
     missedWinningCalledNumbers = null,
-    isAutoMarkOn = true,
     onNumberToggle = null,
     showHeader = false
 }) {
@@ -150,7 +149,7 @@ export default function CartellaCard({
 
     // Handle cell click for manual marking
     const handleCellClick = (number) => {
-        if (!isAutoMarkOn && onNumberToggle && number !== 0) {
+        if (onNumberToggle && number !== 0) {
             onNumberToggle(number);
         }
     };
@@ -203,8 +202,7 @@ export default function CartellaCard({
                                         showWinningPattern ? 'cartela-called-secondary' : 'cartela-called';
                                 }
 
-                                // Make cell clickable if auto-mark is OFF and it's not a free space
-                                const isClickable = !isAutoMarkOn && onNumberToggle && !isFree;
+                                const isClickable = onNumberToggle && !isFree;
                                 
                                 return (
                                     <div

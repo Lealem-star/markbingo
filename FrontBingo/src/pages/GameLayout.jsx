@@ -10,6 +10,8 @@ import '../styles/action-buttons.css';
 
 const MISSED_BINGO_MSG = 'ይቅርታ የማሸነፍ እድልዎ አልፏል';
 const INVALID_BINGO_MSG = 'Invalid BINGO! No winning pattern yet.';
+/** Minimum time to claim BINGO after a winning pattern appears (next ball alone is not enough if it comes sooner). */
+const WIN_CLAIM_MIN_MS = 5000;
 
 function getBallLetter(number) {
     if (number <= 15) return 'B';
@@ -103,15 +105,8 @@ export default function GameLayout({
 
     // Sound control
     const [isSoundOn, setIsSoundOn] = useState(false);
-    
-    // Auto-mark control (green or light purple)
-    const [isAutoMarkOn, setIsAutoMarkOn] = useState(false);
-    
-    // Track if user has manually toggled auto-mark off (to prevent auto-enabling again)
-    const userManuallyDisabledRef = useRef(false);
-    
-    // Track manually marked numbers per cartela when auto-mark is OFF
-    // Structure: { cardNumber: Set<number> }
+
+    // Manually marked numbers per cartela: { cardNumber: Set<number> }
     const [manuallyMarkedNumbers, setManuallyMarkedNumbers] = useState({});
     const [isManualClaiming, setIsManualClaiming] = useState(false);
     const [startCountdown, setStartCountdown] = useState(0);
@@ -119,9 +114,9 @@ export default function GameLayout({
     /** Cartelas locked after a false BINGO claim — show "ታስሯል" banner. */
     const [lockedCartelaIds, setLockedCartelaIds] = useState([]);
 
-    /** After a new number is drawn: user had a winning pattern on the previous call but did not tap BINGO. */
+    /** User had a winning pattern but did not tap BINGO in time. */
     const [missedClaimWindow, setMissedClaimWindow] = useState(false);
-    /** Called numbers snapshot (before the ball that closed the claim window) — drives red pattern cells. */
+    /** Called numbers when the win opportunity opened — drives red pattern cells. */
     const [missedPatternCalledSnapshot, setMissedPatternCalledSnapshot] = useState(null);
 
     // Track if we've already claimed bingo for this game to prevent duplicate claims
@@ -129,7 +124,9 @@ export default function GameLayout({
     const lastGameIdRef = useRef(null);
     const lastClaimCardRef = useRef(null);
     const yourCardsRef = useRef([]);
-    const calledLenEvalRef = useRef(-1);
+    /** When a win pattern first completes: { startedAt, callCount, snapshot }. */
+    const winOpportunityRef = useRef(null);
+    const hadWinPatternRef = useRef(false);
 
     useEffect(() => {
         yourCardsRef.current = yourCards;
@@ -151,15 +148,6 @@ export default function GameLayout({
         });
     }, []);
     
-    // Reset manually marked numbers when auto-mark is turned back ON
-    useEffect(() => {
-        if (isAutoMarkOn && Object.keys(manuallyMarkedNumbers).length > 0) {
-            setManuallyMarkedNumbers({});
-        }
-    }, [isAutoMarkOn]);
-    
-    // Single-cartela mode: no auto-mark forcing based on card count
-
     // Connect to WebSocket when component mounts with stake
     useEffect(() => {
         if (stake && sessionId) {
@@ -205,46 +193,75 @@ export default function GameLayout({
         if (currentGameId !== lastGameIdRef.current) {
             claimedBingoRef.current = false;
             lastGameIdRef.current = currentGameId;
-            calledLenEvalRef.current = -1;
+            winOpportunityRef.current = null;
+            hadWinPatternRef.current = false;
             setMissedClaimWindow(false);
             setMissedPatternCalledSnapshot(null);
             setLockedCartelaIds([]);
             lastClaimCardRef.current = null;
-            // Keep manually marked numbers when new game starts (don't clear them)
         }
     }, [currentGameId]);
 
-    // Detect missed BINGO window for any active cartela
+    // Start win-opportunity timer when any cartela first completes a pattern
     useEffect(() => {
         if (gameState.phase !== 'running' || yourCards.length === 0) {
+            winOpportunityRef.current = null;
+            hadWinPatternRef.current = false;
             setMissedClaimWindow(false);
             setMissedPatternCalledSnapshot(null);
             return;
         }
 
-        const len = calledNumbers.length;
-        if (calledLenEvalRef.current < 0) {
-            calledLenEvalRef.current = len;
+        if (claimedBingoRef.current || missedClaimWindow) {
             return;
         }
 
-        if (len > calledLenEvalRef.current) {
-            for (let i = calledLenEvalRef.current + 1; i <= len; i++) {
-                const prevCalled = calledNumbers.slice(0, i - 1);
-                const hadWinningBoard = yourCards.some(({ card }) => checkBingoPattern(card, prevCalled));
-                if (hadWinningBoard && !claimedBingoRef.current) {
-                    setMissedClaimWindow(true);
-                    setMissedPatternCalledSnapshot([...prevCalled]);
-                    break;
-                }
-            }
+        const hasWinPattern = yourCards.some(({ card }) => checkBingoPattern(card, calledNumbers));
+
+        if (hasWinPattern && !hadWinPatternRef.current) {
+            winOpportunityRef.current = {
+                startedAt: Date.now(),
+                callCount: calledNumbers.length,
+                snapshot: [...calledNumbers],
+            };
         }
-        calledLenEvalRef.current = len;
-    }, [calledNumbers, gameState.phase, yourCards, currentGameId]);
+
+        if (!hasWinPattern) {
+            winOpportunityRef.current = null;
+        }
+
+        hadWinPatternRef.current = hasWinPattern;
+    }, [calledNumbers, gameState.phase, yourCards, currentGameId, missedClaimWindow]);
+
+    // Close claim window after min 5s AND next ball (whichever is later — fast draws still get 5s)
+    useEffect(() => {
+        if (gameState.phase !== 'running' || missedClaimWindow) {
+            return;
+        }
+
+        const evaluateMissedWindow = () => {
+            const opp = winOpportunityRef.current;
+            if (!opp || claimedBingoRef.current) {
+                return;
+            }
+
+            const elapsed = Date.now() - opp.startedAt;
+            const nextBallDrawn = calledNumbers.length > opp.callCount;
+
+            if (nextBallDrawn && elapsed >= WIN_CLAIM_MIN_MS) {
+                setMissedClaimWindow(true);
+                setMissedPatternCalledSnapshot(opp.snapshot);
+                winOpportunityRef.current = null;
+            }
+        };
+
+        evaluateMissedWindow();
+        const intervalId = setInterval(evaluateMissedWindow, 250);
+        return () => clearInterval(intervalId);
+    }, [calledNumbers.length, gameState.phase, missedClaimWindow, currentGameId]);
 
     // Handle manual number marking/unmarking
     const handleNumberToggle = useCallback((cardNumber, number) => {
-        if (isAutoMarkOn) return;
         if (missedClaimWindow) return;
         if (isCartelaLocked(cardNumber)) return;
 
@@ -263,13 +280,12 @@ export default function GameLayout({
                 [cardNumber]: newCardMarks
             };
         });
-    }, [isAutoMarkOn, missedClaimWindow, isCartelaLocked]);
+    }, [missedClaimWindow, isCartelaLocked]);
 
     const getMarkedNumbersForCard = useCallback((cardNumber) => {
-        if (isAutoMarkOn) return calledNumbers;
         const marksSet = manuallyMarkedNumbers[cardNumber];
         return marksSet ? Array.from(marksSet) : [];
-    }, [isAutoMarkOn, calledNumbers, manuallyMarkedNumbers]);
+    }, [manuallyMarkedNumbers]);
 
     const cardHasValidBingo = useCallback((cardNumber, card) => {
         if (!card || !Array.isArray(calledNumbers) || calledNumbers.length === 0) {
@@ -278,19 +294,17 @@ export default function GameLayout({
         if (!checkBingoPattern(card, calledNumbers)) {
             return false;
         }
-        if (!isAutoMarkOn) {
-            const marks = manuallyMarkedNumbers[cardNumber];
-            if (!marks || marks.size === 0) {
+        const marks = manuallyMarkedNumbers[cardNumber];
+        if (!marks || marks.size === 0) {
+            return false;
+        }
+        for (const n of marks) {
+            if (n !== 0 && !calledNumbers.includes(n)) {
                 return false;
-            }
-            for (const n of marks) {
-                if (n !== 0 && !calledNumbers.includes(n)) {
-                    return false;
-                }
             }
         }
         return true;
-    }, [calledNumbers, isAutoMarkOn, manuallyMarkedNumbers]);
+    }, [calledNumbers, manuallyMarkedNumbers]);
 
     const handleCardBingo = useCallback((cardNumber, card) => {
         if (!connected || gameState.phase !== 'running' || !currentGameId) {
@@ -326,10 +340,7 @@ export default function GameLayout({
             claimedBingoRef.current = true;
             lastClaimCardRef.current = cardNumber;
             const marks = getMarkedNumbersForCard(cardNumber);
-            const payload = isAutoMarkOn
-                ? { cardNumber }
-                : { cardNumber, markedNumbers: marks };
-            const result = claimBingo(payload);
+            const result = claimBingo({ cardNumber, markedNumbers: marks });
             if (!result) {
                 claimedBingoRef.current = false;
                 lastClaimCardRef.current = null;
@@ -352,7 +363,6 @@ export default function GameLayout({
         currentGameId,
         gameState.phase,
         getMarkedNumbersForCard,
-        isAutoMarkOn,
         isCartelaLocked,
         isManualClaiming,
         lockCartela,
@@ -888,9 +898,9 @@ export default function GameLayout({
                         {hasPlayableCartelas ? (
                             <div className={hasTwoCartelas ? 'user-cartelas-stack' : 'user-cartelas-single-play'}>
                                 {yourCards.map(({ cardNumber, card }) => {
-                                    const markedNumbers = isAutoMarkOn
-                                        ? calledNumbers
-                                        : (manuallyMarkedNumbers[cardNumber] ? Array.from(manuallyMarkedNumbers[cardNumber]) : []);
+                                    const markedNumbers = manuallyMarkedNumbers[cardNumber]
+                                        ? Array.from(manuallyMarkedNumbers[cardNumber])
+                                        : [];
                                     const bingoReady = cardHasValidBingo(cardNumber, card);
                                     const isLocked = isCartelaLocked(cardNumber);
 
@@ -900,12 +910,11 @@ export default function GameLayout({
                                                 <CartellaCard
                                                     id={cardNumber}
                                                     card={card}
-                                                    called={isAutoMarkOn ? calledNumbers : markedNumbers}
+                                                    called={markedNumbers}
                                                     isPreview={false}
                                                     showHeader={true}
-                                                    isAutoMarkOn={isAutoMarkOn}
                                                     onNumberToggle={
-                                                        !isAutoMarkOn && !missedClaimWindow && !isLocked
+                                                        !missedClaimWindow && !isLocked
                                                             ? (number) => handleNumberToggle(cardNumber, number)
                                                             : undefined
                                                     }
