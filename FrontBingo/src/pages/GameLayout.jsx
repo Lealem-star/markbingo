@@ -362,18 +362,19 @@ export default function GameLayout({
 
     // NO automatic winning or auto-claim: players must always tap the BINGO button.
 
-    // Local 3-2-1 countdown before showing "STARTED" in status box
+    // Local 3-2-1 countdown before the first ball is drawn
     useEffect(() => {
-        // Reset countdown when game changes or leaves running phase
         if (gameState.phase !== 'running') {
             setStartCountdown(0);
             return;
         }
 
-        // Only trigger countdown at the very beginning of a running game (no numbers called yet)
-        if (gameState.phase === 'running' && calledNumbers.length === 0) {
-            setStartCountdown(3);
+        if (calledNumbers.length > 0) {
+            setStartCountdown(0);
+            return;
         }
+
+        setStartCountdown(3);
     }, [gameState.phase, calledNumbers.length, currentGameId]);
 
     // Tick the countdown down each second
@@ -631,7 +632,6 @@ export default function GameLayout({
 
 
     // Determine game phase display
-    const gamePhaseDisplay = (gameState.phase === 'running' || gameState.phase === 'playing') ? 'STARTED' : gameState.phase === 'registration' ? 'REGISTRATION' : 'WAITING';
     const hasPlayableCartelas = yourCards.length >= 1 && yourCards.length <= 2;
     const hasTwoCartelas = yourCards.length === 2;
     const roomLabel = Number(stake) === 50 ? 'VIP 💰💰' : `${stake || 10} ETB`;
@@ -848,31 +848,32 @@ export default function GameLayout({
                     {/* Right Side */}
                     <div className="right-side-container game-layout-right">
                         <div className="gl-right-top">
-                            {startCountdown > 0 && (
-                                <div className="gl-countdown-pill">
-                                    <span className="gl-countdown-num">{startCountdown}</span>
-                                    <span className="gl-countdown-label">{gamePhaseDisplay}</span>
-                                </div>
-                            )}
-
-                            <div className={`recent-numbers-joy ${calledNumbers.length === 0 ? 'recent-numbers-empty' : ''}`}>
-                                {calledNumbers.length === 0 ? (
-                                    <span className="recent-numbers-placeholder">—</span>
+                            <div className="gl-call-strip">
+                                {startCountdown > 0 && calledNumbers.length === 0 ? (
+                                    <div className="gl-start-countdown" aria-live="polite">
+                                        {startCountdown}
+                                    </div>
                                 ) : (
-                                    (() => {
-                                        let recent = currentNumber
-                                            ? calledNumbers.filter((n) => n !== currentNumber).slice(-3)
-                                            : calledNumbers.slice(-3);
-                                        if (recent.length === 0) recent = calledNumbers.slice(-3);
-                                        return recent.map((n, index) => {
-                                            const letter = getBallLetter(n);
-                                            return (
-                                                <div key={`recent-${n}-${index}`} className={`recent-number-circle recent-number-${letter.toLowerCase()}`}>
-                                                    {`${letter}${n}`}
-                                                </div>
-                                            );
-                                        });
-                                    })()
+                                    <div className={`recent-numbers-joy gl-recent-numbers ${calledNumbers.length === 0 ? 'recent-numbers-empty' : ''}`}>
+                                        {calledNumbers.length === 0 ? (
+                                            <span className="recent-numbers-placeholder">—</span>
+                                        ) : (
+                                            (() => {
+                                                let recent = currentNumber
+                                                    ? calledNumbers.filter((n) => n !== currentNumber).slice(-3)
+                                                    : calledNumbers.slice(-3);
+                                                if (recent.length === 0) recent = calledNumbers.slice(-3);
+                                                return recent.map((n, index) => {
+                                                    const letter = getBallLetter(n);
+                                                    return (
+                                                        <div key={`recent-${n}-${index}`} className={`recent-number-circle recent-number-${letter.toLowerCase()}`}>
+                                                            {`${letter}${n}`}
+                                                        </div>
+                                                    );
+                                                });
+                                            })()
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </div>
