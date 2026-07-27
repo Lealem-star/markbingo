@@ -477,21 +477,21 @@ export default function GameLayout({
     }, [gameState.phase, yourCards.length, currentPlayersCount, currentPrizePool, calledNumbers.length, currentGameId]);
 
 
-    // Reset local state when game phase changes to registration
+    // Reset local state and go to cartela selection when next round opens
     useEffect(() => {
         if (gameState.phase === 'registration') {
-            // Clear any local state that might interfere with new game
             setShowTimeout(false);
             setIsRefreshing(false);
-            // Reset bingo claim tracking for new game
             claimedBingoRef.current = false;
-            calledLenEvalRef.current = -1;
+            winOpportunityRef.current = null;
+            hadWinPatternRef.current = false;
             setMissedClaimWindow(false);
             setMissedPatternCalledSnapshot(null);
             setLockedCartelaIds([]);
             lastClaimCardRef.current = null;
+            onNavigate?.('cartela-selection');
         }
-    }, [gameState.phase]);
+    }, [gameState.phase, onNavigate]);
 
     // Handle invalid BINGO claim from server: clear marks and lock cartela with "ታስሯል"
     useEffect(() => {

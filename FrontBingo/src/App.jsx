@@ -218,10 +218,13 @@ function AppContent() {
     const isGameStartingOrRunning =
       (gameState.phase === 'starting' || gameState.phase === 'running') && gameState.gameId && hasPlayers;
     const isGameFinished = gameState.phase === 'announce' && gameState.gameId;
+    const isRegistrationOpen =
+      gameState.phase === 'registration' && gameState.gameId;
     
     const shouldNavigate = 
       (isGameStartingOrRunning && currentPage !== 'game-layout') ||
-      (isGameFinished && currentPage !== 'game-layout');
+      (isGameFinished && currentPage !== 'game-layout') ||
+      (isRegistrationOpen && currentPage !== 'cartela-selection');
     
     console.log('🤔 Should navigate?', shouldNavigate, {
       phase: gameState.phase,
@@ -231,14 +234,16 @@ function AppContent() {
       currentPage,
       isGameStartingOrRunning,
       isGameFinished,
+      isRegistrationOpen,
       hasCards: Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0,
       winnersCount: gameState.winners?.length || 0
     });
     
     if (shouldNavigate) {
+      const destination = isRegistrationOpen ? 'cartela-selection' : 'game-layout';
       console.log('✅ NAVIGATING! Auto-navigating based on game state:', {
         from: currentPage,
-        to: 'game-layout',
+        to: destination,
         phase: gameState.phase,
         gameId: gameState.gameId,
         hasCards: Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0,
@@ -262,8 +267,12 @@ function AppContent() {
         }
         // If no cards/selections, that's fine - GameLayout will show watch mode
       }
+
+      if (isRegistrationOpen) {
+        setSelectedCartelas([]);
+      }
       
-      setCurrentPage('game-layout');
+      setCurrentPage(destination);
     } else {
       console.log('⏸️ Not navigating - conditions not met');
     }
