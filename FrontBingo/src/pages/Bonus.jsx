@@ -165,7 +165,7 @@ export default function Bonus({ onNavigate }) {
             setHistory(historyData?.history || []);
         } catch (err) {
             console.error('Failed to load bonus data:', err);
-            showError('Could not load GoodBingo Bonus.');
+            showError('Could not load BestBingo Bonus.');
         } finally {
             setLoading(false);
         }

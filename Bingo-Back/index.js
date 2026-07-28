@@ -160,6 +160,9 @@ const FULL_NUMBER_POOL = Array.from({ length: 75 }, (_, i) => i + 1);
 /** How long the winner/results screen stays up before the next registration round opens. */
 const WINNER_ANNOUNCE_MS = 15000;
 
+/** Delay between each drawn/called number during a running game. */
+const NUMBER_CALL_INTERVAL_MS = 8000;
+
 // Bot fairness policy (Option B):
 // - allow bots to win up to BOT_WIN_STREAK_LIMIT consecutive games
 // - then block bot bingo claims for BOT_HUMAN_ALLOW_GAMES games
@@ -864,11 +867,11 @@ function callNextNumber(room) {
     // winners are now only determined from explicit bingo_claim messages.
 
     // Call next number after delay (maintains consistent timing)
-    console.log('⏰ Scheduling next number call in 5 seconds...');
+    console.log(`⏰ Scheduling next number call in ${NUMBER_CALL_INTERVAL_MS / 1000} seconds...`);
     room.callTimerId = setTimeout(() => {
         console.log('⏰ Timer fired, calling next number...');
         callNextNumber(room);
-    }, 5000);
+    }, NUMBER_CALL_INTERVAL_MS);
     console.log('✅ Timer scheduled, callTimerId:', room.callTimerId);
 }
 

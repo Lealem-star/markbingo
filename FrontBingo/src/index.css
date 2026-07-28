@@ -6599,7 +6599,7 @@ body.game-layout-active .App {
     color: #111827;
 }
 
-/* GoodBingo Bonus — match prediction */
+/* BestBingo Bonus — match prediction */
 .bonus-page {
     min-height: 100vh;
     background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);

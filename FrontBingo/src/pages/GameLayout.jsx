@@ -25,6 +25,12 @@ function formatBallLabel(number) {
     return `${getBallLetter(number)}-${number}`;
 }
 
+function cartelaContainsNumber(card, number) {
+    if (!card || !Array.isArray(card) || number === 0) return false;
+    const n = Number(number);
+    return card.some((row) => row.some((cell) => Number(cell) === n));
+}
+
 export default function GameLayout({
     stake,
     selectedCartelas,
@@ -257,6 +263,38 @@ export default function GameLayout({
         return () => clearInterval(intervalId);
     }, [calledNumbers.length, gameState.phase, missedClaimWindow, currentGameId]);
 
+    // Two cartelas: auto-mark a drawn number when it appears on only one card
+    useEffect(() => {
+        if (yourCards.length !== 2) return;
+        if (gameState.phase !== 'running') return;
+        if (missedClaimWindow) return;
+        if (typeof currentNumber !== 'number' || !calledNumbers.includes(currentNumber)) return;
+
+        const cardsWithNumber = yourCards.filter(
+            ({ cardNumber, card }) =>
+                !isCartelaLocked(cardNumber) && cartelaContainsNumber(card, currentNumber)
+        );
+
+        if (cardsWithNumber.length !== 1) return;
+
+        const { cardNumber } = cardsWithNumber[0];
+        setManuallyMarkedNumbers((prev) => {
+            const cardMarks = prev[cardNumber] || new Set();
+            if (cardMarks.has(currentNumber)) return prev;
+            return {
+                ...prev,
+                [cardNumber]: new Set([...cardMarks, currentNumber]),
+            };
+        });
+    }, [
+        currentNumber,
+        calledNumbers,
+        gameState.phase,
+        missedClaimWindow,
+        yourCards,
+        isCartelaLocked,
+    ]);
+
     // Handle manual number marking/unmarking
     const handleNumberToggle = useCallback((cardNumber, number) => {
         if (missedClaimWindow) return;
@@ -265,19 +303,47 @@ export default function GameLayout({
         setManuallyMarkedNumbers(prev => {
             const cardMarks = prev[cardNumber] || new Set();
             const newCardMarks = new Set(cardMarks);
-            
-            if (newCardMarks.has(number)) {
-                newCardMarks.delete(number); // Unmark
+            const isMarking = !newCardMarks.has(number);
+
+            if (isMarking) {
+                newCardMarks.add(number);
             } else {
-                newCardMarks.add(number); // Mark
+                newCardMarks.delete(number);
             }
-            
-            return {
+
+            const next = {
                 ...prev,
-                [cardNumber]: newCardMarks
+                [cardNumber]: newCardMarks,
             };
+
+            // Two cartelas: if the same number is on both cards, sync mark/unmark
+            const cards = yourCardsRef.current;
+            if (
+                cards.length === 2 &&
+                calledNumbers.includes(number)
+            ) {
+                const other = cards.find(
+                    (c) => Number(c.cardNumber) !== Number(cardNumber)
+                );
+                if (
+                    other &&
+                    !isCartelaLocked(other.cardNumber) &&
+                    cartelaContainsNumber(other.card, number)
+                ) {
+                    const otherMarks = next[other.cardNumber] || new Set();
+                    const syncedOtherMarks = new Set(otherMarks);
+                    if (isMarking) {
+                        syncedOtherMarks.add(number);
+                    } else {
+                        syncedOtherMarks.delete(number);
+                    }
+                    next[other.cardNumber] = syncedOtherMarks;
+                }
+            }
+
+            return next;
         });
-    }, [missedClaimWindow, isCartelaLocked]);
+    }, [missedClaimWindow, isCartelaLocked, calledNumbers]);
 
     const getMarkedNumbersForCard = useCallback((cardNumber) => {
         const marksSet = manuallyMarkedNumbers[cardNumber];

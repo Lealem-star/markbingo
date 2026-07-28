@@ -83,8 +83,8 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 ? { text: 'SuperBingo | 50 ብር', web_app: { url: `${baseUrl}?stake=50` } }
                 : { text: 'SuperBingo | 50 ብር', callback_data: 'play_stake_50' };
             const bonusBtn = isHttpsWebApp
-                ? { text: '⚽ GoodBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }
-                : { text: '⚽ GoodBingo Bonus', callback_data: 'play_bonus' };
+                ? { text: '⚽ BestBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }
+                : { text: '⚽ BestBingo Bonus', callback_data: 'play_bonus' };
 
             return {
                 text: '🕹️ *PLAY IN:*\nChoose a room to join the game:',
@@ -377,7 +377,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 registered = !!(user && (user.isRegistered || user.phone));
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nGoodBingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
+                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nBestBingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
                     const photoPath = path.join(__dirname, '..', 'static', 'lb.png');
                     const photo = fs.existsSync(photoPath) ? { source: fs.createReadStream(photoPath) } : (WEBAPP_URL || '').replace(/\/$/, '') + '/lb.png';
                     return ctx.replyWithPhoto(photo, { caption: regText, reply_markup: regKeyboard.reply_markup, parse_mode: 'Markdown' });
@@ -845,7 +845,7 @@ Thank you for your dedication! 🙏`;
 
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nGoodBingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
+                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nBestBingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
                     return ctx.reply(regText, { ...regKeyboard, parse_mode: 'Markdown' });
                 }
 
@@ -1382,11 +1382,11 @@ Thank you for your dedication! 🙏`;
             if (!(await requireRegistration(ctx))) return;
             if (isHttpsWebApp) {
                 const baseUrl = (webAppUrl || '').replace(/\/$/, '');
-                ctx.answerCbQuery('Opening GoodBingo Bonus…');
-                return ctx.reply('⚽ *GoodBingo Bonus* — predict the exact match score!', {
+                ctx.answerCbQuery('Opening BestBingo Bonus…');
+                return ctx.reply('⚽ *BestBingo Bonus* — predict the exact match score!', {
                     parse_mode: 'Markdown',
                     reply_markup: {
-                        inline_keyboard: [[{ text: '⚽ Open GoodBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }]]
+                        inline_keyboard: [[{ text: '⚽ Open BestBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }]]
                     }
                 });
             }
