@@ -103,24 +103,20 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     useEffect(() => {
     }, [sessionId, stake, connected, wsReadyState, isConnecting]);
 
-    // Handle page visibility changes to maintain connection
+    // Rejoin room when tab becomes visible (handles zombie connections)
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && stake && sessionId) {
-                console.log('CartelaSelection - Page became visible, ensuring WebSocket connection');
-                // Small delay to let the page fully load
+                console.log('CartelaSelection - Page became visible, rejoining stake room');
                 setTimeout(() => {
-                    if (!connected) {
-                        console.log('Reconnecting WebSocket after page visibility change');
-                        connectToStake(stake);
-                    }
+                    connectToStake(stake);
                 }, 100);
             }
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [stake, sessionId, connected, connectToStake]);
+    }, [stake, sessionId, connectToStake]);
 
     // Update gameId in parent component when it changes
     useEffect(() => {

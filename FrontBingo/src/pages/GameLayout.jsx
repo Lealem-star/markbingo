@@ -155,22 +155,19 @@ export default function GameLayout({
         }
     }, [stake, sessionId, connectToStake]);
 
-    // Handle page visibility changes to maintain connection
+    // Rejoin room when tab becomes visible (handles zombie connections that look "connected")
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && stake && sessionId) {
-                // Small delay to let the page fully load
                 setTimeout(() => {
-                    if (!connected) {
-                        connectToStake(stake);
-                    }
+                    connectToStake(stake);
                 }, 100);
             }
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [stake, sessionId, connected, connectToStake]);
+    }, [stake, sessionId, connectToStake]);
 
     // Preload sounds on first user toggle on (or mount if desired)
     useEffect(() => {

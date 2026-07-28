@@ -3,6 +3,14 @@ import { useAuth } from '../lib/auth/AuthProvider';
 
 const WebSocketContext = createContext();
 
+const STALE_CONNECTION_MS = 15000;
+const MAX_RECONNECT_ATTEMPTS = 5;
+
+function lastCalledNumber(calledNumbers) {
+    if (!Array.isArray(calledNumbers) || calledNumbers.length === 0) return null;
+    return calledNumbers[calledNumbers.length - 1];
+}
+
 export function WebSocketProvider({ children }) {
     const { sessionId } = useAuth();
     const wsRef = useRef(null);
@@ -33,6 +41,17 @@ export function WebSocketProvider({ children }) {
     const [isConnecting, setIsConnecting] = useState(false);
     const rejoinScheduledRef = useRef(false);
     const connectionAttemptRef = useRef(false);
+    const currentStakeRef = useRef(null);
+    const gamePhaseRef = useRef('waiting');
+    const lastMessageAtRef = useRef(Date.now());
+
+    useEffect(() => {
+        gamePhaseRef.current = gameState.phase;
+    }, [gameState.phase]);
+
+    useEffect(() => {
+        currentStakeRef.current = currentStake;
+    }, [currentStake]);
 
     const send = useCallback((type, payload) => {
         const ws = wsRef.current;
@@ -166,11 +185,14 @@ export function WebSocketProvider({ children }) {
                     }
                 }, 30000);
 
-                // Auto-join current stake room if selected
-                if (currentStake) {
+                lastMessageAtRef.current = Date.now();
+
+                // Auto-join current stake room (use ref to avoid stale closure on reconnect)
+                const stakeToJoin = currentStakeRef.current;
+                if (stakeToJoin) {
                     try {
-                        console.log('Joining room after connect:', { stake: currentStake });
-                        ws.send(JSON.stringify({ type: 'join_room', payload: { stake: currentStake } }));
+                        console.log('Joining room after connect:', { stake: stakeToJoin });
+                        ws.send(JSON.stringify({ type: 'join_room', payload: { stake: stakeToJoin } }));
                     } catch (e) {
                         console.warn('Failed to send join_room on open', e);
                     }
@@ -179,6 +201,7 @@ export function WebSocketProvider({ children }) {
 
             ws.onmessage = (e) => {
                 try {
+                    lastMessageAtRef.current = Date.now();
                     setMessageCount(prev => prev + 1);
                     console.log('WS message received:', e.data);
                     const event = JSON.parse(e.data);
@@ -287,6 +310,8 @@ export function WebSocketProvider({ children }) {
                                     }
                                 }
                                 
+                                const snapshotCalled = event.payload.calledNumbers || event.payload.called || prev.calledNumbers || [];
+
                                 const newState = {
                                     ...prev,
                                     // Only spread safe fields from payload (not yourCards/yourSelections)
@@ -296,7 +321,7 @@ export function WebSocketProvider({ children }) {
                                     availableCards: event.payload.availableCards || prev.availableCards || [],
                                     phase,
                                     gameId,
-                                    calledNumbers: event.payload.calledNumbers || event.payload.called || prev.calledNumbers || [],
+                                    calledNumbers: snapshotCalled,
                                     countdown: phase === 'registration' ? remainingSeconds : (event.payload.countdown || prev.countdown || 0),
                                     registrationEndTime,
                                     // Use our carefully determined final values
@@ -305,6 +330,10 @@ export function WebSocketProvider({ children }) {
                                     ...(phase === 'registration' ? {
                                         currentNumber: null,
                                         winners: []
+                                    } : phase === 'running' ? {
+                                        currentNumber: event.payload.currentNumber
+                                            ?? lastCalledNumber(snapshotCalled)
+                                            ?? prev.currentNumber
                                     } : {})
                                 };
                                 
@@ -611,10 +640,11 @@ export function WebSocketProvider({ children }) {
                     heartbeat = null;
                 }
 
-                // Auto-reconnect with exponential backoff
-                if (!stopped && retry < 5) {
+                // Auto-reconnect with exponential backoff; keep retrying during active games
+                const inActiveGame = gamePhaseRef.current === 'running' || gamePhaseRef.current === 'starting';
+                if (!stopped && (inActiveGame || retry < MAX_RECONNECT_ATTEMPTS)) {
                     const delay = Math.min(1000 * Math.pow(2, retry), 30000);
-                    console.log(`Reconnecting general WebSocket in ${delay}ms (attempt ${retry + 1})`);
+                    console.log(`Reconnecting general WebSocket in ${delay}ms (attempt ${retry + 1}${inActiveGame ? ', active game' : ''})`);
                     setTimeout(() => {
                         retry++;
                         connectionAttemptRef.current = false; // Reset before reconnecting
@@ -671,6 +701,8 @@ export function WebSocketProvider({ children }) {
             return;
         }
 
+        currentStakeRef.current = stake;
+
         const isSameStake = currentStake === stake;
 
         // Reset game state when switching stakes; if same stake, don't nuke state
@@ -726,6 +758,23 @@ export function WebSocketProvider({ children }) {
             connectGeneral();
         }
     }, [sessionId, connected, isConnecting]);
+
+    // Force reconnect if socket appears open but stops delivering messages during a live game
+    useEffect(() => {
+        if (!connected) return undefined;
+        const phase = gameState.phase;
+        if (phase !== 'running' && phase !== 'starting') return undefined;
+
+        const intervalId = setInterval(() => {
+            const elapsed = Date.now() - lastMessageAtRef.current;
+            if (elapsed > STALE_CONNECTION_MS && wsRef.current?.readyState === WebSocket.OPEN) {
+                console.warn('Stale WebSocket during active game — forcing reconnect', { elapsedMs: elapsed });
+                wsRef.current.close();
+            }
+        }, 5000);
+
+        return () => clearInterval(intervalId);
+    }, [connected, gameState.phase]);
 
     // Keep general connection alive during navigation
     useEffect(() => {

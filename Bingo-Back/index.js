@@ -264,6 +264,9 @@ function makeRoom(stake) {
                 playersCount: selectedPlayersCount,
                 calledNumbers: room.calledNumbers,
                 called: room.calledNumbers,
+                currentNumber: room.calledNumbers.length > 0
+                    ? room.calledNumbers[room.calledNumbers.length - 1]
+                    : null,
                 stake: room.stake,
                 takenCards: Array.from(room.takenCards),
                 yourSelections: getUserSelections(ws.userId),
@@ -1387,6 +1390,12 @@ wss.on('connection', async (ws, request) => {
     ws.on('message', async (message) => {
         try {
             const data = JSON.parse(message);
+            if (data.type === 'ping') {
+                if (ws.readyState === ws.OPEN) {
+                    ws.send(JSON.stringify({ type: 'pong' }));
+                }
+                return;
+            }
             if (data.type === 'join_room') {
                 const stake = data.stake || data.payload?.stake;
                 console.log('join_room received:', { stake, dataStake: data.stake, payloadStake: data.payload?.stake, userId: ws.userId });
