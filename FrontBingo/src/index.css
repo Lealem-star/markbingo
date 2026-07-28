@@ -2765,7 +2765,7 @@ body {
 
 .cartela-grid-panel {
     flex: 0 0 auto;
-    padding: 4px 4px 0;
+    padding: 10px 4px 0;
 }
 
 .cartela-grid-scrollable-v2 {
@@ -2774,9 +2774,11 @@ body {
     border: none;
     max-height: min(52vh, 420px);
     min-height: 240px;
+    overflow-x: hidden;
     overflow-y: auto;
     padding: 4px;
     flex: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 .cartela-numbers-grid-8 {
