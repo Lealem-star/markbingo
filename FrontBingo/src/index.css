@@ -5690,14 +5690,16 @@ body.game-layout-active .App {
 
 .game-layout-page .bingo-letter-square {
     width: 100%;
-    aspect-ratio: 1;
     height: auto;
-    min-height: 0;
+    min-height: 2.75rem;
     border-radius: 5px;
-    font-size: 0.62rem;
+    font-size: 24px;
     font-weight: 800;
     margin: 0;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .game-layout-page .bingo-letter-b { background: #2563eb; }
@@ -5709,15 +5711,17 @@ body.game-layout-active .App {
 .game-layout-page .bingo-number-btn {
     border: 1px solid #dde1e8;
     border-radius: 5px;
-    font-size: 0.62rem;
-    font-weight: 700;
-    aspect-ratio: 1;
+    font-size: 24px;
+    font-weight: 800;
     width: 100%;
-    min-height: 0;
+    min-height: 2.75rem;
     flex: none;
     padding: 0;
     cursor: default;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .game-layout-page .bingo-number-default {
@@ -6035,10 +6039,12 @@ body.game-layout-active .App {
 }
 
 .game-layout-page .gl-cartela-card-wrap .cartela-letter {
-    border-radius: 6px;
+    border-radius: 5px;
     font-size: 0.65rem;
     font-weight: 800;
-    padding: 0.2rem 0;
+    height: auto;
+    min-height: 1.75rem;
+    padding: 0.35rem 0;
 }
 
 .game-layout-page .gl-cartela-card-wrap .cartela-letter-b { background: #2563eb; }
@@ -6058,11 +6064,14 @@ body.game-layout-active .App {
 
 .game-layout-page .gl-cartela-card-wrap .cartela-cell {
     height: auto;
-    min-height: 1.35rem;
-    border-radius: 6px;
+    min-height: 2.25rem;
+    border-radius: 5px;
     font-size: 0.72rem;
     font-weight: 700;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .game-layout-page .gl-cartela-card-wrap .cartela-normal {
@@ -6084,18 +6093,24 @@ body.game-layout-active .App {
 }
 
 .game-layout-page .gl-cartela-card-wrap .cartela-star {
-    color: #2563eb;
-    font-size: 0.85rem;
-    text-shadow: none;
+    color: #fbbf24;
+    font-size: 1rem;
+    text-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
 }
 
 .user-cartelas-stack .gl-cartela-card-wrap .cartela-cell {
-    min-height: 1.05rem;
+    min-height: 1.65rem;
     font-size: 0.62rem;
 }
 
 .user-cartelas-stack .gl-cartela-card-wrap .cartela-letter {
     font-size: 0.55rem;
+    min-height: 1.35rem;
+    padding: 0.25rem 0;
+}
+
+.user-cartelas-stack .gl-cartela-card-wrap .cartela-star {
+    font-size: 0.75rem;
 }
 
 .cartela-bingo-btn {
@@ -6183,8 +6198,10 @@ body.game-layout-active .App {
 }
 
 @media (max-width: 360px) {
-    .game-layout-page .bingo-number-btn {
-        font-size: 0.5rem;
+    .game-layout-page .bingo-number-btn,
+    .game-layout-page .bingo-letter-square {
+        font-size: 16px;
+        min-height: 2rem;
     }
 
     .game-layout-page .gl-master-grid,
