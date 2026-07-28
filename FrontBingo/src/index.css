@@ -2685,15 +2685,16 @@ body {
 }
 
 .cartela-selection-header {
-    padding: 4px 4px 0;
+    padding: 4px 8px 0;
     flex-shrink: 0;
+    background: #f3f4f6;
 }
 
 .cartela-selection-top {
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
-    background: #E1E8F0;
+    background: #f3f4f6;
 }
 
 .cartela-status-badges {
@@ -2765,18 +2766,20 @@ body {
 
 .cartela-grid-panel {
     flex: 0 0 auto;
-    padding: 10px 4px 0;
+    padding: 10px 8px 0;
+    background: #f3f4f6;
 }
 
 .cartela-grid-scrollable-v2 {
     background: #E1E8F0;
-    border-radius: 10px;
-    border: none;
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
     max-height: min(52vh, 420px);
     min-height: 240px;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: 4px;
+    padding: 10px;
     flex: none;
     -webkit-overflow-scrolling: touch;
 }
@@ -2795,6 +2798,7 @@ body {
     height: 28px;
     font-size: 12px;
     border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 
 .cartela-number-btn-light.cartela-sold-light {
@@ -2815,7 +2819,7 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 4px;
     flex-shrink: 0;
-    padding: 2px 4px 4px;
+    padding: 0 8px 8px;
 }
 
 .cartela-slot {
