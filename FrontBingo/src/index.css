@@ -5665,7 +5665,7 @@ body.game-layout-active .App {
     row-gap: 0;
     flex: 1;
     min-height: 0;
-    align-items: stretch;
+    align-items: start;
     overflow: hidden;
     background: #E1E8F0;
 }
@@ -5673,18 +5673,22 @@ body.game-layout-active .App {
 .game-layout-left-col {
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
+    align-self: start;
+    gap: 0;
     background: #E1E8F0;
     min-height: 0;
     min-width: 0;
+    width: 100%;
 }
 
 .game-layout-page .bingo-grid-container.gl-master-board {
     background: #E1E8F0;
     border: none;
     border-radius: 0;
-    padding: 0.2rem 0.15rem 0.15rem 0.2rem;
+    padding: 0.2rem 0.15rem 0 0.2rem;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: visible;
     flex: 0 0 auto;
     align-self: stretch;
     min-height: 0;
@@ -5764,13 +5768,25 @@ body.game-layout-active .App {
 
 .gl-left-footer {
     flex-shrink: 0;
-    margin-top: auto;
     background: #1a202c;
     border-radius: 8px 8px 0 0;
     margin: 0;
-    padding: 0.4rem 0.45rem 0.5rem;
+    margin-top: 0;
+    padding: 0.4rem 0.2rem 0.5rem;
     width: 100%;
     box-sizing: border-box;
+}
+
+.game-layout-right {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.15rem 0.25rem 0.15rem 0;
+    justify-content: flex-start;
+    align-self: stretch;
+    min-width: 0;
+    min-height: 100%;
+    height: 100%;
 }
 
 .gl-left-footer-row,
@@ -5833,17 +5849,6 @@ body.game-layout-active .App {
 .gl-refresh-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-.game-layout-right {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    padding: 0.15rem 0.25rem 0.15rem 0;
-    justify-content: flex-start;
-    min-width: 0;
-    min-height: 0;
-    height: 100%;
 }
 
 .gl-right-top {
