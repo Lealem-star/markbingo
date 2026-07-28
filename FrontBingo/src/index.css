@@ -5706,7 +5706,7 @@ body.game-layout-active .App {
     height: auto;
     min-height: 2.75rem;
     border-radius: 5px;
-    font-size: 24px;
+    font-size: 14px;
     font-weight: 800;
     margin: 0;
     flex-shrink: 0;
@@ -5724,7 +5724,7 @@ body.game-layout-active .App {
 .game-layout-page .bingo-number-btn {
     border: 1px solid #dde1e8;
     border-radius: 5px;
-    font-size: 24px;
+    font-size: 14px;
     font-weight: 800;
     width: 100%;
     min-height: 2.75rem;
@@ -6213,7 +6213,7 @@ body.game-layout-active .App {
 @media (max-width: 360px) {
     .game-layout-page .bingo-number-btn,
     .game-layout-page .bingo-letter-square {
-        font-size: 16px;
+        font-size: 14px;
         min-height: 2rem;
     }
 
