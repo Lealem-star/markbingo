@@ -2690,8 +2690,7 @@ body {
 }
 
 .cartela-selection-top {
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     background: #E1E8F0;
@@ -2761,26 +2760,23 @@ body {
 .cartela-selection-preview {
     flex: 0 0 auto;
     background: #ffffff;
-    padding: 0;
+    padding-top: 10px;
 }
 
 .cartela-grid-panel {
-    flex: 1 1 auto;
-    min-height: 0;
-    padding: 4px 0 0;
-    display: flex;
-    flex-direction: column;
+    flex: 0 0 auto;
+    padding: 4px 4px 0;
 }
 
 .cartela-grid-scrollable-v2 {
     background: #E1E8F0;
-    border-radius: 0;
+    border-radius: 10px;
     border: none;
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none;
+    max-height: min(52vh, 420px);
+    min-height: 240px;
     overflow-y: auto;
     padding: 4px;
+    flex: none;
 }
 
 .cartela-numbers-grid-8 {
