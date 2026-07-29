@@ -13,6 +13,52 @@ const INVALID_BINGO_MSG = 'Invalid BINGO! No winning pattern yet.';
 /** Minimum time to claim BINGO after a winning pattern appears (next ball alone is not enough if it comes sooner). */
 const WIN_CLAIM_MIN_MS = 5000;
 
+/** Pattern ids (row/col/diag/corners) complete on this cartela for the given calls. */
+function getCompletedPatternSignatures(cartella, calledNumbers) {
+    const signatures = new Set();
+    if (!cartella || !Array.isArray(calledNumbers)) return signatures;
+
+    for (let i = 0; i < 5; i++) {
+        if (cartella[i].every((num) => num === 0 || calledNumbers.includes(num))) {
+            signatures.add(`row-${i}`);
+        }
+    }
+    for (let j = 0; j < 5; j++) {
+        if (cartella.every((row) => row[j] === 0 || calledNumbers.includes(row[j]))) {
+            signatures.add(`col-${j}`);
+        }
+    }
+    if (cartella.every((row, i) => row[i] === 0 || calledNumbers.includes(row[i]))) {
+        signatures.add('diag-main');
+    }
+    if (cartella.every((row, i) => row[4 - i] === 0 || calledNumbers.includes(row[4 - i]))) {
+        signatures.add('diag-anti');
+    }
+    const topLeft = cartella[0][0];
+    const topRight = cartella[0][4];
+    const bottomLeft = cartella[4][0];
+    const bottomRight = cartella[4][4];
+    if (
+        (topLeft === 0 || calledNumbers.includes(topLeft)) &&
+        (topRight === 0 || calledNumbers.includes(topRight)) &&
+        (bottomLeft === 0 || calledNumbers.includes(bottomLeft)) &&
+        (bottomRight === 0 || calledNumbers.includes(bottomRight))
+    ) {
+        signatures.add('corners');
+    }
+    return signatures;
+}
+
+function getAllCompletedPatternSignatures(cards, calledNumbers) {
+    const all = new Set();
+    for (const { card } of cards) {
+        for (const sig of getCompletedPatternSignatures(card, calledNumbers)) {
+            all.add(sig);
+        }
+    }
+    return all;
+}
+
 function getBallLetter(number) {
     if (number <= 15) return 'B';
     if (number <= 30) return 'I';
@@ -120,9 +166,9 @@ export default function GameLayout({
     /** Cartelas locked after a false BINGO claim — show "ታስሯል" banner. */
     const [lockedCartelaIds, setLockedCartelaIds] = useState([]);
 
-    /** User had a winning pattern but did not tap BINGO in time. */
-    const [missedClaimWindow, setMissedClaimWindow] = useState(false);
-    /** Called numbers when the win opportunity opened — drives red pattern cells. */
+    /** True while the player may tap BINGO for the current win opportunity. */
+    const [activeClaimWindow, setActiveClaimWindow] = useState(false);
+    /** Called numbers when a win opportunity expired — drives red pattern cells. */
     const [missedPatternCalledSnapshot, setMissedPatternCalledSnapshot] = useState(null);
 
     // Track if we've already claimed bingo for this game to prevent duplicate claims
@@ -130,9 +176,12 @@ export default function GameLayout({
     const lastGameIdRef = useRef(null);
     const lastClaimCardRef = useRef(null);
     const yourCardsRef = useRef([]);
-    /** When a win pattern first completes: { startedAt, callCount, snapshot }. */
+    /** When a new win pattern completes: { startedAt, callCount, snapshot, patterns }. */
     const winOpportunityRef = useRef(null);
-    const hadWinPatternRef = useRef(false);
+    /** Patterns that already completed and their claim window expired. */
+    const missedPatternSignaturesRef = useRef(new Set());
+    /** Patterns that were already complete on the previous ball draw. */
+    const knownCompletedPatternsRef = useRef(new Set());
 
     useEffect(() => {
         yourCardsRef.current = yourCards;
@@ -197,48 +246,60 @@ export default function GameLayout({
             claimedBingoRef.current = false;
             lastGameIdRef.current = currentGameId;
             winOpportunityRef.current = null;
-            hadWinPatternRef.current = false;
-            setMissedClaimWindow(false);
+            missedPatternSignaturesRef.current = new Set();
+            knownCompletedPatternsRef.current = new Set();
+            setActiveClaimWindow(false);
             setMissedPatternCalledSnapshot(null);
             setLockedCartelaIds([]);
             lastClaimCardRef.current = null;
         }
     }, [currentGameId]);
 
-    // Start win-opportunity timer when any cartela first completes a pattern
+    // Start a claim window when a NEW winning pattern completes (not one already missed)
     useEffect(() => {
         if (gameState.phase !== 'running' || yourCards.length === 0) {
             winOpportunityRef.current = null;
-            hadWinPatternRef.current = false;
-            setMissedClaimWindow(false);
-            setMissedPatternCalledSnapshot(null);
+            knownCompletedPatternsRef.current = new Set();
+            setActiveClaimWindow(false);
             return;
         }
 
-        if (claimedBingoRef.current || missedClaimWindow) {
+        if (claimedBingoRef.current) {
+            knownCompletedPatternsRef.current = getAllCompletedPatternSignatures(yourCards, calledNumbers);
             return;
         }
 
-        const hasWinPattern = yourCards.some(({ card }) => checkBingoPattern(card, calledNumbers));
+        const currentPatterns = getAllCompletedPatternSignatures(yourCards, calledNumbers);
+        const previouslyKnown = knownCompletedPatternsRef.current;
+        const justCompleted = [...currentPatterns].filter((p) => !previouslyKnown.has(p));
+        knownCompletedPatternsRef.current = currentPatterns;
 
-        if (hasWinPattern && !hadWinPatternRef.current) {
-            winOpportunityRef.current = {
-                startedAt: Date.now(),
-                callCount: calledNumbers.length,
-                snapshot: [...calledNumbers],
-            };
+        const newClaimable = justCompleted.filter(
+            (p) => !missedPatternSignaturesRef.current.has(p)
+        );
+
+        if (newClaimable.length > 0) {
+            if (winOpportunityRef.current) {
+                const opp = winOpportunityRef.current;
+                winOpportunityRef.current = {
+                    ...opp,
+                    patterns: [...new Set([...opp.patterns, ...newClaimable])],
+                };
+            } else {
+                winOpportunityRef.current = {
+                    startedAt: Date.now(),
+                    callCount: calledNumbers.length,
+                    snapshot: [...calledNumbers],
+                    patterns: newClaimable,
+                };
+                setActiveClaimWindow(true);
+            }
         }
-
-        if (!hasWinPattern) {
-            winOpportunityRef.current = null;
-        }
-
-        hadWinPatternRef.current = hasWinPattern;
-    }, [calledNumbers, gameState.phase, yourCards, currentGameId, missedClaimWindow]);
+    }, [calledNumbers, gameState.phase, yourCards, currentGameId]);
 
     // Close claim window after min 5s AND next ball (whichever is later — fast draws still get 5s)
     useEffect(() => {
-        if (gameState.phase !== 'running' || missedClaimWindow) {
+        if (gameState.phase !== 'running') {
             return;
         }
 
@@ -252,20 +313,26 @@ export default function GameLayout({
             const nextBallDrawn = calledNumbers.length > opp.callCount;
 
             if (nextBallDrawn && elapsed >= WIN_CLAIM_MIN_MS) {
-                setMissedClaimWindow(true);
+                for (const pattern of opp.patterns) {
+                    missedPatternSignaturesRef.current.add(pattern);
+                }
                 setMissedPatternCalledSnapshot(opp.snapshot);
+                setActiveClaimWindow(false);
                 winOpportunityRef.current = null;
+                setAlertBanners((prev) =>
+                    prev.includes(MISSED_BINGO_MSG) ? prev : [...prev, MISSED_BINGO_MSG]
+                );
+                showError(MISSED_BINGO_MSG);
             }
         };
 
         evaluateMissedWindow();
         const intervalId = setInterval(evaluateMissedWindow, 250);
         return () => clearInterval(intervalId);
-    }, [calledNumbers.length, gameState.phase, missedClaimWindow, currentGameId]);
+    }, [calledNumbers.length, gameState.phase, currentGameId, showError]);
 
     // Handle manual number marking/unmarking
     const handleNumberToggle = useCallback((cardNumber, number) => {
-        if (missedClaimWindow) return;
         if (isCartelaLocked(cardNumber)) return;
 
         setManuallyMarkedNumbers(prev => {
@@ -311,7 +378,7 @@ export default function GameLayout({
 
             return next;
         });
-    }, [missedClaimWindow, isCartelaLocked, calledNumbers]);
+    }, [isCartelaLocked, calledNumbers]);
 
     const getMarkedNumbersForCard = useCallback((cardNumber) => {
         const marksSet = manuallyMarkedNumbers[cardNumber];
@@ -346,8 +413,8 @@ export default function GameLayout({
             return;
         }
 
-        if (missedClaimWindow) {
-            setAlertBanners(prev =>
+        if (!activeClaimWindow) {
+            setAlertBanners((prev) =>
                 prev.includes(MISSED_BINGO_MSG) ? prev : [...prev, MISSED_BINGO_MSG]
             );
             showError(MISSED_BINGO_MSG);
@@ -397,7 +464,7 @@ export default function GameLayout({
         isCartelaLocked,
         isManualClaiming,
         lockCartela,
-        missedClaimWindow,
+        activeClaimWindow,
         showError,
         showSuccess
     ]);
@@ -515,8 +582,9 @@ export default function GameLayout({
             setIsRefreshing(false);
             claimedBingoRef.current = false;
             winOpportunityRef.current = null;
-            hadWinPatternRef.current = false;
-            setMissedClaimWindow(false);
+            missedPatternSignaturesRef.current = new Set();
+            knownCompletedPatternsRef.current = new Set();
+            setActiveClaimWindow(false);
             setMissedPatternCalledSnapshot(null);
             setLockedCartelaIds([]);
             lastClaimCardRef.current = null;
@@ -952,15 +1020,11 @@ export default function GameLayout({
                                                     isPreview={false}
                                                     showHeader={true}
                                                     onNumberToggle={
-                                                        !missedClaimWindow && !isLocked
+                                                        !isLocked
                                                             ? (number) => handleNumberToggle(cardNumber, number)
                                                             : undefined
                                                     }
-                                                    missedWinningCalledNumbers={
-                                                        missedClaimWindow && missedPatternCalledSnapshot
-                                                            ? missedPatternCalledSnapshot
-                                                            : null
-                                                    }
+                                                    missedWinningCalledNumbers={missedPatternCalledSnapshot}
                                                 />
                                                 {isLocked && (
                                                     <div className="cartela-lock-overlay" aria-hidden="true">
@@ -974,14 +1038,14 @@ export default function GameLayout({
                                             {gameState.phase === 'running' && (
                                                 <button
                                                     type="button"
-                                                    className={`cartela-bingo-btn ${bingoReady && !isLocked ? 'cartela-bingo-btn--ready' : ''} ${isManualClaiming ? 'loading' : ''} ${isLocked ? 'cartela-bingo-btn--locked' : ''}`}
+                                                    className={`cartela-bingo-btn ${bingoReady && activeClaimWindow && !isLocked ? 'cartela-bingo-btn--ready' : ''} ${isManualClaiming ? 'loading' : ''} ${isLocked ? 'cartela-bingo-btn--locked' : ''}`}
                                                     onClick={() => handleCardBingo(cardNumber, card)}
                                                     disabled={
                                                         !connected ||
                                                         !currentGameId ||
                                                         claimedBingoRef.current ||
                                                         isManualClaiming ||
-                                                        missedClaimWindow ||
+                                                        !activeClaimWindow ||
                                                         isLocked
                                                     }
                                                 >
