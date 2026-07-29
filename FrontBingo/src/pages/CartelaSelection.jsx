@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 // import BottomNav from '../components/BottomNav';
 import CartellaCard from '../components/CartellaCard';
 import { apiFetch } from '../lib/api/client';
@@ -7,6 +7,78 @@ import { useToast } from '../contexts/ToastContext';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
 const MAX_CARTELAS_PER_PLAYER = 2;
+const PRESALE_AUTO_CONFIRM_MS = 3500;
+
+function SuperPendingCartelaSlot({ cardNumber, card, called, onCancel, onConfirm }) {
+    const [progress, setProgress] = useState(0);
+    const cancelledRef = useRef(false);
+    const confirmedRef = useRef(false);
+    const onConfirmRef = useRef(onConfirm);
+
+    useEffect(() => {
+        onConfirmRef.current = onConfirm;
+    }, [onConfirm]);
+
+    useEffect(() => {
+        cancelledRef.current = false;
+        confirmedRef.current = false;
+        setProgress(0);
+        const start = Date.now();
+        let frameId = null;
+
+        const tick = () => {
+            if (cancelledRef.current || confirmedRef.current) return;
+            const elapsed = Date.now() - start;
+            const pct = Math.min(100, (elapsed / PRESALE_AUTO_CONFIRM_MS) * 100);
+            setProgress(pct);
+            if (pct >= 100) {
+                confirmedRef.current = true;
+                onConfirmRef.current(cardNumber);
+                return;
+            }
+            frameId = requestAnimationFrame(tick);
+        };
+
+        frameId = requestAnimationFrame(tick);
+        return () => {
+            cancelledRef.current = true;
+            if (frameId) cancelAnimationFrame(frameId);
+        };
+    }, [cardNumber]);
+
+    const handleCancel = () => {
+        if (confirmedRef.current) return;
+        cancelledRef.current = true;
+        onCancel(cardNumber);
+    };
+
+    return (
+        <div className="cartela-slot cartela-slot-filled cartela-slot-pending">
+            <div className="cartela-slot-progress-track" aria-hidden="true">
+                <div className="cartela-slot-progress-fill" style={{ width: `${progress}%` }} />
+            </div>
+            <button
+                type="button"
+                className="cartela-slot-remove"
+                onClick={handleCancel}
+                aria-label={`Cancel cartela ${cardNumber}`}
+            >
+                ×
+            </button>
+            <div className="cartela-slot-meta">
+                <span className="cartela-slot-id">#{cardNumber}</span>
+            </div>
+            <div className="cartela-slot-card">
+                <CartellaCard
+                    id={cardNumber}
+                    card={card}
+                    called={called}
+                    isPreview={true}
+                />
+            </div>
+        </div>
+    );
+}
 
 export default function CartelaSelection({ onNavigate, onResetToGame, stake, onCartelaSelected, onGameIdUpdate }) {
     const { sessionId } = useAuth();
@@ -409,36 +481,48 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             const msg = 'LOW BALANCE';
             setAlertBanners((prev) => (prev.includes(msg) ? prev : [...prev, msg]));
             showError(msg);
+            const rejected = Number(lastEvent.payload?.cardNumber);
+            if (Number.isInteger(rejected)) {
+                setPendingSelections((prev) => prev.filter((n) => n !== rejected));
+            }
         } else if (reason === 'LOCKED') {
             showError('This cartela is confirmed and locked.');
         }
     }, [lastEvent, showError]);
 
-    const handleConfirmCartela = async (cardNum) => {
+    const handleConfirmCartela = useCallback(async (cardNum) => {
         if (walletLoading) {
             showError('Loading wallet information. Please wait a moment and try again.');
-            return;
+            setPendingSelections((prev) => prev.filter((n) => n !== cardNum));
+            return false;
         }
         const totalBalance = (wallet.main || 0) + (wallet.play || 0);
         if (totalBalance < Number(stake)) {
             const msg = totalBalance <= 0 ? 'LOW BALANCE' : 'Insufficient fund';
             setAlertBanners((prev) => (prev.includes(msg) ? prev : [...prev, msg]));
             showError(msg);
-            return;
+            setPendingSelections((prev) => prev.filter((n) => n !== cardNum));
+            return false;
         }
         if (!connected || wsReadyState !== WebSocket.OPEN) {
             showError('Not connected to game server. Please refresh and try again.');
-            return;
+            setPendingSelections((prev) => prev.filter((n) => n !== cardNum));
+            return false;
         }
         const success = confirmCartella(cardNum);
         if (success) {
             setPendingSelections((prev) => prev.filter((n) => n !== cardNum));
             showSuccess(`Cartela #${cardNum} confirmed!`);
-            refreshWallet();
-        } else {
-            showError('Failed to confirm cartela. Please try again.');
+            return true;
         }
-    };
+        showError('Failed to confirm cartela. Please try again.');
+        setPendingSelections((prev) => prev.filter((n) => n !== cardNum));
+        return false;
+    }, [walletLoading, wallet.main, wallet.play, stake, connected, wsReadyState, confirmCartella, showError, showSuccess]);
+
+    const handleCancelPending = useCallback((cardNum) => {
+        setPendingSelections((prev) => prev.filter((n) => n !== cardNum));
+    }, []);
 
 
     // Handle card selection - automatically confirm without separate confirmation step
@@ -664,6 +748,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             if (!card) return null;
             return (
                 <div key={`slot-${slotIndex}`} className="cartela-slot cartela-slot-filled cartela-slot-confirmed">
+                    <div className="cartela-slot-lock-badge" aria-hidden="true" title="Confirmed">
+                        🔒
+                    </div>
                     <div className="cartela-slot-meta">
                         <span className="cartela-slot-id">#{entry.number}</span>
                         <span className="cartela-slot-live cartela-slot-confirmed-label">CONFIRMED</span>
@@ -676,7 +763,6 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                             isPreview={true}
                         />
                     </div>
-                    <div className="cartela-slot-lock" aria-hidden="true">🔒</div>
                 </div>
             );
         }
@@ -685,35 +771,14 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
             const card = cards[entry.number - 1];
             if (!card) return null;
             return (
-                <div key={`slot-${slotIndex}`} className="cartela-slot cartela-slot-filled cartela-slot-pending">
-                    <button
-                        type="button"
-                        className="cartela-slot-remove"
-                        onClick={() => setPendingSelections((prev) => prev.filter((n) => n !== entry.number))}
-                        aria-label={`Remove cartela ${entry.number}`}
-                    >
-                        ×
-                    </button>
-                    <div className="cartela-slot-meta">
-                        <span className="cartela-slot-id">#{entry.number}</span>
-                        <span className="cartela-slot-live">PREVIEW</span>
-                    </div>
-                    <div className="cartela-slot-card">
-                        <CartellaCard
-                            id={entry.number}
-                            card={card}
-                            called={gameState.calledNumbers || []}
-                            isPreview={true}
-                        />
-                    </div>
-                    <button
-                        type="button"
-                        className="cartela-slot-confirm-btn"
-                        onClick={() => handleConfirmCartela(entry.number)}
-                    >
-                        Confirm &amp; Pay {stake} ETB
-                    </button>
-                </div>
+                <SuperPendingCartelaSlot
+                    key={`slot-pending-${entry.number}`}
+                    cardNumber={entry.number}
+                    card={card}
+                    called={gameState.calledNumbers || []}
+                    onCancel={handleCancelPending}
+                    onConfirm={handleConfirmCartela}
+                />
             );
         }
 

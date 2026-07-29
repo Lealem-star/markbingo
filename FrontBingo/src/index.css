@@ -2913,41 +2913,61 @@ body {
 }
 
 .cartela-slot-confirmed {
-    border-color: #2563eb;
+    border-color: #dbeafe;
+    overflow: hidden;
 }
 
 .cartela-slot-confirmed-label {
-    color: #2563eb !important;
+    color: #38bdf8 !important;
     font-size: 9px !important;
+    font-weight: 800;
+    letter-spacing: 0.04em;
 }
 
-.cartela-slot-lock {
+.cartela-slot-lock-badge {
     position: absolute;
-    top: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 14px;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
+    z-index: 4;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    pointer-events: none;
 }
 
 .cartela-slot-pending {
-    border-color: #f59e0b;
+    border-color: #fca5a5;
+    overflow: hidden;
+    padding-top: 4px;
 }
 
-.cartela-slot-confirm-btn {
-    width: calc(100% - 12px);
-    margin: 4px 6px 6px;
-    padding: 6px 4px;
-    border: none;
-    border-radius: 8px;
-    background: #16a34a;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 800;
-    cursor: pointer;
+.cartela-slot-progress-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(239, 68, 68, 0.15);
+    z-index: 3;
 }
 
-.cartela-slot-confirm-btn:active {
-    opacity: 0.9;
+.cartela-slot-progress-fill {
+    height: 100%;
+    background: #ef4444;
+    border-radius: 0 2px 2px 0;
+    will-change: width;
+}
+
+.cartela-slot-pending .cartela-slot-remove {
+    top: 10px;
 }
 
 .cartela-slot {
