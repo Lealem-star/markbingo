@@ -2822,6 +2822,134 @@ body {
     padding: 0 8px 8px;
 }
 
+/* Super Bingo presale header (stake 50) */
+.cartela-selection-top-super {
+    background: #0f172a;
+}
+
+.cartela-selection-top-super .cartela-selection-header {
+    background: #0f172a;
+    padding: 6px 8px 0;
+}
+
+.super-bingo-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.super-bingo-bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    border-radius: 10px;
+    padding: 8px 6px;
+}
+
+.super-bingo-bar-gold {
+    background: linear-gradient(180deg, #facc15 0%, #eab308 100%);
+    color: #111827;
+}
+
+.super-bingo-bar-dark {
+    background: #1e293b;
+    color: #f8fafc;
+}
+
+.super-bingo-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    text-align: center;
+    min-width: 0;
+}
+
+.super-bingo-cell-wide {
+    grid-column: span 1;
+}
+
+.super-bingo-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
+}
+
+.super-bingo-value {
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.super-bingo-status {
+    color: #fbbf24;
+}
+
+.super-bingo-schedule {
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #93c5fd;
+}
+
+.cartela-selection-top-super .cartela-grid-panel {
+    background: #0f172a;
+}
+
+.cartela-selection-top-super .cartela-grid-scrollable-v2 {
+    background: #1e293b;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.cartela-selection-top-super .cartela-number-btn-light.cartela-normal-light {
+    background: #f8fafc;
+}
+
+.cartela-selection-top-super .cartela-number-btn-light.cartela-selected-light {
+    background: #22c55e;
+    color: #fff;
+}
+
+.cartela-slot-confirmed {
+    border-color: #2563eb;
+}
+
+.cartela-slot-confirmed-label {
+    color: #2563eb !important;
+    font-size: 9px !important;
+}
+
+.cartela-slot-lock {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+}
+
+.cartela-slot-pending {
+    border-color: #f59e0b;
+}
+
+.cartela-slot-confirm-btn {
+    width: calc(100% - 12px);
+    margin: 4px 6px 6px;
+    padding: 6px 4px;
+    border: none;
+    border-radius: 8px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.cartela-slot-confirm-btn:active {
+    opacity: 0.9;
+}
+
 .cartela-slot {
     position: relative;
     border-radius: 14px;

@@ -101,7 +101,14 @@ function AppContent() {
     // - Players who have cartellas go to game layout.
     // - Users without cards can still go to game layout in watch mode.
     const hasPlayers = typeof gameState.playersCount === 'number' && gameState.playersCount >= 2;
-    if (gameState.phase === 'running' && gameState.gameId && hasPlayers) {
+    const userHasSuperCartelas = selectedStake === 50 && (
+      (Array.isArray(gameState.yourSelections) && gameState.yourSelections.length > 0) ||
+      (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) ||
+      selectedCartelas.length > 0
+    );
+    const canEnterLiveGame = hasPlayers || userHasSuperCartelas;
+
+    if (gameState.phase === 'running' && gameState.gameId && canEnterLiveGame) {
       const hasCards =
         (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) ||
         selectedCartelas.length > 0;
@@ -116,7 +123,7 @@ function AppContent() {
     }
 
     // If registration just closed and game is about to start with players, show game layout
-    if (gameState.phase === 'starting' && gameState.gameId && hasPlayers) {
+    if (gameState.phase === 'starting' && gameState.gameId && canEnterLiveGame) {
       console.log('→ Routing to game-layout (starting game)');
       return 'game-layout';
     }
@@ -134,7 +141,7 @@ function AppContent() {
     }
 
     // If stake selected but game didn't start (e.g. not enough players) — stay on cartela selection
-    if (selectedStake && (gameState.phase === 'starting' || gameState.phase === 'running') && gameState.gameId && !hasPlayers) {
+    if (selectedStake && (gameState.phase === 'starting' || gameState.phase === 'running') && gameState.gameId && !canEnterLiveGame) {
       console.log('→ Routing to cartela-selection (game cancelled / not enough players)');
       return 'cartela-selection';
     }
@@ -167,8 +174,11 @@ function AppContent() {
         ? event.detail.playersCount
         : gameState.playersCount;
       const hasPlayers = typeof playersCount === 'number' && playersCount >= 2;
+      const userHasCards = event.detail?.hasCards
+        || (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0)
+        || (Array.isArray(gameState.yourSelections) && gameState.yourSelections.length > 0);
 
-      if (event.detail.phase === 'running' && event.detail.gameId && hasPlayers && currentPage !== 'game-layout') {
+      if (event.detail.phase === 'running' && event.detail.gameId && (hasPlayers || userHasCards) && currentPage !== 'game-layout') {
         console.log('🚀 FORCE NAVIGATING via custom event to game-layout');
         // Update selectedCartelas from gameState if available
         if (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) {
@@ -215,8 +225,14 @@ function AppContent() {
     
     // Navigate to game layout only when a real game is starting/running WITH enough players.
     const hasPlayers = typeof gameState.playersCount === 'number' && gameState.playersCount >= 2;
+    const userHasSuperCartelas = selectedStake === 50 && (
+      (Array.isArray(gameState.yourSelections) && gameState.yourSelections.length > 0) ||
+      (Array.isArray(gameState.yourCards) && gameState.yourCards.length > 0) ||
+      selectedCartelas.length > 0
+    );
+    const canEnterLiveGame = hasPlayers || userHasSuperCartelas;
     const isGameStartingOrRunning =
-      (gameState.phase === 'starting' || gameState.phase === 'running') && gameState.gameId && hasPlayers;
+      (gameState.phase === 'starting' || gameState.phase === 'running') && gameState.gameId && canEnterLiveGame;
     const isGameFinished = gameState.phase === 'announce' && gameState.gameId;
     const isRegistrationOpen =
       gameState.phase === 'registration' && gameState.gameId;

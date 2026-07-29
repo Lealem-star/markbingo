@@ -50,6 +50,42 @@ function getHumanPlayerIdsFromGame(game) {
     return humanIds;
 }
 
+let telegramBotInstance = null;
+
+async function announceSuperBingoCountdown(payload = {}) {
+    if (!telegramBotInstance) {
+        console.log('Super Bingo countdown (bot not ready):', payload.message || payload);
+        return;
+    }
+    const minutes = payload.minutes || 5;
+    const text =
+        `⭐ *Super Bingo* starts in ~${minutes} minutes!\n\n` +
+        `Open the app and keep your cartela ready. Normal bingo keeps running.\n\n` +
+        `_Super Bingo በ ${minutes} ደቂቃ ውስጥ ይጀምራል — መተግበሪያውን ይክፈቱ_`;
+
+    try {
+        await connectDB();
+        const users = await User.find(
+            { telegramId: { $ne: null } },
+            { telegramId: 1, role: 1 }
+        ).limit(5000);
+        let sent = 0;
+        for (const user of users) {
+            const id = user.telegramId ? String(user.telegramId) : null;
+            if (!id) continue;
+            try {
+                await telegramBotInstance.telegram.sendMessage(id, text, { parse_mode: 'Markdown' });
+                sent += 1;
+            } catch (_) {
+                /* skip blocked users */
+            }
+        }
+        console.log(`Super Bingo countdown sent to ${sent} telegram users`);
+    } catch (e) {
+        console.error('announceSuperBingoCountdown error:', e);
+    }
+}
+
 function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
     try {
         const { Telegraf } = require('telegraf');
@@ -59,6 +95,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
         }
 
         const bot = new Telegraf(BOT_TOKEN);
+        telegramBotInstance = bot;
 
         // Ensure MongoDB is connected for bot-only PM2 runs
         (async () => {
@@ -3753,7 +3790,7 @@ Thank you for your dedication! 🙏`;
     scheduleWeeklyNotification();
 }
 
-module.exports = { startTelegramBot };
+module.exports = { startTelegramBot, announceSuperBingoCountdown };
 
 // Allow running this file directly via PM2/node
 if (require.main === module) {

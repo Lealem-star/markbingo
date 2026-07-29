@@ -20,9 +20,10 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const alertTimersRef = useRef(new Map());
 
     // WebSocket integration
-    const { connected, gameState, selectCartella, deselectCartella, connectToStake, wsReadyState, isConnecting, lastEvent } = useWebSocket();
+    const { connected, gameState, selectCartella, deselectCartella, confirmCartella, connectToStake, wsReadyState, isConnecting, lastEvent } = useWebSocket();
     const hasConnectedRef = useRef(false);
     const rejoinTriedRef = useRef(false);
+    const [pendingSelections, setPendingSelections] = useState([]);
 
     // Connect to WebSocket when component mounts with stake
     useEffect(() => {
@@ -368,6 +369,78 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     }, []);
 
 
+    // Super Bingo presale: local preview before confirm + pay
+    const isSuperPresale = Number(stake) === 50
+        && gameState.phase === 'registration'
+        && gameState.superMode !== 'weekend_live';
+
+    const lockedNumbers = Array.isArray(gameState.lockedSelections) && gameState.lockedSelections.length > 0
+        ? gameState.lockedSelections.map(Number)
+        : (isSuperPresale
+            ? (Array.isArray(gameState.yourSelections) ? gameState.yourSelections.map(Number) : [])
+            : []);
+
+    useEffect(() => {
+        setPendingSelections([]);
+    }, [gameState.gameId]);
+
+    useEffect(() => {
+        if (gameState.superCountdownAlert) {
+            setAlertBanners((prev) => (
+                prev.includes(gameState.superCountdownAlert) ? prev : [...prev, gameState.superCountdownAlert]
+            ));
+            showWarning(gameState.superCountdownAlert);
+        }
+    }, [gameState.superCountdownAlert, showWarning]);
+
+    useEffect(() => {
+        if (gameState.walletUpdate) {
+            setWallet({
+                main: gameState.walletUpdate.main ?? 0,
+                play: gameState.walletUpdate.play ?? 0,
+            });
+        }
+    }, [gameState.walletUpdate]);
+
+    useEffect(() => {
+        if (!lastEvent || lastEvent.type !== 'selection_rejected') return;
+        const reason = lastEvent.payload?.reason;
+        if (reason === 'INSUFFICIENT_FUNDS') {
+            const msg = 'LOW BALANCE';
+            setAlertBanners((prev) => (prev.includes(msg) ? prev : [...prev, msg]));
+            showError(msg);
+        } else if (reason === 'LOCKED') {
+            showError('This cartela is confirmed and locked.');
+        }
+    }, [lastEvent, showError]);
+
+    const handleConfirmCartela = async (cardNum) => {
+        if (walletLoading) {
+            showError('Loading wallet information. Please wait a moment and try again.');
+            return;
+        }
+        const totalBalance = (wallet.main || 0) + (wallet.play || 0);
+        if (totalBalance < Number(stake)) {
+            const msg = totalBalance <= 0 ? 'LOW BALANCE' : 'Insufficient fund';
+            setAlertBanners((prev) => (prev.includes(msg) ? prev : [...prev, msg]));
+            showError(msg);
+            return;
+        }
+        if (!connected || wsReadyState !== WebSocket.OPEN) {
+            showError('Not connected to game server. Please refresh and try again.');
+            return;
+        }
+        const success = confirmCartella(cardNum);
+        if (success) {
+            setPendingSelections((prev) => prev.filter((n) => n !== cardNum));
+            showSuccess(`Cartela #${cardNum} confirmed!`);
+            refreshWallet();
+        } else {
+            showError('Failed to confirm cartela. Please try again.');
+        }
+    };
+
+
     // Handle card selection - automatically confirm without separate confirmation step
     const handleCardSelect = async (cardNumber) => {
         // Ensure type consistency - convert to number
@@ -389,6 +462,39 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         }
 
         const selectedNumbers = Array.isArray(gameState.yourSelections) ? gameState.yourSelections : [];
+
+        // Super Bingo presale: preview locally, confirm separately
+        if (isSuperPresale) {
+            if (lockedNumbers.includes(cardNum)) {
+                return;
+            }
+            if (pendingSelections.includes(cardNum)) {
+                setPendingSelections((prev) => prev.filter((n) => n !== cardNum));
+                return;
+            }
+            if (lockedNumbers.length + pendingSelections.length >= MAX_CARTELAS_PER_PLAYER) {
+                showError(`You can select up to ${MAX_CARTELAS_PER_PLAYER} cartelas.`);
+                return;
+            }
+            const totalBalance = (wallet.main || 0) + (wallet.play || 0);
+            if (totalBalance < Number(stake)) {
+                const msg = totalBalance <= 0 ? 'LOW BALANCE' : 'Insufficient fund';
+                setAlertBanners((prev) => (prev.includes(msg) ? prev : [...prev, msg]));
+                showError(msg);
+                return;
+            }
+            const isTakenByOthers = gameState.takenCards.some((taken) => Number(taken) === cardNum)
+                && !lockedNumbers.includes(cardNum)
+                && !pendingSelections.includes(cardNum);
+            if (isTakenByOthers) {
+                const takenMsg = 'ተይዟል ሌላ ᭭ምረጡ';
+                setAlertBanners((prev) => (prev.includes(takenMsg) ? prev : [...prev, takenMsg]));
+                showError(takenMsg);
+                return;
+            }
+            setPendingSelections((prev) => [...prev, cardNum]);
+            return;
+        }
 
         // Check if we're in the right phase first (for both select and deselect)
         if (gameState.phase !== 'registration') {
@@ -525,40 +631,120 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
         : (gameState.countdown || 0);
 
     const selectedNumbers = Array.isArray(gameState.yourSelections) ? gameState.yourSelections : [];
-    const selectedCards = selectedNumbers
+    const highlightedNumbers = isSuperPresale
+        ? [...new Set([...lockedNumbers, ...pendingSelections])]
+        : selectedNumbers;
+    const selectedCards = highlightedNumbers
         .map(n => ({ number: n, card: cards[n - 1] }))
         .filter(x => x.card);
     const soldCount = Array.isArray(gameState.takenCards) ? gameState.takenCards.length : 0;
     const balanceTotal = (wallet.main || 0) + (wallet.play || 0);
     const roomLabel = Number(stake) === 50 ? 'VIP' : `${stake} ETB`;
 
+    const superScheduleLabel = 'ዘወትር ቅዳሜ እና እሁድ ከቀኑ 10 ሰዓት';
+    const superStatusLabel = gameState.superMode === 'countdown'
+        ? `${timerSeconds}s`
+        : 'ሙሉ ዝግ';
+
+    const slotEntries = (() => {
+        const entries = [];
+        lockedNumbers.forEach((n) => entries.push({ type: 'confirmed', number: n }));
+        pendingSelections.forEach((n) => entries.push({ type: 'pending', number: n }));
+        while (entries.length < MAX_CARTELAS_PER_PLAYER) {
+            entries.push({ type: 'empty', number: null });
+        }
+        return entries.slice(0, MAX_CARTELAS_PER_PLAYER);
+    })();
+
     const renderSelectionSlot = (slotIndex) => {
-        const entry = selectedCards[slotIndex];
-        if (entry) {
+        const entry = slotEntries[slotIndex];
+
+        if (entry?.type === 'confirmed') {
+            const card = cards[entry.number - 1];
+            if (!card) return null;
             return (
-                <div key={`slot-${slotIndex}`} className="cartela-slot cartela-slot-filled">
+                <div key={`slot-${slotIndex}`} className="cartela-slot cartela-slot-filled cartela-slot-confirmed">
+                    <div className="cartela-slot-meta">
+                        <span className="cartela-slot-id">#{entry.number}</span>
+                        <span className="cartela-slot-live cartela-slot-confirmed-label">CONFIRMED</span>
+                    </div>
+                    <div className="cartela-slot-card">
+                        <CartellaCard
+                            id={entry.number}
+                            card={card}
+                            called={gameState.calledNumbers || []}
+                            isPreview={true}
+                        />
+                    </div>
+                    <div className="cartela-slot-lock" aria-hidden="true">🔒</div>
+                </div>
+            );
+        }
+
+        if (entry?.type === 'pending') {
+            const card = cards[entry.number - 1];
+            if (!card) return null;
+            return (
+                <div key={`slot-${slotIndex}`} className="cartela-slot cartela-slot-filled cartela-slot-pending">
                     <button
                         type="button"
                         className="cartela-slot-remove"
-                        onClick={() => handleCardSelect(entry.number)}
+                        onClick={() => setPendingSelections((prev) => prev.filter((n) => n !== entry.number))}
                         aria-label={`Remove cartela ${entry.number}`}
                     >
                         ×
                     </button>
                     <div className="cartela-slot-meta">
                         <span className="cartela-slot-id">#{entry.number}</span>
-                        <span className="cartela-slot-live">LIVE</span>
+                        <span className="cartela-slot-live">PREVIEW</span>
                     </div>
                     <div className="cartela-slot-card">
                         <CartellaCard
                             id={entry.number}
-                            card={entry.card}
+                            card={card}
                             called={gameState.calledNumbers || []}
                             isPreview={true}
                         />
                     </div>
+                    <button
+                        type="button"
+                        className="cartela-slot-confirm-btn"
+                        onClick={() => handleConfirmCartela(entry.number)}
+                    >
+                        Confirm &amp; Pay {stake} ETB
+                    </button>
                 </div>
             );
+        }
+
+        if (!isSuperPresale) {
+            const legacy = selectedCards[slotIndex];
+            if (legacy) {
+                return (
+                    <div key={`slot-${slotIndex}`} className="cartela-slot cartela-slot-filled">
+                        <button
+                            type="button"
+                            className="cartela-slot-remove"
+                            onClick={() => handleCardSelect(legacy.number)}
+                            aria-label={`Remove cartela ${legacy.number}`}
+                        >
+                            ×
+                        </button>
+                        <div className="cartela-slot-meta">
+                            <span className="cartela-slot-id">#{legacy.number}</span>
+                            <span className="cartela-slot-live">LIVE</span>
+                        </div>
+                        <div className="cartela-slot-card">
+                            <CartellaCard
+                                id={legacy.number}
+                                card={legacy.card}
+                                called={gameState.calledNumbers || []}
+                                isPreview={true}
+                            />
+                        </div>
+                    </div>
+                );
+            }
         }
 
         return (
@@ -720,28 +906,63 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 </div>
             )}
 
-            <div className="cartela-selection-top">
+            <div className={`cartela-selection-top ${isSuperPresale ? 'cartela-selection-top-super' : ''}`}>
                 <header className="cartela-selection-header">
-                    <div className="cartela-status-badges">
-                        <div className="cs-badge cs-badge-room">
-                            <span className="cs-badge-label">ROOM</span>
-                            <span className="cs-badge-value">{roomLabel}</span>
+                    {isSuperPresale ? (
+                        <div className="super-bingo-header">
+                            <div className="super-bingo-bar super-bingo-bar-gold">
+                                <div className="super-bingo-cell">
+                                    <span className="super-bingo-label">SOLD</span>
+                                    <span className="super-bingo-value">{soldCount}</span>
+                                </div>
+                                <div className="super-bingo-cell">
+                                    <span className="super-bingo-label">REG CODE</span>
+                                    <span className="super-bingo-value">{gameState.regCode || '---'}</span>
+                                </div>
+                                <div className="super-bingo-cell">
+                                    <span className="super-bingo-label">BALANCE</span>
+                                    <span className="super-bingo-value">
+                                        {walletLoading ? '...' : balanceTotal.toFixed(0)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="super-bingo-bar super-bingo-bar-dark">
+                                <div className="super-bingo-cell">
+                                    <span className="super-bingo-label">STAKE</span>
+                                    <span className="super-bingo-value">{stake} ETB</span>
+                                </div>
+                                <div className="super-bingo-cell">
+                                    <span className="super-bingo-label">STATUS</span>
+                                    <span className="super-bingo-value super-bingo-status">{superStatusLabel}</span>
+                                </div>
+                                <div className="super-bingo-cell super-bingo-cell-wide">
+                                    <span className="super-bingo-label">TIME</span>
+                                    <span className="super-bingo-schedule">{superScheduleLabel}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="cs-badge cs-badge-sold">
-                            <span className="cs-badge-label">SOLD</span>
-                            <span className="cs-badge-value">{soldCount}</span>
+                    ) : (
+                        <div className="cartela-status-badges">
+                            <div className="cs-badge cs-badge-room">
+                                <span className="cs-badge-label">ROOM</span>
+                                <span className="cs-badge-value">{roomLabel}</span>
+                            </div>
+                            <div className="cs-badge cs-badge-sold">
+                                <span className="cs-badge-label">SOLD</span>
+                                <span className="cs-badge-value">{soldCount}</span>
+                            </div>
+                            <div className="cs-badge cs-badge-time">
+                                <span className="cs-badge-label cs-time-label">TIME</span>
+                                <span className="cs-badge-value">{timerSeconds}s</span>
+                            </div>
+                            <div className="cs-badge cs-badge-balance">
+                                <span className="cs-badge-label">BALANCE</span>
+                                <span className="cs-badge-value">
+                                    {walletLoading ? '...' : `${balanceTotal.toFixed(2)} ETB`}
+                                </span>
+                            </div>
                         </div>
-                        <div className="cs-badge cs-badge-time">
-                            <span className="cs-badge-label cs-time-label">TIME</span>
-                            <span className="cs-badge-value">{timerSeconds}s</span>
-                        </div>
-                        <div className="cs-badge cs-badge-balance">
-                            <span className="cs-badge-label">BALANCE</span>
-                            <span className="cs-badge-value">
-                                {walletLoading ? '...' : `${balanceTotal.toFixed(2)} ETB`}
-                            </span>
-                        </div>
-                    </div>
+                    )}
                 </header>
 
                 <div className="cartela-grid-panel">
@@ -760,7 +981,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                                     ? gameState.takenCards.some(taken => Number(taken) === cartelaNum)
                                     : false; // Hide taken cards for newcomers during running game
                                     
-                                const takenByMe = selectedNumbers.includes(cartelaNum);
+                                const takenByMe = highlightedNumbers.includes(cartelaNum);
                                 const isSelected = takenByMe;
                                 const isSold = isTaken && !takenByMe;
 

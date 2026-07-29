@@ -45,6 +45,14 @@ const User = require('./models/User');
 const Game = require('./models/Game');
 const jwt = require('jsonwebtoken');
 const BingoCards = require('./data/cartellas');
+const {
+    SUPER_COUNTDOWN_MS,
+    generateRegCode,
+    getNextScheduledStartMs,
+    isWeekendLiveWindow,
+    isSuperBingoStake,
+    buildSuperSnapshotFields,
+} = require('./services/superBingoService');
 console.log('✅ Services and models loaded');
 
 // Import routes
@@ -226,6 +234,119 @@ function cleanupEmptyRooms(stake) {
     }
 }
 
+/** Optional Telegram hook (set when bot starts). */
+let superBingoTelegramAnnounce = null;
+
+function setSuperBingoTelegramAnnounce(fn) {
+    superBingoTelegramAnnounce = typeof fn === 'function' ? fn : null;
+}
+
+function clearRoomRegistrationTimer(room) {
+    if (room?.registrationTimerId) {
+        clearTimeout(room.registrationTimerId);
+        room.registrationTimerId = null;
+    }
+}
+
+function ensureSuperScheduler(room) {
+    if (!room?.isSuperBingo || room.superTickIntervalId) return;
+    room.superTickIntervalId = setInterval(() => tickSuperBingoRoom(room), 15000);
+}
+
+async function startSuperPresale(room) {
+    if (!room?.isSuperBingo) return;
+
+    clearRoomRegistrationTimer(room);
+    room.phase = 'registration';
+    room.superMode = 'presale';
+    room.superCountdownAnnounced = false;
+    room.regCode = generateRegCode();
+    room.scheduledStartAt = getNextScheduledStartMs();
+    room.registrationEndTime = room.scheduledStartAt;
+    room.startTime = Date.now();
+    room.announceProcessed = false;
+    room.takenCards.clear();
+    room.userCardSelections.clear();
+    room.selectedPlayers.clear();
+    room.presaleLockedCards = new Map();
+
+    if (room.callTimerId) {
+        clearTimeout(room.callTimerId);
+        room.callTimerId = null;
+    }
+
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+    const processId = process.pid ? String(process.pid).slice(-2) : '00';
+    room.currentGameId = `SB${String(timestamp).slice(-4)}${String(random).padStart(4, '0')}${processId}`;
+
+    console.log(`Super Bingo presale opened: ${room.currentGameId}, regCode=${room.regCode}, startsAt=${new Date(room.scheduledStartAt).toISOString()}`);
+
+    broadcast('registration_open', {
+        gameId: room.currentGameId,
+        stake: room.stake,
+        playersCount: 0,
+        duration: Math.max(0, room.scheduledStartAt - Date.now()),
+        endsAt: room.registrationEndTime,
+        availableCards: Array.from({ length: BingoCards.cards.length }, (_, i) => i + 1),
+        takenCards: [],
+        isSuperBingo: true,
+        superMode: 'presale',
+        scheduledStartAt: room.scheduledStartAt,
+        regCode: null,
+    }, room);
+
+    ensureSuperScheduler(room);
+}
+
+function tickSuperBingoRoom(room) {
+    if (!room?.isSuperBingo) return;
+    if (room.phase !== 'registration') return;
+    if (room.superMode === 'weekend_live') return;
+
+    const now = Date.now();
+    const msUntilStart = room.scheduledStartAt - now;
+
+    if (!room.superCountdownAnnounced && msUntilStart > 0 && msUntilStart <= SUPER_COUNTDOWN_MS) {
+        room.superCountdownAnnounced = true;
+        room.superMode = 'countdown';
+        const payload = {
+            gameId: room.currentGameId,
+            stake: room.stake,
+            scheduledStartAt: room.scheduledStartAt,
+            minutes: Math.ceil(msUntilStart / 60000),
+            message: 'Super Bingo starts in 5 minutes. Open the app to join your cartela.',
+        };
+        broadcast('super_bingo_countdown', payload, room);
+        try {
+            if (superBingoTelegramAnnounce) {
+                superBingoTelegramAnnounce(payload);
+            }
+        } catch (e) {
+            console.error('Super Bingo telegram announce failed:', e);
+        }
+    }
+
+    if (msUntilStart <= 0 && room.superMode !== 'starting_live') {
+        room.superMode = 'starting_live';
+        console.log('Super Bingo scheduled start — starting game', room.currentGameId);
+        startGame(room);
+    }
+}
+
+function userPresaleLockedSet(room, userId) {
+    if (!room.presaleLockedCards) room.presaleLockedCards = new Map();
+    if (!room.presaleLockedCards.has(userId)) {
+        room.presaleLockedCards.set(userId, new Set());
+    }
+    return room.presaleLockedCards.get(userId);
+}
+
+function isCardPresaleLocked(room, userId, cardNumber) {
+    const set = room.presaleLockedCards?.get(userId);
+    return set ? set.has(Number(cardNumber)) : false;
+}
+
 function makeRoom(stake) {
     const room = {
         id: `room_${stake}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
@@ -276,7 +397,8 @@ function makeRoom(stake) {
                 nextStartAt: room.registrationEndTime || room.gameEndTime || null,
                 prizePool: room.phase === 'running'
                     ? (selectedCount * room.stake) - Math.floor(selectedCount * room.stake * 0.2)
-                    : 0
+                    : 0,
+                ...buildSuperSnapshotFields(room, ws.userId),
             };
 
             // If room is running and user has cards, include the cards array in snapshot
@@ -307,12 +429,18 @@ function makeRoom(stake) {
             room.players.delete(ws.userId);
 
             if (room.phase === 'registration') {
-                // During registration, free up their selections so others can take the cards
-                room.selectedPlayers.delete(ws.userId);
-                room.cartellas.delete(ws.userId);
+                const locked = room.presaleLockedCards?.get(ws.userId);
                 const prevSelections = room.userCardSelections.get(ws.userId) || [];
-                prevSelections.forEach((n) => room.takenCards.delete(n));
-                room.userCardSelections.delete(ws.userId);
+                const unlocked = prevSelections.filter((n) => !locked?.has(Number(n)));
+
+                unlocked.forEach((n) => room.takenCards.delete(n));
+                if (locked && locked.size > 0) {
+                    room.userCardSelections.set(ws.userId, Array.from(locked));
+                } else {
+                    room.selectedPlayers.delete(ws.userId);
+                    room.cartellas.delete(ws.userId);
+                    room.userCardSelections.delete(ws.userId);
+                }
 
                 const selectedCount = countSelectedCartelas(room);
                 const selectedPlayersCount = countSelectedPlayers(room);
@@ -331,6 +459,15 @@ function makeRoom(stake) {
             }
         }
     };
+    if (isSuperBingoStake(stake)) {
+        room.isSuperBingo = true;
+        room.superMode = 'presale';
+        room.regCode = generateRegCode();
+        room.scheduledStartAt = getNextScheduledStartMs();
+        room.presaleLockedCards = new Map();
+        room.superCountdownAnnounced = false;
+        room.registrationTimerId = null;
+    }
     return room;
 }
 
@@ -357,6 +494,17 @@ function broadcast(type, payload, targetRoom = null) {
 
 async function startRegistration(room) {
     console.log('startRegistration called for room:', room.stake);
+
+    if (room.isSuperBingo && !isWeekendLiveWindow()) {
+        await startSuperPresale(room);
+        return;
+    }
+    if (room.isSuperBingo) {
+        room.superMode = 'weekend_live';
+        room.superCountdownAnnounced = false;
+    }
+
+    clearRoomRegistrationTimer(room);
     room.phase = 'registration';
     room.registrationEndTime = Date.now() + 30000; // 30 seconds
     room.startTime = Date.now();
@@ -369,6 +517,9 @@ async function startRegistration(room) {
     room.takenCards.clear();
     room.userCardSelections.clear();
     room.selectedPlayers.clear(); // Clear previous selections
+    if (room.isSuperBingo) {
+        room.presaleLockedCards = new Map();
+    }
 
     // Generate a more unique gameId with random component and process ID
     const timestamp = Date.now();
@@ -388,6 +539,11 @@ async function startRegistration(room) {
         endsAt: room.registrationEndTime,
         availableCards: Array.from({ length: BingoCards.cards.length }, (_, i) => i + 1), // Generate available cards based on actual card count
         takenCards: [],
+        ...(room.isSuperBingo ? {
+            isSuperBingo: true,
+            superMode: room.superMode,
+            scheduledStartAt: room.scheduledStartAt,
+        } : {}),
     }, room);
 
     // Proactively fund bots when registration opens
@@ -404,7 +560,8 @@ async function startRegistration(room) {
         }
     })();
 
-    setTimeout(async () => {
+    room.registrationTimerId = setTimeout(async () => {
+        room.registrationTimerId = null;
         if (room.phase === 'registration') {
             // Decide whether to start, extend, or restart registration.
             // IMPORTANT: only broadcast registration_closed when we will actually start the game.
@@ -416,15 +573,20 @@ async function startRegistration(room) {
 async function startGame(room) {
     const selectedCount = Array.from(room.userCardSelections.values()).reduce((sum, arr) => sum + (arr?.length || 0), 0);
     const selectedPlayersCount = room.selectedPlayers ? room.selectedPlayers.size : 0;
+    const isSuperScheduledStart = room.isSuperBingo && room.superMode === 'starting_live';
 
     if (selectedPlayersCount === 0) {
         // No players, start new registration immediately
         console.log(`No players joined game ${room.currentGameId} - skipping database creation and starting new registration`);
-        startRegistration(room);
+        if (room.isSuperBingo && !isWeekendLiveWindow()) {
+            await startSuperPresale(room);
+        } else {
+            startRegistration(room);
+        }
         return;
     }
 
-    if (selectedPlayersCount < 2) {
+    if (selectedPlayersCount < 2 && !isSuperScheduledStart) {
         // Not enough players yet to start a game – extend registration until we have at least 2 players.
         console.log(`Only ${selectedPlayersCount} player(s) joined game ${room.currentGameId}. Extending registration by 30 seconds.`);
 
@@ -448,12 +610,17 @@ async function startGame(room) {
 
         // Schedule another check after the extended period.
         // This will keep extending every 30s until there are 0 or 2+ selections.
-        setTimeout(() => {
+        room.registrationTimerId = setTimeout(() => {
+            room.registrationTimerId = null;
             if (room.phase === 'registration' && room.currentGameId) {
                 startGame(room);
             }
         }, 30000);
         return;
+    }
+
+    if (room.isSuperBingo) {
+        room.superMode = 'live';
     }
 
     // We have enough players to start. Tell clients registration is closed so they can move to "starting".
@@ -485,7 +652,18 @@ async function startGame(room) {
         for (const userId of room.selectedPlayers) {
             try {
                 const selections = room.userCardSelections.get(userId) || [];
+                const locked = room.presaleLockedCards?.get(userId) || new Set();
                 for (const cartelaNumber of selections) {
+                    if (locked.has(Number(cartelaNumber))) {
+                        players.push({
+                            userId,
+                            cartelaNumber,
+                            joinedAt: new Date()
+                        });
+                        payingUsers.push(userId);
+                        console.log(`Super Bingo presale already paid for user ${userId} cartela ${cartelaNumber}`);
+                        continue;
+                    }
                     const result = await WalletService.processGameBet(userId, room.stake, room.currentGameId);
                     if (result && result.wallet) {
                         players.push({
@@ -1147,7 +1325,13 @@ async function toAnnounce(room) {
         console.log('🔄 Room reset for next round:', { roomId: room.id, stake: room.stake, playersCount: room.players.size });
         
         // Start new registration immediately
-        await startRegistration(room);
+        if (room.isSuperBingo && isWeekendLiveWindow()) {
+            await startRegistration(room);
+        } else if (room.isSuperBingo) {
+            await startSuperPresale(room);
+        } else {
+            await startRegistration(room);
+        }
     }, WINNER_ANNOUNCE_MS);
 }
 
@@ -1384,7 +1568,11 @@ wss.on('connection', async (ws, request) => {
         if (!room) {
             room = makeRoom(stakeParam);
             list.push(room);
-            await startRegistration(room);
+            if (isSuperBingoStake(stakeParam)) {
+                await startSuperPresale(room);
+            } else {
+                await startRegistration(room);
+            }
             }
         }
         await room.onJoin(ws);
@@ -1437,7 +1625,11 @@ wss.on('connection', async (ws, request) => {
                     // No room yet for this stake – create one and start registration
                     room = makeRoom(stake);
                     list.push(room);
-                    await startRegistration(room);
+                    if (isSuperBingoStake(stake)) {
+                        await startSuperPresale(room);
+                    } else {
+                        await startRegistration(room);
+                    }
                     console.log('🆕 Created first room for stake and started registration:', {
                         userId: ws.userId,
                         roomId: room.id,
@@ -1481,6 +1673,15 @@ wss.on('connection', async (ws, request) => {
                                 cardNumber,
                                 currentPhase: room.phase
                             }
+                        }));
+                        return;
+                    }
+
+                    // Super Bingo presale: reserve only via confirm_card (pay + lock)
+                    if (room.isSuperBingo && (room.superMode === 'presale' || room.superMode === 'countdown')) {
+                        ws.send(JSON.stringify({
+                            type: 'selection_rejected',
+                            payload: { reason: 'USE_CONFIRM', cardNumber }
                         }));
                         return;
                     }
@@ -1551,6 +1752,120 @@ wss.on('connection', async (ws, request) => {
                         prizePool: currentPrizePool
                     }, room);
                 }
+            } else if (data.type === 'confirm_card') {
+                const room = ws.room;
+                const cardNumber = Number(data.cardNumber || data.payload?.cardNumber);
+                console.log('confirm_card received:', { cardNumber, roomPhase: room?.phase, superMode: room?.superMode, userId: ws.userId });
+
+                if (!room || !room.isSuperBingo || room.phase !== 'registration') {
+                    ws.send(JSON.stringify({
+                        type: 'selection_rejected',
+                        payload: { reason: 'NOT_SUPER_PRESALE', cardNumber }
+                    }));
+                    return;
+                }
+                if (room.superMode !== 'presale' && room.superMode !== 'countdown') {
+                    ws.send(JSON.stringify({
+                        type: 'selection_rejected',
+                        payload: { reason: 'NOT_IN_PRESALE', cardNumber }
+                    }));
+                    return;
+                }
+                if (!Number.isInteger(cardNumber) || cardNumber < 1 || cardNumber > BingoCards.cards.length) {
+                    return;
+                }
+                if (!room.players.has(ws.userId)) {
+                    room.players.set(ws.userId, { ws, cartella: null, name: 'Player' });
+                }
+
+                const selections = room.userCardSelections.get(ws.userId) || [];
+                const locked = userPresaleLockedSet(room, ws.userId);
+
+                if (locked.has(cardNumber) || selections.includes(cardNumber)) {
+                    ws.send(JSON.stringify({
+                        type: 'selection_confirmed',
+                        payload: {
+                            cardNumber,
+                            selections,
+                            lockedSelections: Array.from(locked),
+                            confirmed: true,
+                            regCode: room.regCode,
+                        }
+                    }));
+                    return;
+                }
+                if (selections.length >= 2) {
+                    ws.send(JSON.stringify({
+                        type: 'selection_rejected',
+                        payload: { reason: 'LIMIT_REACHED', limit: 2, cardNumber }
+                    }));
+                    return;
+                }
+                if (room.takenCards.has(cardNumber)) {
+                    ws.send(JSON.stringify({
+                        type: 'selection_rejected',
+                        payload: { reason: 'TAKEN', cardNumber }
+                    }));
+                    return;
+                }
+
+                try {
+                    const result = await WalletService.processGameBet(ws.userId, room.stake, room.currentGameId);
+                    if (!result || !result.wallet) {
+                        ws.send(JSON.stringify({
+                            type: 'selection_rejected',
+                            payload: { reason: 'PAYMENT_FAILED', cardNumber }
+                        }));
+                        return;
+                    }
+
+                    const nextSelections = [...selections, cardNumber];
+                    room.userCardSelections.set(ws.userId, nextSelections);
+                    room.takenCards.add(cardNumber);
+                    room.selectedPlayers.add(ws.userId);
+                    locked.add(cardNumber);
+
+                    const selectedCount = countSelectedCartelas(room);
+                    const selectedPlayersCount = countSelectedPlayers(room);
+                    const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
+
+                    ws.send(JSON.stringify({
+                        type: 'wallet_update',
+                        payload: {
+                            main: result.wallet.main,
+                            play: result.wallet.play,
+                            source: result.source
+                        }
+                    }));
+
+                    ws.send(JSON.stringify({
+                        type: 'selection_confirmed',
+                        payload: {
+                            cardNumber,
+                            selections: nextSelections,
+                            lockedSelections: Array.from(locked),
+                            confirmed: true,
+                            playersCount: selectedPlayersCount,
+                            prizePool: currentPrizePool,
+                            regCode: room.regCode,
+                        }
+                    }));
+
+                    broadcast('players_update', {
+                        playersCount: selectedPlayersCount,
+                        prizePool: currentPrizePool
+                    }, room);
+                    broadcast('registration_update', {
+                        takenCards: Array.from(room.takenCards),
+                        prizePool: currentPrizePool
+                    }, room);
+                } catch (error) {
+                    const reason = String(error.message) === 'INSUFFICIENT_FUNDS' ? 'INSUFFICIENT_FUNDS' : 'PAYMENT_FAILED';
+                    ws.send(JSON.stringify({
+                        type: 'selection_rejected',
+                        payload: { reason, cardNumber }
+                    }));
+                }
             } else if (data.type === 'deselect_card') {
                 const room = ws.room;
                 const cardNumber = Number(data.cardNumber || data.payload?.cardNumber);
@@ -1558,6 +1873,13 @@ wss.on('connection', async (ws, request) => {
 
                 if (room && room.phase === 'registration') {
                     const currentSelections = room.userCardSelections.get(ws.userId) || [];
+                    if (Number.isInteger(cardNumber) && cardNumber > 0 && isCardPresaleLocked(room, ws.userId, cardNumber)) {
+                        ws.send(JSON.stringify({
+                            type: 'selection_rejected',
+                            payload: { reason: 'LOCKED', cardNumber }
+                        }));
+                        return;
+                    }
                     if (currentSelections.length > 0) {
                         // Remove specific card if provided; else clear all
                         const toRemove = Number.isInteger(cardNumber) && cardNumber > 0 ? cardNumber : null;
@@ -1778,8 +2100,11 @@ server.listen(PORT, () => {
                 list.push(makeRoom(stake));
             }
             const room = list[0];
-            // Start registration immediately
-            await startRegistration(room);
+            if (isSuperBingoStake(stake)) {
+                await startSuperPresale(room);
+            } else {
+                await startRegistration(room);
+            }
         } catch (error) {
             console.error(`Error initializing room for stake ${stake}:`, error);
         }
@@ -1796,8 +2121,9 @@ server.listen(PORT, () => {
 // Start Telegram bot (guarded by RUN_TELEGRAM_BOT)
 if (process.env.RUN_TELEGRAM_BOT === 'true') {
     if (BOT_TOKEN) {
-        const { startTelegramBot } = require('./telegram/bot');
+        const { startTelegramBot, announceSuperBingoCountdown } = require('./telegram/bot');
         startTelegramBot({ BOT_TOKEN, WEBAPP_URL });
+        setSuperBingoTelegramAnnounce(announceSuperBingoCountdown);
     } else {
         console.log('⚠️  BOT_TOKEN not set. Telegram bot is disabled.');
     }

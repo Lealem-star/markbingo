@@ -32,7 +32,13 @@ export function WebSocketProvider({ children }) {
         registrationEndTime: null,
         winners: [],
         walletUpdate: null,
-        nextRegistrationStart: null
+        nextRegistrationStart: null,
+        isSuperBingo: false,
+        superMode: null,
+        scheduledStartAt: null,
+        regCode: null,
+        lockedSelections: [],
+        superCountdownAlert: null,
     });
     const [lastEvent, setLastEvent] = useState(null);
     const [currentStake, setCurrentStake] = useState(null);
@@ -324,9 +330,15 @@ export function WebSocketProvider({ children }) {
                                     calledNumbers: snapshotCalled,
                                     countdown: phase === 'registration' ? remainingSeconds : (event.payload.countdown || prev.countdown || 0),
                                     registrationEndTime,
-                                    // Use our carefully determined final values
+                                    isSuperBingo: event.payload.isSuperBingo ?? prev.isSuperBingo ?? false,
+                                    superMode: event.payload.superMode ?? prev.superMode ?? null,
+                                    scheduledStartAt: event.payload.scheduledStartAt ?? prev.scheduledStartAt ?? null,
+                                    regCode: event.payload.regCode ?? prev.regCode ?? null,
+                                    lockedSelections: event.payload.lockedSelections ?? prev.lockedSelections ?? [],
                                     yourCards: phase === 'registration' ? [] : finalCards,
-                                    yourSelections: phase === 'registration' ? [] : finalSelections,
+                                    yourSelections: phase === 'registration'
+                                        ? (snapshotSelections || prev.yourSelections || [])
+                                        : finalSelections,
                                     ...(phase === 'registration' ? {
                                         currentNumber: null,
                                         winners: []
@@ -368,7 +380,13 @@ export function WebSocketProvider({ children }) {
                                 winners: [],
                                 takenCards: event.payload.takenCards || [],
                                 availableCards: event.payload.availableCards || [],
-                                prizePool: 0
+                                prizePool: 0,
+                                isSuperBingo: event.payload.isSuperBingo || false,
+                                superMode: event.payload.superMode || null,
+                                scheduledStartAt: event.payload.scheduledStartAt || null,
+                                regCode: event.payload.regCode || null,
+                                lockedSelections: [],
+                                superCountdownAlert: null,
                             }));
                             break;
                         }
@@ -518,6 +536,21 @@ export function WebSocketProvider({ children }) {
                             });
                             break;
 
+                        case 'super_bingo_countdown': {
+                            const alertMsg = event.payload?.message
+                                || 'Super Bingo starts in 5 minutes! Open the app and wait on cartela selection.';
+                            setGameState(prev => ({
+                                ...prev,
+                                superMode: 'countdown',
+                                superCountdownAlert: alertMsg,
+                                scheduledStartAt: event.payload?.scheduledStartAt ?? prev.scheduledStartAt,
+                            }));
+                            window.dispatchEvent(new CustomEvent('superBingoCountdown', {
+                                detail: event.payload || {},
+                            }));
+                            break;
+                        }
+
                         case 'selection_confirmed':
                             // Only process if it's for the current game (or no gameId specified - assume it's for current)
                             setGameState(prev => {
@@ -531,8 +564,10 @@ export function WebSocketProvider({ children }) {
                                 return {
                                 ...prev,
                                 yourSelections: event.payload.selections || prev.yourSelections || [],
-                                playersCount: event.payload.playersCount,
-                                prizePool: event.payload.prizePool
+                                lockedSelections: event.payload.lockedSelections || prev.lockedSelections || [],
+                                regCode: event.payload.regCode ?? prev.regCode,
+                                playersCount: event.payload.playersCount ?? prev.playersCount,
+                                prizePool: event.payload.prizePool ?? prev.prizePool
                                 };
                             });
                             break;
@@ -801,6 +836,10 @@ export function WebSocketProvider({ children }) {
         return send('deselect_card', { cardNumber });
     }, [send]);
 
+    const confirmCartella = useCallback((cardNumber) => {
+        return send('confirm_card', { cardNumber });
+    }, [send]);
+
     const claimBingo = useCallback((payload = {}) => {
         return send('bingo_claim', payload || {});
     }, [send]);
@@ -828,6 +867,7 @@ export function WebSocketProvider({ children }) {
         connectGeneral,
         selectCartella,
         deselectCartella,
+        confirmCartella,
         claimBingo,
         send,
         // Debug info
