@@ -17,7 +17,7 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
 }
 
 /**
- * Next scheduled Super Bingo start: Saturday or Sunday at 21:00 Ethiopia time.
+ * Next scheduled Super Bingo start: Saturday or Sunday at 17:00 Ethiopia time (11 o'clock daytime).
  */
 function getNextScheduledStartMs(fromMs = Date.now()) {
     const testMinutes = Number(process.env.SUPER_BINGO_TEST_MINUTES);
@@ -30,14 +30,13 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
     const m = eth.getUTCMonth();
     const d = eth.getUTCDate();
     const dow = eth.getUTCDay(); // 0 Sun … 6 Sat
-    const hour = eth.getUTCHours();
-    const minute = eth.getUTCMinutes();
 
     const candidates = [];
 
-    const todayAt22 = fromEthiopiaParts(y, m, d, 21, 0);
-    if ((dow === 6 || dow === 0) && fromMs < todayAt22) {
-        candidates.push(todayAt22);
+    // CHANGED: 11 o'clock daytime is 17:00 standard local time
+    const todayAt17 = fromEthiopiaParts(y, m, d, 17, 0); 
+    if ((dow === 6 || dow === 0) && fromMs < todayAt17) {
+        candidates.push(todayAt17);
     }
 
     for (let add = 1; add <= 14; add++) {
@@ -46,7 +45,8 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
         const dow2 = e.getUTCDay();
         if (dow2 === 6 || dow2 === 0) {
             candidates.push(
-                fromEthiopiaParts(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate(), 21, 0)
+                // CHANGED: 11 o'clock daytime is 17:00 standard local time
+                fromEthiopiaParts(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate(), 17, 0)
             );
             break;
         }
@@ -58,12 +58,14 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
     return Math.min(...candidates.filter((c) => c > fromMs));
 }
 
+// Note: You may also want to adjust your live window hours here depending 
+// on how long after 17:00 the bingo room should remain active.
 function isWeekendLiveWindow(fromMs = Date.now()) {
     const eth = toEthiopiaDate(fromMs);
     const dow = eth.getUTCDay();
     if (dow !== 6 && dow !== 0) return false;
     const h = eth.getUTCHours();
-    return h >= 21 || h < 2;
+    return h >= 17 || h < 5; 
 }
 
 function isSuperBingoStake(stake) {
