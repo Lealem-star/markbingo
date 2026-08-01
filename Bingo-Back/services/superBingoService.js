@@ -17,7 +17,7 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
 }
 
 /**
- * Next scheduled Super Bingo start: Saturday or Sunday at 22:00 Ethiopia time.
+ * Next scheduled Super Bingo start: Saturday or Sunday at 21:00 Ethiopia time.
  */
 function getNextScheduledStartMs(fromMs = Date.now()) {
     const testMinutes = Number(process.env.SUPER_BINGO_TEST_MINUTES);
@@ -35,7 +35,7 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
 
     const candidates = [];
 
-    const todayAt22 = fromEthiopiaParts(y, m, d, 22, 0);
+    const todayAt22 = fromEthiopiaParts(y, m, d, 21, 0);
     if ((dow === 6 || dow === 0) && fromMs < todayAt22) {
         candidates.push(todayAt22);
     }
@@ -46,7 +46,7 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
         const dow2 = e.getUTCDay();
         if (dow2 === 6 || dow2 === 0) {
             candidates.push(
-                fromEthiopiaParts(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate(), 22, 0)
+                fromEthiopiaParts(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate(), 21, 0)
             );
             break;
         }
@@ -63,7 +63,7 @@ function isWeekendLiveWindow(fromMs = Date.now()) {
     const dow = eth.getUTCDay();
     if (dow !== 6 && dow !== 0) return false;
     const h = eth.getUTCHours();
-    return h >= 22 || h < 2;
+    return h >= 21 || h < 2;
 }
 
 function isSuperBingoStake(stake) {
