@@ -96,6 +96,10 @@ const gameSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    superTelegramReminderSent: {
+        type: Boolean,
+        default: false
+    },
     /** Paid presale cartelas — survives server restarts. */
     presaleEntries: [{
         userId: { type: String, required: true },

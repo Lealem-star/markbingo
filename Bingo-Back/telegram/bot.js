@@ -51,20 +51,51 @@ function getHumanPlayerIdsFromGame(game) {
 }
 
 let telegramBotInstance = null;
+let announceOnlyBot = null;
+
+function getTelegramSender() {
+    if (telegramBotInstance) return telegramBotInstance;
+    if (!announceOnlyBot && process.env.BOT_TOKEN) {
+        const { Telegraf } = require('telegraf');
+        announceOnlyBot = new Telegraf(process.env.BOT_TOKEN);
+    }
+    return announceOnlyBot;
+}
+
+function buildSuperBingoCountdownText(minutes) {
+    const mins = Math.max(1, Number(minutes) || 5);
+    return (
+        `⏳ የሱፐር ቢንጎ ጨዋታ ከ${mins} ደቂቃ${mins === 1 ? '' : 'ዎች'} በኋላ ይጀምራል! 🚀\n\n` +
+        `🔒 የጨዋታ አይነት: 🎯 ሙሉ ዝግ 🏆`
+    );
+}
 
 async function announceSuperBingoCountdown(payload = {}) {
-    if (!telegramBotInstance) {
-        console.log('Super Bingo countdown (bot not ready):', payload.message || payload);
+    const bot = getTelegramSender();
+    if (!bot) {
+        console.log('Super Bingo countdown (no bot token):', payload.message || payload);
         return;
     }
+
     const minutes = payload.minutes || 5;
-    const text =
-        `⭐ *Super Bingo* starts in ~${minutes} minutes!\n\n` +
-        `Open the app and keep your cartela ready. Normal bingo keeps running.\n\n` +
-        `_Super Bingo በ ${minutes} ደቂቃ ውስጥ ይጀምራል — መተግበሪያውን ይክፈቱ_`;
+    const gameId = payload.gameId || null;
+    const text = buildSuperBingoCountdownText(minutes);
 
     try {
         await connectDB();
+
+        if (gameId) {
+            const claimed = await Game.findOneAndUpdate(
+                { gameId, superTelegramReminderSent: { $ne: true } },
+                { superTelegramReminderSent: true },
+                { new: true }
+            );
+            if (!claimed) {
+                console.log(`Super Bingo countdown already sent for ${gameId}`);
+                return;
+            }
+        }
+
         const users = await User.find(
             { telegramId: { $ne: null } },
             { telegramId: 1, role: 1 }
@@ -74,7 +105,7 @@ async function announceSuperBingoCountdown(payload = {}) {
             const id = user.telegramId ? String(user.telegramId) : null;
             if (!id) continue;
             try {
-                await telegramBotInstance.telegram.sendMessage(id, text, { parse_mode: 'Markdown' });
+                await bot.telegram.sendMessage(id, text);
                 sent += 1;
             } catch (_) {
                 /* skip blocked users */
@@ -83,7 +114,41 @@ async function announceSuperBingoCountdown(payload = {}) {
         console.log(`Super Bingo countdown sent to ${sent} telegram users`);
     } catch (e) {
         console.error('announceSuperBingoCountdown error:', e);
+        if (gameId) {
+            await Game.updateOne({ gameId }, { superTelegramReminderSent: false }).catch(() => {});
+        }
     }
+}
+
+async function tickSuperBingoTelegramReminder() {
+    try {
+        const { SUPER_STAKE, SUPER_COUNTDOWN_MS } = require('../services/superBingoService');
+        await connectDB();
+        const now = Date.now();
+        const games = await Game.find({
+            stake: SUPER_STAKE,
+            isSuperBingo: true,
+            status: 'registration',
+            superTelegramReminderSent: { $ne: true },
+            scheduledStartAt: {
+                $gt: new Date(now),
+                $lte: new Date(now + SUPER_COUNTDOWN_MS),
+            },
+        }).limit(5);
+
+        for (const game of games) {
+            const minutes = Math.max(1, Math.ceil((game.scheduledStartAt.getTime() - now) / 60000));
+            await announceSuperBingoCountdown({ gameId: game.gameId, minutes });
+        }
+    } catch (e) {
+        console.error('tickSuperBingoTelegramReminder error:', e);
+    }
+}
+
+function startSuperBingoReminderScheduler() {
+    tickSuperBingoTelegramReminder();
+    setInterval(tickSuperBingoTelegramReminder, 30000);
+    console.log('📣 Super Bingo Telegram reminder scheduler started');
 }
 
 function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
@@ -3790,7 +3855,11 @@ Thank you for your dedication! 🙏`;
     scheduleWeeklyNotification();
 }
 
-module.exports = { startTelegramBot, announceSuperBingoCountdown };
+module.exports = {
+    startTelegramBot,
+    announceSuperBingoCountdown,
+    startSuperBingoReminderScheduler,
+};
 
 // Allow running this file directly via PM2/node
 if (require.main === module) {
@@ -3798,6 +3867,7 @@ if (require.main === module) {
     const WEBAPP_URL = process.env.WEBAPP_URL || 'https://fikirbingo.com';
     try {
         startTelegramBot({ BOT_TOKEN, WEBAPP_URL });
+        startSuperBingoReminderScheduler();
         if (typeof process.send === 'function') {
             process.send('ready');
         }

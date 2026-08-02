@@ -122,6 +122,7 @@ async function saveSuperPresaleOpen(room) {
             $setOnInsert: {
                 gameId: room.currentGameId,
                 presaleEntries: [],
+                superTelegramReminderSent: false,
             },
         },
         { upsert: true, setDefaultsOnInsert: true }

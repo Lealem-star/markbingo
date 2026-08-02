@@ -449,7 +449,9 @@ function tickSuperBingoRoom(room) {
         broadcast('super_bingo_countdown', payload, room);
         try {
             if (superBingoTelegramAnnounce) {
-                superBingoTelegramAnnounce(payload);
+                Promise.resolve(superBingoTelegramAnnounce(payload)).catch((e) => {
+                    console.error('Super Bingo telegram announce failed:', e);
+                });
             }
         } catch (e) {
             console.error('Super Bingo telegram announce failed:', e);
@@ -2284,17 +2286,21 @@ server.listen(PORT, () => {
     }, 30000);
 });
 
+// Super Bingo 5-min Telegram reminder (game server process — bot runs separately in PM2)
+const { announceSuperBingoCountdown } = require('./telegram/bot');
+setSuperBingoTelegramAnnounce(announceSuperBingoCountdown);
+
 // Start Telegram bot (guarded by RUN_TELEGRAM_BOT)
 if (process.env.RUN_TELEGRAM_BOT === 'true') {
     if (BOT_TOKEN) {
-        const { startTelegramBot, announceSuperBingoCountdown } = require('./telegram/bot');
+        const { startTelegramBot, startSuperBingoReminderScheduler } = require('./telegram/bot');
         startTelegramBot({ BOT_TOKEN, WEBAPP_URL });
-        setSuperBingoTelegramAnnounce(announceSuperBingoCountdown);
+        startSuperBingoReminderScheduler();
     } else {
         console.log('⚠️  BOT_TOKEN not set. Telegram bot is disabled.');
     }
 } else {
-    console.log('🤖 Telegram bot startup skipped (RUN_TELEGRAM_BOT != "true").');
+    console.log('🤖 Telegram bot startup skipped (RUN_TELEGRAM_BOT != "true"). Super Bingo reminders wired on API server.');
 }
 
 } catch (error) {
