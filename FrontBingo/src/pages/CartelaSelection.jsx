@@ -725,10 +725,11 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const balanceTotal = (wallet.main || 0) + (wallet.play || 0);
     const roomLabel = Number(stake) === 50 ? 'VIP' : `${stake} ETB`;
 
-    const superScheduleLabel = 'ዘወትር ቅዳሜ እና እሁድ ከቀኑ 10 ሰዓት';
-    const superStatusLabel = gameState.superMode === 'countdown'
+    const superScheduleLabel = 'ዘወትር ቅዳሜ እና እሁድ ከቀኑ 11 ሰዓት';
+    const superGameTypeLabel = 'ሙሉ ዝግ';
+    const superTimeLabel = gameState.superMode === 'countdown'
         ? `${timerSeconds}s`
-        : 'ሙሉ ዝግ';
+        : superScheduleLabel;
 
     const slotEntries = (() => {
         const entries = [];
@@ -997,12 +998,12 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                                     <span className="super-bingo-value">{stake} ETB</span>
                                 </div>
                                 <div className="super-bingo-cell">
-                                    <span className="super-bingo-label">STATUS</span>
-                                    <span className="super-bingo-value super-bingo-status">{superStatusLabel}</span>
+                                    <span className="super-bingo-label">የጨዋታ አይነት</span>
+                                    <span className="super-bingo-value super-bingo-status">{superGameTypeLabel}</span>
                                 </div>
                                 <div className="super-bingo-cell super-bingo-cell-wide">
                                     <span className="super-bingo-label">TIME</span>
-                                    <span className="super-bingo-schedule">{superScheduleLabel}</span>
+                                    <span className="super-bingo-schedule">{superTimeLabel}</span>
                                 </div>
                             </div>
                         </div>

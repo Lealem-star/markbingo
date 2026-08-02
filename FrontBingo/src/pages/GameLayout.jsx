@@ -13,8 +13,25 @@ const INVALID_BINGO_MSG = 'Invalid BINGO! No winning pattern yet.';
 /** Minimum time to claim BINGO after a winning pattern appears (next ball alone is not enough if it comes sooner). */
 const WIN_CLAIM_MIN_MS = 5000;
 
-/** Pattern ids (row/col/diag/corners) complete on this cartela for the given calls. */
-function getCompletedPatternSignatures(cartella, calledNumbers) {
+/** Super Bingo (ሙሉ ዝግ): all 25 cells must be covered by called numbers. */
+function checkFullCardBingo(cartella, calledNumbers) {
+    if (!cartella || !Array.isArray(cartella) || cartella.length !== 5) {
+        return false;
+    }
+    if (!calledNumbers || !Array.isArray(calledNumbers)) {
+        return false;
+    }
+    return cartella.every((row) =>
+        row.every((num) => num === 0 || calledNumbers.includes(num))
+    );
+}
+
+/** Pattern ids (row/col/diag/corners/full-card) complete on this cartela for the given calls. */
+function getCompletedPatternSignatures(cartella, calledNumbers, fullCard = false) {
+    if (fullCard) {
+        return checkFullCardBingo(cartella, calledNumbers) ? new Set(['full-card']) : new Set();
+    }
+
     const signatures = new Set();
     if (!cartella || !Array.isArray(calledNumbers)) return signatures;
 
@@ -49,10 +66,10 @@ function getCompletedPatternSignatures(cartella, calledNumbers) {
     return signatures;
 }
 
-function getAllCompletedPatternSignatures(cards, calledNumbers) {
+function getAllCompletedPatternSignatures(cards, calledNumbers, fullCard = false) {
     const all = new Set();
     for (const { card } of cards) {
-        for (const sig of getCompletedPatternSignatures(card, calledNumbers)) {
+        for (const sig of getCompletedPatternSignatures(card, calledNumbers, fullCard)) {
             all.add(sig);
         }
     }
@@ -100,9 +117,13 @@ export default function GameLayout({
     }, []);
 
     // Function to check if player has a valid bingo pattern
-    const checkBingoPattern = (cartella, calledNumbers) => {
+    const checkBingoPattern = (cartella, calledNumbers, fullCard = false) => {
         if (!cartella || !Array.isArray(cartella) || !Array.isArray(calledNumbers)) {
             return false;
+        }
+
+        if (fullCard) {
+            return checkFullCardBingo(cartella, calledNumbers);
         }
 
         // Check rows
@@ -154,6 +175,7 @@ export default function GameLayout({
     const currentNumber = gameState.currentNumber;
     const currentGameId = gameState.gameId;
     const yourCards = Array.isArray(gameState.yourCards) ? gameState.yourCards : [];
+    const isFullCardGame = gameState.isSuperBingo || Number(stake) === 50;
 
     // Sound control
     const [isSoundOn, setIsSoundOn] = useState(false);
@@ -265,11 +287,11 @@ export default function GameLayout({
         }
 
         if (claimedBingoRef.current) {
-            knownCompletedPatternsRef.current = getAllCompletedPatternSignatures(yourCards, calledNumbers);
+            knownCompletedPatternsRef.current = getAllCompletedPatternSignatures(yourCards, calledNumbers, isFullCardGame);
             return;
         }
 
-        const currentPatterns = getAllCompletedPatternSignatures(yourCards, calledNumbers);
+        const currentPatterns = getAllCompletedPatternSignatures(yourCards, calledNumbers, isFullCardGame);
         const previouslyKnown = knownCompletedPatternsRef.current;
         const justCompleted = [...currentPatterns].filter((p) => !previouslyKnown.has(p));
         knownCompletedPatternsRef.current = currentPatterns;
@@ -295,7 +317,7 @@ export default function GameLayout({
                 setActiveClaimWindow(true);
             }
         }
-    }, [calledNumbers, gameState.phase, yourCards, currentGameId]);
+    }, [calledNumbers, gameState.phase, yourCards, currentGameId, isFullCardGame]);
 
     // Close claim window after min 5s AND next ball (whichever is later — fast draws still get 5s)
     useEffect(() => {
@@ -389,12 +411,24 @@ export default function GameLayout({
         if (!card || !Array.isArray(calledNumbers) || calledNumbers.length === 0) {
             return false;
         }
-        if (!checkBingoPattern(card, calledNumbers)) {
+        if (!checkBingoPattern(card, calledNumbers, isFullCardGame)) {
             return false;
         }
         const marks = manuallyMarkedNumbers[cardNumber];
         if (!marks || marks.size === 0) {
             return false;
+        }
+        if (isFullCardGame) {
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const num = card[i][j];
+                    if (num === 0) continue;
+                    if (!calledNumbers.includes(num) || !marks.has(num)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
         for (const n of marks) {
             if (n !== 0 && !calledNumbers.includes(n)) {
@@ -402,7 +436,7 @@ export default function GameLayout({
             }
         }
         return true;
-    }, [calledNumbers, manuallyMarkedNumbers]);
+    }, [calledNumbers, manuallyMarkedNumbers, isFullCardGame]);
 
     const handleCardBingo = useCallback((cardNumber, card) => {
         if (!connected || gameState.phase !== 'running' || !currentGameId) {
@@ -1019,6 +1053,7 @@ export default function GameLayout({
                                                     called={markedNumbers}
                                                     isPreview={false}
                                                     showHeader={true}
+                                                    fullCardWin={isFullCardGame}
                                                     onNumberToggle={
                                                         !isLocked
                                                             ? (number) => handleNumberToggle(cardNumber, number)

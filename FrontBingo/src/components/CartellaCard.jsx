@@ -26,11 +26,25 @@ function patternIncludesLastCall(card, patternKeys, lastCallNum) {
 
 // Collect all valid winning patterns, then prefer one that includes the latest draw
 // so the winner screen matches "the call that made BINGO" (not an older completed line).
-function detectWinningPattern(card, called) {
+function detectWinningPattern(card, called, { fullCard = false } = {}) {
     if (!card || !called || called.length === 0) return new Set();
 
     const calledNums = new Set(called.map((x) => Number(x)));
     const lastCallNum = Number(called[called.length - 1]);
+
+    if (fullCard) {
+        const allCells = [];
+        for (let row = 0; row < 5; row++) {
+            for (let col = 0; col < 5; col++) {
+                const num = card[row][col];
+                if (!cellIsMarked(num, calledNums)) {
+                    return new Set();
+                }
+                allCells.push({ row, col });
+            }
+        }
+        return cellsToKeySet(allCells);
+    }
 
     const candidates = [];
 
@@ -120,6 +134,8 @@ export default function CartellaCard({
     selectedNumber = null, 
     isPreview = false, 
     showWinningPattern = false,
+    /** Super Bingo (ሙሉ ዝግ): highlight all 25 cells when the full card is complete. */
+    fullCardWin = false,
     /** When set, cells in the winning pattern at this call snapshot are shown in red (missed BINGO window). */
     missedWinningCalledNumbers = null,
     onNumberToggle = null,
@@ -133,10 +149,12 @@ export default function CartellaCard({
     const letterColors = ['cartela-letter-b', 'cartela-letter-i', 'cartela-letter-n', 'cartela-letter-g', 'cartela-letter-o'];
     
     // Detect winning pattern if needed
-    const winningPattern = showWinningPattern ? detectWinningPattern(grid, called) : new Set();
+    const winningPattern = showWinningPattern
+        ? detectWinningPattern(grid, called, { fullCard: fullCardWin })
+        : new Set();
     const missedWinPattern =
         Array.isArray(missedWinningCalledNumbers)
-            ? detectWinningPattern(grid, missedWinningCalledNumbers)
+            ? detectWinningPattern(grid, missedWinningCalledNumbers, { fullCard: fullCardWin })
             : new Set();
 
     // Mark a cell only if that cell's number was actually drawn (1–75). Free center (0) is never "drawn".

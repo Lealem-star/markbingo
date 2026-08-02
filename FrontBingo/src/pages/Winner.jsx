@@ -242,6 +242,7 @@ export default function Winner({ onNavigate, overlay = false }) {
                                 called={activeCalled}
                                 isPreview={false}
                                 showWinningPattern={true}
+                                fullCardWin={gameState.isSuperBingo}
                                 showHeader={false}
                             />
                         ) : (

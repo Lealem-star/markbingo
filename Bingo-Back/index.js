@@ -51,7 +51,13 @@ const {
     getNextScheduledStartMs,
     isWeekendLiveWindow,
     isSuperBingoStake,
+    checkFullCardBingo,
     buildSuperSnapshotFields,
+    saveSuperPresaleOpen,
+    appendSuperPresaleEntry,
+    markSuperCountdownAnnounced,
+    findActiveSuperPresaleGame,
+    cancelStaleSuperPresales,
 } = require('./services/superBingoService');
 console.log('✅ Services and models loaded');
 
@@ -253,8 +259,122 @@ function ensureSuperScheduler(room) {
     room.superTickIntervalId = setInterval(() => tickSuperBingoRoom(room), 15000);
 }
 
+function applySuperPresaleEntriesToRoom(room, entries) {
+    room.takenCards.clear();
+    room.userCardSelections.clear();
+    room.selectedPlayers.clear();
+    room.presaleLockedCards = new Map();
+
+    for (const entry of entries || []) {
+        const uid = String(entry.userId);
+        const cardNum = Number(entry.cartelaNumber);
+        if (!Number.isInteger(cardNum)) continue;
+
+        room.takenCards.add(cardNum);
+        room.selectedPlayers.add(uid);
+
+        const locked = userPresaleLockedSet(room, uid);
+        locked.add(cardNum);
+
+        const selections = room.userCardSelections.get(uid) || [];
+        if (!selections.includes(cardNum)) {
+            selections.push(cardNum);
+        }
+        room.userCardSelections.set(uid, selections);
+    }
+}
+
+function resolveSuperModeAfterRestore(room) {
+    const now = Date.now();
+    const msUntilStart = room.scheduledStartAt - now;
+
+    if (msUntilStart <= 0) {
+        room.superMode = 'starting_live';
+        return;
+    }
+    if (msUntilStart <= SUPER_COUNTDOWN_MS && room.superCountdownAnnounced) {
+        room.superMode = 'countdown';
+        return;
+    }
+    room.superMode = 'presale';
+}
+
+async function tryRestoreSuperPresale(room) {
+    if (!room?.isSuperBingo) return false;
+
+    try {
+        const active = await findActiveSuperPresaleGame();
+        if (!active || !active.gameId) return false;
+
+        clearRoomRegistrationTimer(room);
+        room.phase = 'registration';
+        room.currentGameId = active.gameId;
+        room.regCode = active.regCode || generateRegCode();
+        room.scheduledStartAt = active.scheduledStartAt
+            ? active.scheduledStartAt.getTime()
+            : getNextScheduledStartMs();
+        room.registrationEndTime = room.scheduledStartAt;
+        room.startTime = Date.now();
+        room.announceProcessed = false;
+        room.superCountdownAnnounced = !!active.superCountdownAnnounced;
+
+        applySuperPresaleEntriesToRoom(room, active.presaleEntries);
+        resolveSuperModeAfterRestore(room);
+
+        if (room.callTimerId) {
+            clearTimeout(room.callTimerId);
+            room.callTimerId = null;
+        }
+
+        const selectedCount = countSelectedCartelas(room);
+        const selectedPlayersCount = countSelectedPlayers(room);
+        const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
+
+        console.log(
+            `Super Bingo presale restored: ${room.currentGameId}, regCode=${room.regCode}, entries=${selectedCount}, superMode=${room.superMode}`
+        );
+
+        ensureSuperScheduler(room);
+
+        if (room.superMode === 'starting_live') {
+            console.log('Super Bingo restore — scheduled start passed, starting game now');
+            startGame(room);
+            return true;
+        }
+
+        broadcast('registration_open', {
+            gameId: room.currentGameId,
+            stake: room.stake,
+            playersCount: selectedPlayersCount,
+            duration: Math.max(0, room.scheduledStartAt - Date.now()),
+            endsAt: room.registrationEndTime,
+            availableCards: Array.from({ length: BingoCards.cards.length }, (_, i) => i + 1),
+            takenCards: Array.from(room.takenCards),
+            prizePool: currentPrizePool,
+            isSuperBingo: true,
+            superMode: room.superMode,
+            scheduledStartAt: room.scheduledStartAt,
+            regCode: null,
+        }, room);
+
+        return true;
+    } catch (error) {
+        console.error('Failed to restore Super Bingo presale:', error);
+        return false;
+    }
+}
+
 async function startSuperPresale(room) {
     if (!room?.isSuperBingo) return;
+
+    const restored = await tryRestoreSuperPresale(room);
+    if (restored) return;
+
+    try {
+        await cancelStaleSuperPresales();
+    } catch (error) {
+        console.error('Failed to cancel stale Super Bingo presales:', error);
+    }
 
     clearRoomRegistrationTimer(room);
     room.phase = 'registration';
@@ -281,6 +401,12 @@ async function startSuperPresale(room) {
     room.currentGameId = `SB${String(timestamp).slice(-4)}${String(random).padStart(4, '0')}${processId}`;
 
     console.log(`Super Bingo presale opened: ${room.currentGameId}, regCode=${room.regCode}, startsAt=${new Date(room.scheduledStartAt).toISOString()}`);
+
+    try {
+        await saveSuperPresaleOpen(room);
+    } catch (error) {
+        console.error('Failed to persist Super Bingo presale open:', error);
+    }
 
     broadcast('registration_open', {
         gameId: room.currentGameId,
@@ -310,6 +436,9 @@ function tickSuperBingoRoom(room) {
     if (!room.superCountdownAnnounced && msUntilStart > 0 && msUntilStart <= SUPER_COUNTDOWN_MS) {
         room.superCountdownAnnounced = true;
         room.superMode = 'countdown';
+        markSuperCountdownAnnounced(room.currentGameId).catch((e) => {
+            console.error('Failed to persist Super Bingo countdown flag:', e);
+        });
         const payload = {
             gameId: room.currentGameId,
             stake: room.stake,
@@ -1078,7 +1207,7 @@ async function checkWinners(room) {
                         cartellasMap.forEach((cartella, cartelaNumber) => {
                             try {
                                 if (cartella && Array.isArray(cartella)) {
-        if (checkBingo(cartella, room.calledNumbers)) {
+        if (bingoValidForRoom(room, cartella, room.calledNumbers)) {
                                         console.log(`Bingo found! User: ${userId}, Cartela: ${cartelaNumber}, Called numbers: ${calledCount}`);
                                         winners.push({ userId, cartella, cartelaNumber });
         }
@@ -1090,7 +1219,7 @@ async function checkWinners(room) {
                     } else if (Array.isArray(cartellasMap)) {
                         // Fallback: if it's directly an array (legacy support)
                         try {
-                            if (checkBingo(cartellasMap, room.calledNumbers)) {
+                            if (bingoValidForRoom(room, cartellasMap, room.calledNumbers)) {
                                 console.log(`Bingo found! User: ${userId}, Called numbers: ${calledCount}`);
                                 winners.push({ userId, cartella: cartellasMap });
                             }
@@ -1492,10 +1621,27 @@ function checkBingo(cartella, calledNumbers) {
     return false;
 }
 
-/** Server-side win check: same rules for every round (bot-advantage only biases *calls*, not claim rules). */
+/** Server-side win check: Super Bingo requires full card; normal rooms use standard patterns. */
 function bingoValidForRoom(room, cartella, calledNumbers) {
     if (!room || !cartella || !calledNumbers) return false;
+    if (room.isSuperBingo) {
+        return checkFullCardBingo(cartella, calledNumbers);
+    }
     return checkBingo(cartella, calledNumbers);
+}
+
+function cardFullyMarked(cartella, markedNumbers) {
+    if (!cartella || !Array.isArray(markedNumbers)) return false;
+    const marks = new Set(markedNumbers.map((n) => Number(n)));
+    for (let i = 0; i < 5; i++) {
+        const row = cartella[i];
+        if (!row || !Array.isArray(row)) return false;
+        for (let j = 0; j < 5; j++) {
+            const num = Number(row[j]);
+            if (num !== 0 && !marks.has(num)) return false;
+        }
+    }
+    return true;
 }
 
 // Removed minute-based auto-cycler. Rounds will be chained after each game ends,
@@ -1825,6 +1971,12 @@ wss.on('connection', async (ws, request) => {
                     room.selectedPlayers.add(ws.userId);
                     locked.add(cardNumber);
 
+                    try {
+                        await appendSuperPresaleEntry(room.currentGameId, ws.userId, cardNumber);
+                    } catch (persistErr) {
+                        console.error('Failed to persist Super Bingo presale entry:', persistErr);
+                    }
+
                     const selectedCount = countSelectedCartelas(room);
                     const selectedPlayersCount = countSelectedPlayers(room);
                     const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
@@ -2014,6 +2166,20 @@ wss.on('connection', async (ws, request) => {
                                         payload: {
                                             gameId: room.currentGameId,
                                             reason: 'invalid_marked_numbers'
+                                        }
+                                    }));
+                                }
+                                return;
+                            }
+
+                            // Super Bingo: every cell on the card must be marked before claim
+                            if (room.isSuperBingo && !cardFullyMarked(card, markedNumbers)) {
+                                if (ws.readyState === 1) {
+                                    ws.send(JSON.stringify({
+                                        type: 'bingo_rejected',
+                                        payload: {
+                                            gameId: room.currentGameId,
+                                            reason: 'invalid_claim'
                                         }
                                     }));
                                 }

@@ -27,7 +27,9 @@ const WebSocket = require('ws');
 const https = require('https');
 const http = require('http');
 
-// Mirrors Bingo-Back/index.js `checkBingo` — same win rules as the server for all rounds.
+// Mirrors Bingo-Back/index.js win rules — standard patterns or full card for Super Bingo (stake 50).
+const { checkFullCardBingo } = require('../services/superBingoService');
+
 function checkBingo(cartella, calledNumbers) {
     if (!cartella || !Array.isArray(cartella) || cartella.length !== 5) return false;
     if (!calledNumbers || !Array.isArray(calledNumbers)) return false;
@@ -468,13 +470,16 @@ class PlayerBot {
     }
 
     /**
-     * True when the card has any standard winning pattern vs called numbers (matches server checkBingo).
+     * True when the card has a valid win vs called numbers (matches server bingoValidForRoom).
      */
     checkForWin() {
         if (!this.gameState.myCard || this.gameState.calledNumbers.length === 0) {
             return false;
         }
-        if (!checkBingo(this.gameState.myCard, this.gameState.calledNumbers)) {
+        const hasWin = this.stake === 50
+            ? checkFullCardBingo(this.gameState.myCard, this.gameState.calledNumbers)
+            : checkBingo(this.gameState.myCard, this.gameState.calledNumbers);
+        if (!hasWin) {
             return false;
         }
         console.log('✅ Winning pattern — can claim');

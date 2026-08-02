@@ -74,7 +74,34 @@ const gameSchema = new mongoose.Schema({
     registrationEndsAt: {
         type: Date,
         required: true
-    }
+    },
+    /** Super Bingo presale metadata (stake 50). */
+    isSuperBingo: {
+        type: Boolean,
+        default: false
+    },
+    superMode: {
+        type: String,
+        default: null
+    },
+    regCode: {
+        type: String,
+        default: null
+    },
+    scheduledStartAt: {
+        type: Date,
+        default: null
+    },
+    superCountdownAnnounced: {
+        type: Boolean,
+        default: false
+    },
+    /** Paid presale cartelas — survives server restarts. */
+    presaleEntries: [{
+        userId: { type: String, required: true },
+        cartelaNumber: { type: Number, required: true },
+        confirmedAt: { type: Date, default: Date.now }
+    }]
 }, {
     timestamps: true
 });
@@ -85,5 +112,6 @@ gameSchema.index({ status: 1, finishedAt: -1 }); // Admin stats: find finished g
 gameSchema.index({ stake: 1 });
 gameSchema.index({ 'players.userId': 1 });
 gameSchema.index({ createdAt: -1 });
+gameSchema.index({ isSuperBingo: 1, status: 1, scheduledStartAt: -1 });
 
 module.exports = mongoose.model('Game', gameSchema);
