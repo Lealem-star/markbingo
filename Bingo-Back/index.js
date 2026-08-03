@@ -49,7 +49,6 @@ const {
     SUPER_COUNTDOWN_MS,
     generateRegCode,
     getNextScheduledStartMs,
-    isWeekendLiveWindow,
     isSuperBingoStake,
     checkFullCardBingo,
     buildSuperSnapshotFields,
@@ -626,13 +625,10 @@ function broadcast(type, payload, targetRoom = null) {
 async function startRegistration(room) {
     console.log('startRegistration called for room:', room.stake);
 
-    if (room.isSuperBingo && !isWeekendLiveWindow()) {
+    // Super Bingo always uses appointment presale — never 30s weekend_live rounds.
+    if (room.isSuperBingo) {
         await startSuperPresale(room);
         return;
-    }
-    if (room.isSuperBingo) {
-        room.superMode = 'weekend_live';
-        room.superCountdownAnnounced = false;
     }
 
     clearRoomRegistrationTimer(room);
@@ -648,9 +644,6 @@ async function startRegistration(room) {
     room.takenCards.clear();
     room.userCardSelections.clear();
     room.selectedPlayers.clear(); // Clear previous selections
-    if (room.isSuperBingo) {
-        room.presaleLockedCards = new Map();
-    }
 
     // Generate a more unique gameId with random component and process ID
     const timestamp = Date.now();
@@ -670,11 +663,6 @@ async function startRegistration(room) {
         endsAt: room.registrationEndTime,
         availableCards: Array.from({ length: BingoCards.cards.length }, (_, i) => i + 1), // Generate available cards based on actual card count
         takenCards: [],
-        ...(room.isSuperBingo ? {
-            isSuperBingo: true,
-            superMode: room.superMode,
-            scheduledStartAt: room.scheduledStartAt,
-        } : {}),
     }, room);
 
     // Proactively fund bots when registration opens
@@ -709,7 +697,7 @@ async function startGame(room) {
     if (selectedPlayersCount === 0) {
         // No players, start new registration immediately
         console.log(`No players joined game ${room.currentGameId} - skipping database creation and starting new registration`);
-        if (room.isSuperBingo && !isWeekendLiveWindow()) {
+        if (room.isSuperBingo) {
             await startSuperPresale(room);
         } else {
             startRegistration(room);
@@ -1456,9 +1444,7 @@ async function toAnnounce(room) {
         console.log('🔄 Room reset for next round:', { roomId: room.id, stake: room.stake, playersCount: room.players.size });
         
         // Start new registration immediately
-        if (room.isSuperBingo && isWeekendLiveWindow()) {
-            await startRegistration(room);
-        } else if (room.isSuperBingo) {
+        if (room.isSuperBingo) {
             await startSuperPresale(room);
         } else {
             await startRegistration(room);
