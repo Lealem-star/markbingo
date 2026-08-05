@@ -1,4 +1,4 @@
-/** Super Bingo (stake 50) — weekend appointment + early registration. */
+/** Super Bingo (stake 50) — daily appointment at 11:00 + early presale. */
 
 const Game = require('../models/Game');
 
@@ -18,8 +18,11 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
     return Date.UTC(y, m, d, hour, minute, 0, 0) - ETHIOPIA_OFFSET_MS;
 }
 
+/** Daily Super Bingo start hour in Ethiopia local time (11 o'clock daytime = 17:00). */
+const SUPER_DAILY_START_HOUR = 17;
+
 /**
- * Next scheduled Super Bingo start: Saturday or Sunday at 17:00 Ethiopia time (11 o'clock daytime).
+ * Next scheduled Super Bingo start: every day at 11:00 Ethiopia time.
  */
 function getNextScheduledStartMs(fromMs = Date.now()) {
     const testMinutes = Number(process.env.SUPER_BINGO_TEST_MINUTES);
@@ -31,43 +34,13 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
     const y = eth.getUTCFullYear();
     const m = eth.getUTCMonth();
     const d = eth.getUTCDate();
-    const dow = eth.getUTCDay(); // 0 Sun … 6 Sat
 
-    const candidates = [];
-
-    // CHANGED: 11 o'clock daytime is 17:00 standard local time
-    const todayAt17 = fromEthiopiaParts(y, m, d, 17, 0); 
-    if ((dow === 6 || dow === 0) && fromMs < todayAt17) {
-        candidates.push(todayAt17);
+    const todayStart = fromEthiopiaParts(y, m, d, SUPER_DAILY_START_HOUR, 0);
+    if (fromMs < todayStart) {
+        return todayStart;
     }
 
-    for (let add = 1; add <= 14; add++) {
-        const t = new Date(fromMs + add * 24 * 60 * 60 * 1000);
-        const e = toEthiopiaDate(t.getTime());
-        const dow2 = e.getUTCDay();
-        if (dow2 === 6 || dow2 === 0) {
-            candidates.push(
-                // CHANGED: 11 o'clock daytime is 17:00 standard local time
-                fromEthiopiaParts(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate(), 17, 0)
-            );
-            break;
-        }
-    }
-
-    if (candidates.length === 0) {
-        return fromMs + 7 * 24 * 60 * 60 * 1000;
-    }
-    return Math.min(...candidates.filter((c) => c > fromMs));
-}
-
-// Note: You may also want to adjust your live window hours here depending 
-// on how long after 17:00 the bingo room should remain active.
-function isWeekendLiveWindow(fromMs = Date.now()) {
-    const eth = toEthiopiaDate(fromMs);
-    const dow = eth.getUTCDay();
-    if (dow !== 6 && dow !== 0) return false;
-    const h = eth.getUTCHours();
-    return h >= 17 || h < 5; 
+    return fromEthiopiaParts(y, m, d + 1, SUPER_DAILY_START_HOUR, 0);
 }
 
 function isSuperBingoStake(stake) {
@@ -184,7 +157,6 @@ module.exports = {
     SUPER_COUNTDOWN_MS,
     generateRegCode,
     getNextScheduledStartMs,
-    isWeekendLiveWindow,
     isSuperBingoStake,
     checkFullCardBingo,
     buildSuperSnapshotFields,

@@ -427,7 +427,6 @@ async function startSuperPresale(room) {
 function tickSuperBingoRoom(room) {
     if (!room?.isSuperBingo) return;
     if (room.phase !== 'registration') return;
-    if (room.superMode === 'weekend_live') return;
 
     const now = Date.now();
     const msUntilStart = room.scheduledStartAt - now;

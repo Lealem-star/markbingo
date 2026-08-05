@@ -444,7 +444,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     // Super Bingo presale: local preview before confirm + pay
     const isSuperPresale = Number(stake) === 50
         && gameState.phase === 'registration'
-        && gameState.superMode !== 'weekend_live';
+        && (gameState.superMode === 'presale' || gameState.superMode === 'countdown');
 
     const lockedNumbers = Array.isArray(gameState.lockedSelections) && gameState.lockedSelections.length > 0
         ? gameState.lockedSelections.map(Number)
@@ -725,7 +725,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const balanceTotal = (wallet.main || 0) + (wallet.play || 0);
     const roomLabel = Number(stake) === 50 ? 'VIP' : `${stake} ETB`;
 
-    const superScheduleLabel = 'ዘወትር ቅዳሜ እና እሁድ ከቀኑ 11 ሰዓት';
+    const superScheduleLabel = 'ዘወትር ከቀኑ 11 ሰዓት';
     const superGameTypeLabel = 'ሙሉ ዝግ';
     const superTimeLabel = gameState.superMode === 'countdown'
         ? `${timerSeconds}s`
