@@ -1390,7 +1390,14 @@ Thank you for your dedication! 🙏`;
         }
         function buildBroadcastMarkup(caption) {
             const kb = { inline_keyboard: [] };
-            if (isHttpsWebApp) { kb.inline_keyboard.push([{ text: 'Play-10', web_app: { url: webAppUrl + '?stake=10' } }]); }
+            if (isHttpsWebApp) {
+                kb.inline_keyboard.push([{
+                    text: 'SuperBingo | 50 ብር',
+                    web_app: { url: webAppUrl + '?stake=50' },
+                }]);
+            } else {
+                kb.inline_keyboard.push([{ text: 'SuperBingo | 50 ብር', callback_data: 'play_stake_50' }]);
+            }
             const base = kb.inline_keyboard.length ? { reply_markup: kb } : {};
             if (caption !== undefined) return { ...base, caption, parse_mode: 'HTML' };
             return { ...base, parse_mode: 'HTML' };
@@ -2557,13 +2564,13 @@ Thank you for your dedication! 🙏`;
                                 try {
                                     await bot.telegram.sendMessage(
                                         admin.telegramId,
-                                        `🆕 New Withdrawal Request\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${displayPhone}\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}${walletLine}\n\n⏰ Process within 24-48 hours`,
+                                        `🆕 New Withdrawal Request\n\n👤 User: ${ctx.from.first_name} ${ctx.from.last_name || ''}\n📱 Phone: ${displayPhone}\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}${walletLine}\n\n⏰ Process within 10 min`,
                                         { reply_markup: { inline_keyboard: [[{ text: '✅ Approve', callback_data: `approve_wd_${result.transactionId}` }, { text: '❌ Deny', callback_data: `deny_wd_${result.transactionId}` }]] } }
                                     );
                                 } catch (e) { console.log('Failed to notify admin:', e?.message); }
                             }
 
-                            ctx.reply(`✅ Withdrawal Request Submitted!\n\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}\n\n⏰ Processing: 24-48 hours\n📞 Contact support for updates`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
+                            ctx.reply(`✅ Withdrawal Request Submitted!\n\n💰 Amount: ETB ${withdrawalState.amount}\n🏦 Destination: ${destination}\n\n⏰ Processing: 10 min\n📞 Contact support for updates`, { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_to_menu' }]] } });
                         } else {
                             const error = await response.json();
                             let errorMsg = '❌ Withdrawal request failed.';
