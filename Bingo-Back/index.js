@@ -258,6 +258,10 @@ function clearRoomRegistrationTimer(room) {
 function ensureSuperScheduler(room) {
     if (!room?.isSuperBingo || room.superTickIntervalId) return;
     room.superTickIntervalId = setInterval(() => tickSuperBingoRoom(room), 15000);
+    console.log(
+        `Super Bingo scheduler started: gameId=${room.currentGameId}, startsAt=${new Date(room.scheduledStartAt).toISOString()} (EAT ${new Date(room.scheduledStartAt).toLocaleString('en-GB', { timeZone: 'Africa/Addis_Ababa' })})`
+    );
+    tickSuperBingoRoom(room);
 }
 
 function applySuperPresaleEntriesToRoom(room, entries) {
@@ -348,7 +352,7 @@ async function tryRestoreSuperPresale(room) {
         const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
 
         console.log(
-            `Super Bingo presale restored: ${room.currentGameId}, regCode=${room.regCode}, entries=${selectedCount}, superMode=${room.superMode}`
+            `Super Bingo presale restored: ${room.currentGameId}, regCode=${room.regCode}, entries=${selectedCount}, superMode=${room.superMode}, scheduledStartAt=${new Date(room.scheduledStartAt).toISOString()}`
         );
 
         ensureSuperScheduler(room);
@@ -474,6 +478,12 @@ function tickSuperBingoRoom(room) {
             scheduledStartAt: room.scheduledStartAt,
             regCode: null,
         }, room);
+        if (room.scheduledStartAt <= now && countSelectedPlayers(room) > 0) {
+            room.superMode = 'starting_live';
+            console.log('Super Bingo overdue presale — starting game now', room.currentGameId);
+            startGame(room);
+            return;
+        }
     }
 
     const msUntilStart = room.scheduledStartAt - now;
@@ -1831,6 +1841,9 @@ wss.on('connection', async (ws, request) => {
                 }
 
                 console.log('✅ Joining room:', { stake, roomId: room.id, roomPhase: room.phase, gameId: room.currentGameId, userId: ws.userId });
+                if (room.isSuperBingo && room.phase === 'registration') {
+                    ensureSuperScheduler(room);
+                }
                 await room.onJoin(ws);
             } else if (data.type === 'select_card') {
                 const room = ws.room;

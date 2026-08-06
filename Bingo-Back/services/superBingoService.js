@@ -21,9 +21,19 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
 /** Daily Super Bingo start hour in Ethiopia standard time (EAT, UTC+3) — 11:00 AM. */
 const SUPER_DAILY_START_HOUR = 11;
 
-function ethDayKey(ms) {
-    const e = toEthiopiaDate(ms);
-    return `${e.getUTCFullYear()}-${e.getUTCMonth()}-${e.getUTCDate()}`;
+/** One-off: Aug 6, 2026 at 2:00 PM EAT — remove after today's game. */
+function getDailyStartHour(fromMs = Date.now()) {
+    const eth = toEthiopiaDate(fromMs);
+    const y = eth.getUTCFullYear();
+    const m = eth.getUTCMonth();
+    const d = eth.getUTCDate();
+    if (y === 2026 && m === 7 && d === 6) return 14;
+    return SUPER_DAILY_START_HOUR;
+}
+
+function isAug6OverrideDay(fromMs = Date.now()) {
+    const eth = toEthiopiaDate(fromMs);
+    return eth.getUTCFullYear() === 2026 && eth.getUTCMonth() === 7 && eth.getUTCDate() === 6;
 }
 
 /**
@@ -40,8 +50,14 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
     const m = eth.getUTCMonth();
     const d = eth.getUTCDate();
 
-    const todayStart = fromEthiopiaParts(y, m, d, SUPER_DAILY_START_HOUR, 0);
+    const hour = getDailyStartHour(fromMs);
+    const todayStart = fromEthiopiaParts(y, m, d, hour, 0);
     if (fromMs < todayStart) {
+        return todayStart;
+    }
+
+    // Aug 6 one-off: after 2 PM keep today's slot so an overdue presale starts on the next tick.
+    if (isAug6OverrideDay(fromMs)) {
         return todayStart;
     }
 
@@ -50,31 +66,15 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
 
 /** Align a stored presale start with the current schedule. */
 function reconcilePresaleStartMs(storedMs, fromMs = Date.now()) {
-    if (!storedMs || !Number.isFinite(storedMs)) {
-        return getNextScheduledStartMs(fromMs);
-    }
-
     const expectedMs = getNextScheduledStartMs(fromMs);
+    if (!storedMs || !Number.isFinite(storedMs)) {
+        return expectedMs;
+    }
     if (storedMs === expectedMs) {
         return storedMs;
     }
-
-    // Start time already passed — use next valid slot.
-    if (storedMs <= fromMs) {
-        return expectedMs;
-    }
-
-    // Wrong future slot (e.g. Aug 8 5 PM when next valid is Aug 7 11 AM).
-    if (expectedMs < storedMs) {
-        return expectedMs;
-    }
-
-    // Same Ethiopian day but wrong hour (e.g. 11 AM moved to 1 PM).
-    if (ethDayKey(storedMs) === ethDayKey(expectedMs)) {
-        return expectedMs;
-    }
-
-    return storedMs;
+    // Snap any mismatched presale (wrong day or hour) to the current policy schedule.
+    return expectedMs;
 }
 
 async function updateSuperPresaleSchedule(gameId, scheduledStartMs) {
