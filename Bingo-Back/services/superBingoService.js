@@ -1,4 +1,4 @@
-/** Super Bingo (stake 50) — daily appointment at 11:00 + early presale. */
+/** Super Bingo (stake 50) — daily appointment at 11:00 AM EAT + early presale. */
 
 const Game = require('../models/Game');
 
@@ -18,11 +18,21 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
     return Date.UTC(y, m, d, hour, minute, 0, 0) - ETHIOPIA_OFFSET_MS;
 }
 
-/** Daily Super Bingo start hour in Ethiopia local time (11 o'clock daytime = 114:00). */
-const SUPER_DAILY_START_HOUR = 14;
+/** Daily Super Bingo start hour in Ethiopia standard time (EAT, UTC+3) — 11:00 AM. */
+const SUPER_DAILY_START_HOUR = 11;
+
+/** Today's 11 AM slot moved to 1 PM (Aug 6, 2026) — remove after today. */
+function getDailyStartHour(fromMs = Date.now()) {
+    const eth = toEthiopiaDate(fromMs);
+    const y = eth.getUTCFullYear();
+    const m = eth.getUTCMonth();
+    const d = eth.getUTCDate();
+    if (y === 2026 && m === 7 && d === 6) return 13;
+    return SUPER_DAILY_START_HOUR;
+}
 
 /**
- * Next scheduled Super Bingo start: every day at 11:00 Ethiopia time.
+ * Next scheduled Super Bingo start: every day at 11:00 AM Ethiopia time (EAT).
  */
 function getNextScheduledStartMs(fromMs = Date.now()) {
     const testMinutes = Number(process.env.SUPER_BINGO_TEST_MINUTES);
@@ -35,12 +45,15 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
     const m = eth.getUTCMonth();
     const d = eth.getUTCDate();
 
-    const todayStart = fromEthiopiaParts(y, m, d, SUPER_DAILY_START_HOUR, 0);
+    const hour = getDailyStartHour(fromMs);
+    const todayStart = fromEthiopiaParts(y, m, d, hour, 0);
     if (fromMs < todayStart) {
         return todayStart;
     }
 
-    return fromEthiopiaParts(y, m, d + 1, SUPER_DAILY_START_HOUR, 0);
+    const nextDayRef = fromEthiopiaParts(y, m, d + 1, SUPER_DAILY_START_HOUR, 0);
+    const hourNext = getDailyStartHour(nextDayRef);
+    return fromEthiopiaParts(y, m, d + 1, hourNext, 0);
 }
 
 function isSuperBingoStake(stake) {
