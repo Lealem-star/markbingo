@@ -59,6 +59,7 @@ const {
     findActiveSuperPresaleGame,
     cancelStaleSuperPresales,
     updateSuperPresaleSchedule,
+    finalizeSuperBingoGame,
 } = require('./services/superBingoService');
 console.log('✅ Services and models loaded');
 
@@ -385,16 +386,25 @@ async function tryRestoreSuperPresale(room) {
     }
 }
 
-async function startSuperPresale(room) {
+async function startSuperPresale(room, options = {}) {
     if (!room?.isSuperBingo) return;
 
-    const restored = await tryRestoreSuperPresale(room);
-    if (restored) return;
+    if (options.afterCompletedGameId) {
+        try {
+            await finalizeSuperBingoGame(options.afterCompletedGameId);
+            await cancelStaleSuperPresales();
+        } catch (error) {
+            console.error('Failed to finalize completed Super Bingo game:', error);
+        }
+    } else {
+        const restored = await tryRestoreSuperPresale(room);
+        if (restored) return;
 
-    try {
-        await cancelStaleSuperPresales();
-    } catch (error) {
-        console.error('Failed to cancel stale Super Bingo presales:', error);
+        try {
+            await cancelStaleSuperPresales();
+        } catch (error) {
+            console.error('Failed to cancel stale Super Bingo presales:', error);
+        }
     }
 
     clearRoomRegistrationTimer(room);
@@ -478,7 +488,7 @@ function tickSuperBingoRoom(room) {
             scheduledStartAt: room.scheduledStartAt,
             regCode: null,
         }, room);
-        if (room.scheduledStartAt <= now && countSelectedPlayers(room) > 0) {
+        if (room.scheduledStartAt <= now && countSelectedPlayers(room) > 0 && room.superMode === 'presale') {
             room.superMode = 'starting_live';
             console.log('Super Bingo overdue presale — starting game now', room.currentGameId);
             startGame(room);
@@ -987,8 +997,7 @@ async function startGame(room) {
                 });
             });
 
-            const game = new Game({
-                gameId: room.currentGameId,
+            const update = {
                 stake: room.stake,
                 players: gamePlayers,
                 status: 'running',
@@ -996,10 +1005,23 @@ async function startGame(room) {
                 pot: pot,
                 systemCut: systemCut,
                 prizePool: prizePool,
-                startedAt: new Date()
-            });
-            await game.save();
-            console.log(`Game ${room.currentGameId} created in database with ${gamePlayers.length} cartelas`);
+                startedAt: new Date(),
+            };
+            if (room.isSuperBingo) {
+                update.isSuperBingo = true;
+                update.superMode = 'live';
+                update.regCode = room.regCode || null;
+                if (room.scheduledStartAt) {
+                    update.scheduledStartAt = new Date(room.scheduledStartAt);
+                }
+            }
+
+            await Game.findOneAndUpdate(
+                { gameId: room.currentGameId },
+                { $set: update },
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+            console.log(`Game ${room.currentGameId} saved in database with ${gamePlayers.length} cartelas`);
         } catch (error) {
             console.error('Error creating game record in database:', error);
         }
@@ -1371,7 +1393,9 @@ async function toAnnounce(room) {
         calledNumbers: room.calledNumbers,
         called: room.calledNumbers,
         stake: room.stake,
-        nextStartAt: Date.now() + WINNER_ANNOUNCE_MS
+        nextStartAt: room.isSuperBingo ? getNextScheduledStartMs() : Date.now() + WINNER_ANNOUNCE_MS,
+        isSuperBingo: !!room.isSuperBingo,
+        scheduledStartAt: room.isSuperBingo ? getNextScheduledStartMs() : null,
     }, room);
 
     // Process winnings
@@ -1438,6 +1462,13 @@ async function toAnnounce(room) {
         } catch (error) {
             console.error('Error updating game record:', error);
         }
+    } else if (room.isSuperBingo) {
+        try {
+            await finalizeSuperBingoGame(room.currentGameId);
+            console.log(`Super Bingo ${room.currentGameId} finalized (no winners)`);
+        } catch (error) {
+            console.error('Error finalizing Super Bingo game record:', error);
+        }
     }
 
     // Fairness gate book-keeping for the next rounds:
@@ -1478,8 +1509,9 @@ async function toAnnounce(room) {
         console.error('⚠️ Failed to update bot fairness counters:', e);
     }
 
-    // Reset room after delay, then immediately start a new registration round
+    // Reset room after delay, then open the next Super Bingo presale or normal registration.
     setTimeout(async () => {
+        const completedGameId = room.currentGameId;
         // Keep player connections but reset their per-game state
         room.players.forEach(player => {
             if (player) {
@@ -1496,12 +1528,15 @@ async function toAnnounce(room) {
         room.registrationEndTime = null;
         room.gameEndTime = null;
         room.announceProcessed = false; // Reset for next round
-        
+        room.takenCards.clear();
+        room.userCardSelections.clear();
+        room.presaleLockedCards = new Map();
+        room.superCountdownAnnounced = false;
+
         console.log('🔄 Room reset for next round:', { roomId: room.id, stake: room.stake, playersCount: room.players.size });
-        
-        // Start new registration immediately
+
         if (room.isSuperBingo) {
-            await startSuperPresale(room);
+            await startSuperPresale(room, { afterCompletedGameId: completedGameId });
         } else {
             await startRegistration(room);
         }

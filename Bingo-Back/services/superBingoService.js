@@ -21,23 +21,9 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
 /** Daily Super Bingo start hour in Ethiopia standard time (EAT, UTC+3) — 11:00 AM. */
 const SUPER_DAILY_START_HOUR = 11;
 
-/** One-off: Aug 6, 2026 at 2:00 PM EAT — remove after today's game. */
-function getDailyStartHour(fromMs = Date.now()) {
-    const eth = toEthiopiaDate(fromMs);
-    const y = eth.getUTCFullYear();
-    const m = eth.getUTCMonth();
-    const d = eth.getUTCDate();
-    if (y === 2026 && m === 7 && d === 6) return 14;
-    return SUPER_DAILY_START_HOUR;
-}
-
-function isAug6OverrideDay(fromMs = Date.now()) {
-    const eth = toEthiopiaDate(fromMs);
-    return eth.getUTCFullYear() === 2026 && eth.getUTCMonth() === 7 && eth.getUTCDate() === 6;
-}
-
 /**
- * Next scheduled Super Bingo start: every day at 11:00 AM Ethiopia time (EAT).
+ * Next Super Bingo appointment — always the next upcoming 11:00 AM EAT slot.
+ * If today's 11 AM has passed, returns tomorrow 11 AM.
  */
 function getNextScheduledStartMs(fromMs = Date.now()) {
     const testMinutes = Number(process.env.SUPER_BINGO_TEST_MINUTES);
@@ -50,14 +36,8 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
     const m = eth.getUTCMonth();
     const d = eth.getUTCDate();
 
-    const hour = getDailyStartHour(fromMs);
-    const todayStart = fromEthiopiaParts(y, m, d, hour, 0);
+    const todayStart = fromEthiopiaParts(y, m, d, SUPER_DAILY_START_HOUR, 0);
     if (fromMs < todayStart) {
-        return todayStart;
-    }
-
-    // Aug 6 one-off: after 2 PM keep today's slot so an overdue presale starts on the next tick.
-    if (isAug6OverrideDay(fromMs)) {
         return todayStart;
     }
 
@@ -201,6 +181,20 @@ async function cancelStaleSuperPresales(exceptGameId = null) {
     await Game.updateMany(query, { status: 'cancelled' });
 }
 
+async function finalizeSuperBingoGame(gameId) {
+    if (!gameId) return;
+    await Game.updateOne(
+        { gameId },
+        {
+            $set: {
+                status: 'finished',
+                finishedAt: new Date(),
+                superMode: 'live',
+            },
+        }
+    );
+}
+
 module.exports = {
     SUPER_STAKE,
     SUPER_COUNTDOWN_MS,
@@ -216,4 +210,5 @@ module.exports = {
     findActiveSuperPresaleGame,
     cancelStaleSuperPresales,
     updateSuperPresaleSchedule,
+    finalizeSuperBingoGame,
 };
