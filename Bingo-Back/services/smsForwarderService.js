@@ -485,39 +485,26 @@ class SmsForwarderService {
             const sourcesAreDifferent = userSMS.source !== receiverSMS.source;
             if (!sourcesAreDifferent) {
                 // This should not happen due to early return, but log if it does
-                console.warn(`⚠️ WARNING: Matching attempted with same source (${userSMS.source}) - this should have been caught earlier`);
+                console.warn(` WARNING: Matching attempted with same source (${userSMS.source}) - this should have been caught earlier`);
             }
 
-            // STRICT AUTO-APPROVAL: Require ALL fields to match
-            // Amount, reference, datetime, and payment method must ALL be present and match
-            // Phone number is parsed but NOT required for matching (optional field)
+            // AUTO-APPROVAL: Amount and reference must match.
+            // Datetime and payment method are optional for auto-approval.
+            // Phone number is parsed but NOT required for matching.
             let isVerified = false;
-            if (matches.amountMatch) {
-                // Check if all required fields are present in both SMS
-                const userHasAllFields = userParsed.amount && userParsed.reference && userParsed.datetime && userParsed.paymentMethod;
-                const receiverHasAllFields = receiverParsed.amount && receiverParsed.reference && receiverParsed.datetime && receiverParsed.paymentMethod;
-                
-                if (userHasAllFields && receiverHasAllFields) {
-                    // All fields present - require ALL to match for auto-approval
-                    isVerified = matches.amountMatch && 
-                                 matches.referenceMatch && 
-                                 matches.timeMatch && 
-                                 matches.paymentMethodMatch;
-                } else {
-                    // Missing required fields - cannot auto-approve
-                    isVerified = false;
-                }
+            if (matches.amountMatch && matches.referenceMatch) {
+                isVerified = true;
             }
 
             // Enhanced logging for debugging
-            const userHasAllFields = userParsed.amount && userParsed.reference && userParsed.datetime && userParsed.paymentMethod;
-            const receiverHasAllFields = receiverParsed.amount && receiverParsed.reference && receiverParsed.datetime && receiverParsed.paymentMethod;
+            const userHasRequiredFields = userParsed.amount && userParsed.reference;
+            const receiverHasRequiredFields = receiverParsed.amount && receiverParsed.reference;
             
             const verificationReason = isVerified
-                ? 'Auto-approved: All required fields match (amount, reference, datetime, payment method)'
-                : userHasAllFields && receiverHasAllFields
-                    ? 'Cannot auto-approve: Not all fields match (amount, reference, datetime, payment method must all match)'
-                    : 'Cannot auto-approve: Missing required fields (amount, reference, datetime, payment method must all be present)';
+                ? 'Auto-approved: amount and reference match'
+                : userHasRequiredFields && receiverHasRequiredFields
+                    ? 'Cannot auto-approve: amount and reference must both match'
+                    : 'Cannot auto-approve: missing required fields (amount and reference)';
 
             console.log(`🔍 SMS Matching Debug:`, {
                 userSMSId: userSMS._id?.toString()?.substring(0, 8),

@@ -18,8 +18,8 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
     return Date.UTC(y, m, d, hour, minute, 0, 0) - ETHIOPIA_OFFSET_MS;
 }
 
-/** Daily Super Bingo start hour in Ethiopia local time (11 o'clock daytime = 17:00). */
-const SUPER_DAILY_START_HOUR = 17;
+/** Daily Super Bingo start hour in Ethiopia local time (11 o'clock daytime = 114:00). */
+const SUPER_DAILY_START_HOUR = 14;
 
 /**
  * Next scheduled Super Bingo start: every day at 11:00 Ethiopia time.
