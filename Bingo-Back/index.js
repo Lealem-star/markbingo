@@ -49,6 +49,7 @@ const {
     SUPER_COUNTDOWN_MS,
     generateRegCode,
     getNextScheduledStartMs,
+    reconcilePresaleStartMs,
     isSuperBingoStake,
     checkFullCardBingo,
     buildSuperSnapshotFields,
@@ -57,6 +58,7 @@ const {
     markSuperCountdownAnnounced,
     findActiveSuperPresaleGame,
     cancelStaleSuperPresales,
+    updateSuperPresaleSchedule,
 } = require('./services/superBingoService');
 console.log('✅ Services and models loaded');
 
@@ -309,13 +311,29 @@ async function tryRestoreSuperPresale(room) {
         room.phase = 'registration';
         room.currentGameId = active.gameId;
         room.regCode = active.regCode || generateRegCode();
-        room.scheduledStartAt = active.scheduledStartAt
-            ? active.scheduledStartAt.getTime()
-            : getNextScheduledStartMs();
-        room.registrationEndTime = room.scheduledStartAt;
+
+        const storedStartMs = active.scheduledStartAt ? active.scheduledStartAt.getTime() : null;
+        const reconciledStartMs = reconcilePresaleStartMs(storedStartMs);
+        room.scheduledStartAt = reconciledStartMs;
+        room.registrationEndTime = reconciledStartMs;
+
+        if (storedStartMs !== reconciledStartMs) {
+            room.superCountdownAnnounced = false;
+            room.superMode = 'presale';
+            try {
+                await updateSuperPresaleSchedule(active.gameId, reconciledStartMs);
+                console.log(
+                    `Super Bingo presale rescheduled: ${active.gameId}, ${new Date(storedStartMs).toISOString()} → ${new Date(reconciledStartMs).toISOString()}`
+                );
+            } catch (error) {
+                console.error('Failed to persist Super Bingo presale reschedule:', error);
+            }
+        } else {
+            room.superCountdownAnnounced = !!active.superCountdownAnnounced;
+        }
+
         room.startTime = Date.now();
         room.announceProcessed = false;
-        room.superCountdownAnnounced = !!active.superCountdownAnnounced;
 
         applySuperPresaleEntriesToRoom(room, active.presaleEntries);
         resolveSuperModeAfterRestore(room);

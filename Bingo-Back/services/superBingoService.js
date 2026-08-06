@@ -56,6 +56,40 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
     return fromEthiopiaParts(y, m, d + 1, hourNext, 0);
 }
 
+/** Align a stored presale start with the current schedule (e.g. today moved 11 AM → 1 PM). */
+function reconcilePresaleStartMs(storedMs, fromMs = Date.now()) {
+    if (!storedMs || !Number.isFinite(storedMs)) {
+        return getNextScheduledStartMs(fromMs);
+    }
+
+    const expectedMs = getNextScheduledStartMs(fromMs);
+    const ethDay = (ms) => {
+        const e = toEthiopiaDate(ms);
+        return `${e.getUTCFullYear()}-${e.getUTCMonth()}-${e.getUTCDate()}`;
+    };
+
+    if (ethDay(storedMs) === ethDay(expectedMs) && storedMs !== expectedMs) {
+        return expectedMs;
+    }
+
+    return storedMs;
+}
+
+async function updateSuperPresaleSchedule(gameId, scheduledStartMs) {
+    await Game.updateOne(
+        { gameId },
+        {
+            $set: {
+                scheduledStartAt: new Date(scheduledStartMs),
+                registrationEndsAt: new Date(scheduledStartMs),
+                superCountdownAnnounced: false,
+                superTelegramReminderSent: false,
+                superMode: 'presale',
+            },
+        }
+    );
+}
+
 function isSuperBingoStake(stake) {
     return Number(stake) === SUPER_STAKE;
 }
@@ -170,6 +204,7 @@ module.exports = {
     SUPER_COUNTDOWN_MS,
     generateRegCode,
     getNextScheduledStartMs,
+    reconcilePresaleStartMs,
     isSuperBingoStake,
     checkFullCardBingo,
     buildSuperSnapshotFields,
@@ -178,4 +213,5 @@ module.exports = {
     markSuperCountdownAnnounced,
     findActiveSuperPresaleGame,
     cancelStaleSuperPresales,
+    updateSuperPresaleSchedule,
 };
