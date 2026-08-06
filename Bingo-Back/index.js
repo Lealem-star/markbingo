@@ -447,6 +447,35 @@ function tickSuperBingoRoom(room) {
     if (room.phase !== 'registration') return;
 
     const now = Date.now();
+    const reconciledStartMs = reconcilePresaleStartMs(room.scheduledStartAt, now);
+    if (reconciledStartMs !== room.scheduledStartAt) {
+        const previousStartMs = room.scheduledStartAt;
+        room.scheduledStartAt = reconciledStartMs;
+        room.registrationEndTime = reconciledStartMs;
+        room.superCountdownAnnounced = false;
+        room.superMode = 'presale';
+        updateSuperPresaleSchedule(room.currentGameId, reconciledStartMs).catch((e) => {
+            console.error('Failed to persist Super Bingo presale reschedule (tick):', e);
+        });
+        console.log(
+            `Super Bingo presale rescheduled (tick): ${room.currentGameId}, ${new Date(previousStartMs).toISOString()} → ${new Date(reconciledStartMs).toISOString()}`
+        );
+        broadcast('registration_open', {
+            gameId: room.currentGameId,
+            stake: room.stake,
+            playersCount: countSelectedPlayers(room),
+            duration: Math.max(0, room.scheduledStartAt - now),
+            endsAt: room.registrationEndTime,
+            availableCards: Array.from({ length: BingoCards.cards.length }, (_, i) => i + 1),
+            takenCards: Array.from(room.takenCards),
+            prizePool: Math.floor(countSelectedCartelas(room) * room.stake * 0.8),
+            isSuperBingo: true,
+            superMode: room.superMode,
+            scheduledStartAt: room.scheduledStartAt,
+            regCode: null,
+        }, room);
+    }
+
     const msUntilStart = room.scheduledStartAt - now;
 
     if (!room.superCountdownAnnounced && msUntilStart > 0 && msUntilStart <= SUPER_COUNTDOWN_MS) {
