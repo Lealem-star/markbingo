@@ -7,7 +7,7 @@ async function migrateCartellaSelections() {
         console.log('🔄 Starting cartella selections migration...');
 
         // Connect to database
-        const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://meseretlealem8_db_user:qQcXeixRvjx3v8ge@bestbingo.jpgieop.mongodb.net/?appName=bestbingo';
+        const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://meseretlealem8_db_user:qQcXeixRvjx3v8ge@besttest.ckemna6.mongodb.net/?appName=besttest';
         await mongoose.connect(mongoURI);
         console.log('✅ Connected to MongoDB');
 
