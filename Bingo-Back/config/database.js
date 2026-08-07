@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
     try {
-        const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://meseretlealem8_db_user:qQcXeixRvjx3v8ge@besttest.ckemna6.mongodb.net/?appName=besttest';
+        const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://meseretlealem8_db_user:a5tOQfWESMK3tXcX@besttotest.6vplvce.mongodb.net/?appName=besttotest';
 
         const conn = await mongoose.connect(mongoURI, {
             serverSelectionTimeoutMS: 30000, // Increased to 30s for better reliability
