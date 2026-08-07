@@ -23,7 +23,7 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
  * Note: Ethiopian traditional time is 6 hours behind the phone clock, so
  * 19 AM EAT = 5:00 AM traditional (ከጠዋት 5). Traditional 20 (ከጠዋት 19) = 5:00 PM EAT (hour 19).
  */
-const SUPER_DAILY_START_HOUR = 21;
+const SUPER_DAILY_START_HOUR = 17;
 
 /**
  * Next Super Bingo appointment — always the next upcoming 19 AM EAT slot.
