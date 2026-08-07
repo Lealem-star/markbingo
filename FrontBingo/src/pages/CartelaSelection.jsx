@@ -735,9 +735,9 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
                 hour12: true,
             });
             // Phone clock (EAT) — not traditional Ethiopian time (which is +6h)
-            return `Next game: ${eat} (phone clock)`;
+            return `ዘወትር ከቀኑ: ${eat} ሰዓት`;
         }
-        return 'Daily 11:00 AM (phone clock / EAT)';
+        return 'ዘወትር 11:00 ሰዓት';
     })();
     const superGameTypeLabel = 'ሙሉ ዝግ';
     const superTimeLabel = gameState.superMode === 'countdown'
