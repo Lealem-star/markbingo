@@ -19,15 +19,15 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
 }
 
 /**
- * Daily Super Bingo start hour on the **phone clock** (EAT, UTC+3) — 20 AM.
- * Note: Ethiopian traditional time is 6 hours behind the phone clock, so
- * 19 AM EAT = 5:00 AM traditional (ከጠዋት 5). Traditional 20 (ከጠዋት 19) = 5:00 PM EAT (hour 19).
+ * Daily Super Bingo start hour on the **phone clock** (EAT, UTC+3) — 5:00 PM.
+ * Ethiopian traditional time is 6 hours behind the phone clock:
+ * 5:00 PM EAT = 11:00 AM Ethiopian (ከቀን 11).
  */
 const SUPER_DAILY_START_HOUR = 17;
 
 /**
- * Next Super Bingo appointment — always the next upcoming 19 AM EAT slot.
- * If today's 19 AM has passed, returns tomorrow 19 AM.
+ * Next Super Bingo appointment — always the next upcoming 5:00 PM EAT slot
+ * (11:00 AM Ethiopian). If today's slot has passed, returns tomorrow's.
  */
 function getNextScheduledStartMs(fromMs = Date.now()) {
     const testMinutes = Number(process.env.SUPER_BINGO_TEST_MINUTES);

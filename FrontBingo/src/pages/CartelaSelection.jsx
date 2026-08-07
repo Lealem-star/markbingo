@@ -5,6 +5,7 @@ import { apiFetch } from '../lib/api/client';
 import { useAuth } from '../lib/auth/AuthProvider';
 import { useToast } from '../contexts/ToastContext';
 import { useWebSocket } from '../contexts/WebSocketContext';
+import { formatSuperBingoScheduleLabel } from '../lib/ethiopianTime';
 
 const MAX_CARTELAS_PER_PLAYER = 2;
 const PRESALE_AUTO_CONFIRM_MS = 3500;
@@ -725,20 +726,7 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const balanceTotal = (wallet.main || 0) + (wallet.play || 0);
     const roomLabel = Number(stake) === 50 ? 'VIP' : `${stake} ETB`;
 
-    const superScheduleLabel = (() => {
-        const ms = gameState.scheduledStartAt;
-        if (ms) {
-            const eat = new Date(ms).toLocaleString('en-GB', {
-                timeZone: 'Africa/Addis_Ababa',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-            });
-            // Phone clock (EAT) — not traditional Ethiopian time (which is +6h)
-            return `ዘወትር ከቀኑ: ${eat} ሰዓት`;
-        }
-        return 'ዘወትር 11:00 ሰዓት';
-    })();
+    const superScheduleLabel = formatSuperBingoScheduleLabel(gameState.scheduledStartAt);
     const superGameTypeLabel = 'ሙሉ ዝግ';
     const superTimeLabel = gameState.superMode === 'countdown'
         ? `${timerSeconds}s`
