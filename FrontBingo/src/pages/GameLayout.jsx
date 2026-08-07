@@ -319,9 +319,9 @@ export default function GameLayout({
         }
     }, [calledNumbers, gameState.phase, yourCards, currentGameId, isFullCardGame]);
 
-    // Close claim window after min 5s AND next ball (whichever is later — fast draws still get 5s)
+    // Close claim window after min 5s AND next ball (pattern games only — full-card wins use bingoReady)
     useEffect(() => {
-        if (gameState.phase !== 'running') {
+        if (gameState.phase !== 'running' || isFullCardGame) {
             return;
         }
 
@@ -351,7 +351,7 @@ export default function GameLayout({
         evaluateMissedWindow();
         const intervalId = setInterval(evaluateMissedWindow, 250);
         return () => clearInterval(intervalId);
-    }, [calledNumbers.length, gameState.phase, currentGameId, showError]);
+    }, [calledNumbers.length, gameState.phase, currentGameId, showError, isFullCardGame]);
 
     // Handle manual number marking/unmarking
     const handleNumberToggle = useCallback((cardNumber, number) => {
@@ -447,7 +447,7 @@ export default function GameLayout({
             return;
         }
 
-        if (!activeClaimWindow) {
+        if (!isFullCardGame && !activeClaimWindow) {
             setAlertBanners((prev) =>
                 prev.includes(MISSED_BINGO_MSG) ? prev : [...prev, MISSED_BINGO_MSG]
             );
@@ -499,6 +499,7 @@ export default function GameLayout({
         isManualClaiming,
         lockCartela,
         activeClaimWindow,
+        isFullCardGame,
         showError,
         showSuccess
     ]);
@@ -1042,6 +1043,9 @@ export default function GameLayout({
                                         ? Array.from(manuallyMarkedNumbers[cardNumber])
                                         : [];
                                     const bingoReady = cardHasValidBingo(cardNumber, card);
+                                    const canClaimThisCard = isFullCardGame
+                                        ? bingoReady
+                                        : (bingoReady && activeClaimWindow);
                                     const isLocked = isCartelaLocked(cardNumber);
 
                                     return (
@@ -1073,14 +1077,14 @@ export default function GameLayout({
                                             {gameState.phase === 'running' && (
                                                 <button
                                                     type="button"
-                                                    className={`cartela-bingo-btn ${bingoReady && activeClaimWindow && !isLocked ? 'cartela-bingo-btn--ready' : ''} ${isManualClaiming ? 'loading' : ''} ${isLocked ? 'cartela-bingo-btn--locked' : ''}`}
+                                                    className={`cartela-bingo-btn ${canClaimThisCard && !isLocked ? 'cartela-bingo-btn--ready' : ''} ${isManualClaiming ? 'loading' : ''} ${isLocked ? 'cartela-bingo-btn--locked' : ''}`}
                                                     onClick={() => handleCardBingo(cardNumber, card)}
                                                     disabled={
                                                         !connected ||
                                                         !currentGameId ||
                                                         claimedBingoRef.current ||
                                                         isManualClaiming ||
-                                                        !activeClaimWindow ||
+                                                        !canClaimThisCard ||
                                                         isLocked
                                                     }
                                                 >

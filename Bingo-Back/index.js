@@ -1723,6 +1723,18 @@ function cardFullyMarked(cartella, markedNumbers) {
     return true;
 }
 
+function sendBingoRejected(ws, room, reason, extra = {}) {
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({
+        type: 'bingo_rejected',
+        payload: {
+            gameId: room?.currentGameId || null,
+            reason,
+            ...extra,
+        },
+    }));
+}
+
 // Removed minute-based auto-cycler. Rounds will be chained after each game ends,
 // and initial registration will start at server boot.
 
@@ -2177,133 +2189,152 @@ wss.on('connection', async (ws, request) => {
                 }
             } else if (data.type === 'bingo_claim' || data.type === 'claim_bingo') {
                 const room = ws.room;
-                if (room && room.phase === 'running') {
-                    // Option B fairness gate: block bot claims during cooldown games.
-                    // This gives humans a chance to be the first accepted winner.
-                    let isBotUser = false;
-                    try {
-                        isBotUser = await WalletService.isBotUser(ws.userId);
-                    } catch (e) {
-                        console.error('⚠️ Failed to check bot status for fairness gate:', e);
-                    }
+                if (!room) {
+                    sendBingoRejected(ws, null, 'no_room');
+                    return;
+                }
+                if (room.phase !== 'running') {
+                    console.log('❌ bingo_claim rejected: game not running', {
+                        userId: ws.userId,
+                        phase: room.phase,
+                        gameId: room.currentGameId,
+                    });
+                    sendBingoRejected(ws, room, 'game_not_running', { phase: room.phase });
+                    return;
+                }
 
-                    if (isBotUser && room.botCooldownGamesLeft > 0) {
-                        if (ws.readyState === 1) {
-                            ws.send(JSON.stringify({
-                                type: 'bingo_rejected',
-                                payload: {
-                                    gameId: room.currentGameId,
-                                    reason: 'bot_blocked_by_fairness_gate'
-                                }
-                            }));
-                        }
+                // Option B fairness gate: block bot claims during cooldown games.
+                // This gives humans a chance to be the first accepted winner.
+                let isBotUser = false;
+                try {
+                    isBotUser = await WalletService.isBotUser(ws.userId);
+                } catch (e) {
+                    console.error('⚠️ Failed to check bot status for fairness gate:', e);
+                }
+
+                if (isBotUser && room.botCooldownGamesLeft > 0) {
+                    sendBingoRejected(ws, room, 'bot_blocked_by_fairness_gate');
+                    return;
+                }
+
+                const cartellasByNumber = room.cartellas.get(ws.userId);
+                const entries = cartellasByNumber instanceof Map
+                    ? Array.from(cartellasByNumber.entries()).map(([cartelaNumber, cartella]) => ({ cartelaNumber, cartella }))
+                    : [];
+
+                if (entries.length === 0) {
+                    console.log('❌ bingo_claim rejected: no cartellas for user', {
+                        userId: ws.userId,
+                        gameId: room.currentGameId,
+                    });
+                    sendBingoRejected(ws, room, 'no_cartellas');
+                    return;
+                }
+
+                const calledSet = new Set(room.calledNumbers.map((n) => Number(n)));
+
+                // Strict manual mode:
+                // - If client sends markedNumbers + cardNumber, we only accept
+                //   when those marks themselves form a valid pattern against calledNumbers.
+                // - If no marks are sent (legacy clients/bots), fall back to pure called-numbers check.
+                const payload = data.payload || {};
+                const markedNumbers = Array.isArray(payload.markedNumbers)
+                    ? payload.markedNumbers.map(n => Number(n)).filter(n => Number.isInteger(n))
+                    : null;
+                const claimedCardNumber = payload.cardNumber;
+
+                let winning = null;
+                if (markedNumbers && markedNumbers.length > 0 && typeof claimedCardNumber !== 'undefined') {
+                    // Find the specific claimed card
+                    const entry = entries.find(e => String(e.cartelaNumber) === String(claimedCardNumber));
+                    if (!entry || !entry.cartella) {
+                        console.log('❌ bingo_claim rejected: card not found', {
+                            userId: ws.userId,
+                            gameId: room.currentGameId,
+                            claimedCardNumber,
+                        });
+                        sendBingoRejected(ws, room, 'card_not_found');
                         return;
                     }
 
-                    const cartellasByNumber = room.cartellas.get(ws.userId);
-                    const entries = cartellasByNumber instanceof Map
-                        ? Array.from(cartellasByNumber.entries()).map(([cartelaNumber, cartella]) => ({ cartelaNumber, cartella }))
-                        : [];
-
-                    // Strict manual mode:
-                    // - If client sends markedNumbers + cardNumber, we only accept
-                    //   when those marks themselves form a valid pattern against calledNumbers.
-                    // - If no marks are sent (legacy clients/bots), fall back to pure called-numbers check.
-                    const payload = data.payload || {};
-                    const markedNumbers = Array.isArray(payload.markedNumbers)
-                        ? payload.markedNumbers.map(n => Number(n)).filter(n => Number.isInteger(n))
-                        : null;
-                    const claimedCardNumber = payload.cardNumber;
-
-                    let winning = null;
-                    if (markedNumbers && markedNumbers.length > 0 && typeof claimedCardNumber !== 'undefined') {
-                        // Find the specific claimed card
-                        const entry = entries.find(e => String(e.cartelaNumber) === String(claimedCardNumber));
-                        if (entry && entry.cartella) {
-                            const card = entry.cartella;
-                            // Ensure every marked number is actually on this card
-                            const cardNums = new Set();
-                            if (Array.isArray(card)) {
-                                card.forEach(row => {
-                                    if (!Array.isArray(row)) return;
-                                    row.forEach(num => {
-                                        const n = Number(num);
-                                        if (Number.isInteger(n)) cardNums.add(n);
-                                    });
-                                });
-                            }
-                            const allOnCard = markedNumbers.every(n => n === 0 || cardNums.has(n));
-                            const allCalled = markedNumbers.every(n => n === 0 || room.calledNumbers.includes(n));
-                            if (!allOnCard || !allCalled) {
-                                // Reject immediately: player marked numbers that are not on their card or not yet called
-                                console.log('❌ bingo_claim rejected: marked numbers not valid for card or not yet called', {
-                                    userId: ws.userId,
-                                    gameId: room.currentGameId,
-                                    claimedCardNumber,
-                                    markedNumbers
-                                });
-                                if (ws.readyState === 1) {
-                                    ws.send(JSON.stringify({
-                                        type: 'bingo_rejected',
-                                        payload: {
-                                            gameId: room.currentGameId,
-                                            reason: 'invalid_marked_numbers'
-                                        }
-                                    }));
-                                }
-                                return;
-                            }
-
-                            // Super Bingo: every cell on the card must be marked before claim
-                            if (room.isSuperBingo && !cardFullyMarked(card, markedNumbers)) {
-                                if (ws.readyState === 1) {
-                                    ws.send(JSON.stringify({
-                                        type: 'bingo_rejected',
-                                        payload: {
-                                            gameId: room.currentGameId,
-                                            reason: 'invalid_claim'
-                                        }
-                                    }));
-                                }
-                                return;
-                            }
-
-                            // Pattern vs called numbers (same rules as legacy path)
-                            if (bingoValidForRoom(room, card, room.calledNumbers)) {
-                                winning = entry;
-                            }
-                        }
-                    } else {
-                        // Legacy path: accept if any of the user's cartellas has bingo (based on called numbers only)
-                        winning = entries.find(e => e.cartella && bingoValidForRoom(room, e.cartella, room.calledNumbers));
+                    const card = entry.cartella;
+                    // Ensure every marked number is actually on this card
+                    const cardNums = new Set();
+                    if (Array.isArray(card)) {
+                        card.forEach(row => {
+                            if (!Array.isArray(row)) return;
+                            row.forEach(num => {
+                                const n = Number(num);
+                                if (Number.isInteger(n)) cardNums.add(n);
+                            });
+                        });
                     }
-                    if (winning) {
-                        if (isBotUser) room.gameHadBotWinner = true;
-                        else room.gameHadHumanWinner = true;
-
-                        room.winners.push({ userId: ws.userId, cartelaNumber: winning.cartelaNumber, cartella: winning.cartella });
-                        // Send bingo_accepted event to all players
-                        broadcast('bingo_accepted', {
+                    const allOnCard = markedNumbers.every(n => n === 0 || cardNums.has(n));
+                    const allCalled = markedNumbers.every(n => n === 0 || calledSet.has(n));
+                    if (!allOnCard || !allCalled) {
+                        console.log('❌ bingo_claim rejected: marked numbers not valid for card or not yet called', {
+                            userId: ws.userId,
                             gameId: room.currentGameId,
-                            winners: room.winners,
-                            calledNumbers: room.calledNumbers,
-                            called: room.calledNumbers
-                        }, room);
-                        // Schedule announce after short delay so clients have time
-                        // to show \"Bingo accepted\" before moving to results.
-                        scheduleAnnounce(room, 'bingo_claim_accepted');
-                    } else {
-                        // Invalid claim: user does not have a valid winning pattern. Punish by notifying client to clear manual marks.
-                        if (ws.readyState === 1) {
-                            ws.send(JSON.stringify({
-                                type: 'bingo_rejected',
-                                payload: {
-                                    gameId: room.currentGameId,
-                                    reason: 'invalid_claim'
-                                }
-                            }));
-                        }
+                            claimedCardNumber,
+                            markedNumbers,
+                            allOnCard,
+                            allCalled,
+                        });
+                        sendBingoRejected(ws, room, 'invalid_marked_numbers');
+                        return;
                     }
+
+                    // Super Bingo: every cell on the card must be marked before claim
+                    if (room.isSuperBingo && !cardFullyMarked(card, markedNumbers)) {
+                        console.log('❌ bingo_claim rejected: Super Bingo card not fully marked', {
+                            userId: ws.userId,
+                            gameId: room.currentGameId,
+                            claimedCardNumber,
+                            markedCount: markedNumbers.length,
+                        });
+                        sendBingoRejected(ws, room, 'card_not_fully_marked');
+                        return;
+                    }
+
+                    // Pattern vs called numbers (same rules as legacy path)
+                    if (bingoValidForRoom(room, card, room.calledNumbers)) {
+                        winning = entry;
+                    }
+                } else {
+                    // Legacy path: accept if any of the user's cartellas has bingo (based on called numbers only)
+                    winning = entries.find(e => e.cartella && bingoValidForRoom(room, e.cartella, room.calledNumbers));
+                }
+                if (winning) {
+                    if (isBotUser) room.gameHadBotWinner = true;
+                    else room.gameHadHumanWinner = true;
+
+                    room.winners.push({ userId: ws.userId, cartelaNumber: winning.cartelaNumber, cartella: winning.cartella });
+                    console.log('✅ bingo_claim accepted', {
+                        userId: ws.userId,
+                        gameId: room.currentGameId,
+                        cartelaNumber: winning.cartelaNumber,
+                        isSuperBingo: !!room.isSuperBingo,
+                    });
+                    // Send bingo_accepted event to all players
+                    broadcast('bingo_accepted', {
+                        gameId: room.currentGameId,
+                        winners: room.winners,
+                        calledNumbers: room.calledNumbers,
+                        called: room.calledNumbers
+                    }, room);
+                    // Schedule announce after short delay so clients have time
+                    // to show \"Bingo accepted\" before moving to results.
+                    scheduleAnnounce(room, 'bingo_claim_accepted');
+                } else {
+                    console.log('❌ bingo_claim rejected: invalid_claim', {
+                        userId: ws.userId,
+                        gameId: room.currentGameId,
+                        claimedCardNumber,
+                        markedCount: markedNumbers?.length || 0,
+                        calledCount: room.calledNumbers.length,
+                        isSuperBingo: !!room.isSuperBingo,
+                    });
+                    sendBingoRejected(ws, room, 'invalid_claim');
                 }
             }
         } catch (error) {
