@@ -50,6 +50,12 @@ function getNextScheduledStartMs(fromMs = Date.now()) {
 
 /** Align a stored presale start with the current schedule. */
 function reconcilePresaleStartMs(storedMs, fromMs = Date.now()) {
+    // Keep past-due appointments so the scheduler can start the game instead of
+    // bumping to the next day while players are still waiting.
+    if (storedMs && Number.isFinite(storedMs) && storedMs <= fromMs) {
+        return storedMs;
+    }
+
     const expectedMs = getNextScheduledStartMs(fromMs);
     if (!storedMs || !Number.isFinite(storedMs)) {
         return expectedMs;

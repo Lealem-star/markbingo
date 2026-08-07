@@ -461,6 +461,16 @@ function tickSuperBingoRoom(room) {
     if (room.phase !== 'registration') return;
 
     const now = Date.now();
+    const msUntilStart = room.scheduledStartAt - now;
+
+    // Start immediately when the appointment time has passed (before any reschedule).
+    if (msUntilStart <= 0 && room.superMode !== 'starting_live') {
+        room.superMode = 'starting_live';
+        console.log('Super Bingo scheduled start — starting game', room.currentGameId);
+        startGame(room);
+        return;
+    }
+
     const reconciledStartMs = reconcilePresaleStartMs(room.scheduledStartAt, now);
     if (reconciledStartMs !== room.scheduledStartAt) {
         const previousStartMs = room.scheduledStartAt;
@@ -488,15 +498,7 @@ function tickSuperBingoRoom(room) {
             scheduledStartAt: room.scheduledStartAt,
             regCode: null,
         }, room);
-        if (room.scheduledStartAt <= now && countSelectedPlayers(room) > 0 && room.superMode === 'presale') {
-            room.superMode = 'starting_live';
-            console.log('Super Bingo overdue presale — starting game now', room.currentGameId);
-            startGame(room);
-            return;
-        }
     }
-
-    const msUntilStart = room.scheduledStartAt - now;
 
     if (!room.superCountdownAnnounced && msUntilStart > 0 && msUntilStart <= SUPER_COUNTDOWN_MS) {
         room.superCountdownAnnounced = true;
@@ -521,12 +523,6 @@ function tickSuperBingoRoom(room) {
         } catch (e) {
             console.error('Super Bingo telegram announce failed:', e);
         }
-    }
-
-    if (msUntilStart <= 0 && room.superMode !== 'starting_live') {
-        room.superMode = 'starting_live';
-        console.log('Super Bingo scheduled start — starting game', room.currentGameId);
-        startGame(room);
     }
 }
 
@@ -591,7 +587,7 @@ function makeRoom(stake) {
                 takenCards: Array.from(room.takenCards),
                 yourSelections: getUserSelections(ws.userId),
                 nextStartAt: room.registrationEndTime || room.gameEndTime || null,
-                prizePool: room.phase === 'running'
+                prizePool: room.phase === 'running' || (room.isSuperBingo && selectedCount > 0)
                     ? (selectedCount * room.stake) - Math.floor(selectedCount * room.stake * 0.2)
                     : 0,
                 ...buildSuperSnapshotFields(room, ws.userId),
