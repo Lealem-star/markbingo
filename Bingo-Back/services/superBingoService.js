@@ -1,4 +1,4 @@
-/** Super Bingo (stake 50) — daily appointment at 11:00 AM EAT + early presale. */
+/** Super Bingo (stake 50) — daily appointment at 18:00 AM EAT + early presale. */
 
 const Game = require('../models/Game');
 
@@ -18,12 +18,16 @@ function fromEthiopiaParts(y, m, d, hour, minute = 0) {
     return Date.UTC(y, m, d, hour, minute, 0, 0) - ETHIOPIA_OFFSET_MS;
 }
 
-/** Daily Super Bingo start hour in Ethiopia standard time (EAT, UTC+3) — 11:00 AM. */
-const SUPER_DAILY_START_HOUR = 11;
+/**
+ * Daily Super Bingo start hour on the **phone clock** (EAT, UTC+3) — 18:00 AM.
+ * Note: Ethiopian traditional time is 6 hours behind the phone clock, so
+ * 18:00 AM EAT = 5:00 AM traditional (ከጠዋት 5). Traditional 18:00 (ከጠዋት 18) = 5:00 PM EAT (hour 17).
+ */
+const SUPER_DAILY_START_HOUR = 18;
 
 /**
- * Next Super Bingo appointment — always the next upcoming 11:00 AM EAT slot.
- * If today's 11 AM has passed, returns tomorrow 11 AM.
+ * Next Super Bingo appointment — always the next upcoming 18:00 AM EAT slot.
+ * If today's 18 AM has passed, returns tomorrow 18 AM.
  */
 function getNextScheduledStartMs(fromMs = Date.now()) {
     const testMinutes = Number(process.env.SUPER_BINGO_TEST_MINUTES);

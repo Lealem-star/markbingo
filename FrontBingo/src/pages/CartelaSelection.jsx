@@ -725,7 +725,20 @@ export default function CartelaSelection({ onNavigate, onResetToGame, stake, onC
     const balanceTotal = (wallet.main || 0) + (wallet.play || 0);
     const roomLabel = Number(stake) === 50 ? 'VIP' : `${stake} ETB`;
 
-    const superScheduleLabel = 'ዘወትር ከቀኑ 11 ሰዓት';
+    const superScheduleLabel = (() => {
+        const ms = gameState.scheduledStartAt;
+        if (ms) {
+            const eat = new Date(ms).toLocaleString('en-GB', {
+                timeZone: 'Africa/Addis_Ababa',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+            });
+            // Phone clock (EAT) — not traditional Ethiopian time (which is +6h)
+            return `Next game: ${eat} (phone clock)`;
+        }
+        return 'Daily 11:00 AM (phone clock / EAT)';
+    })();
     const superGameTypeLabel = 'ሙሉ ዝግ';
     const superTimeLabel = gameState.superMode === 'countdown'
         ? `${timerSeconds}s`
