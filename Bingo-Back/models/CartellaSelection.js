@@ -5,7 +5,7 @@ const cartellaSelectionSchema = new mongoose.Schema({
         type: Number,
         required: true,
         min: 1,
-        max: 100
+        max: 1200
     },
     playerId: {
         type: mongoose.Schema.Types.ObjectId,

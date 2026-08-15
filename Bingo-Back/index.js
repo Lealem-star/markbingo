@@ -562,7 +562,7 @@ function makeRoom(stake) {
         calledNumbers: [],
         cartellas: new Map(), // userId -> cartella
         winners: [],
-        takenCards: new Set(), // numbers chosen during registration (1-900)
+        takenCards: new Set(), // numbers chosen during registration (1-1200)
         userCardSelections: new Map(), // userId -> [cardNumber] (max 2)
         // Prevent duplicate announce/payout and manage call timer lifecycle
         announceProcessed: false,
@@ -1558,7 +1558,7 @@ async function toAnnounce(room) {
 }
 
 function getPredefinedCartella(cardNumber) {
-    // Card numbers are 1-900, array index is 0-899
+    // Card numbers are 1-N, array index is 0-(N-1)
     const cardIndex = cardNumber - 1;
     if (cardIndex >= 0 && cardIndex < BingoCards.cards.length) {
         return BingoCards.cards[cardIndex];

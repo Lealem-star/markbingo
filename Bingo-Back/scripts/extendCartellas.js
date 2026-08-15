@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const TARGET_COUNT = 900;
+const TARGET_COUNT = 1200;
 const RANGES = [
     [1, 15],
     [16, 30],

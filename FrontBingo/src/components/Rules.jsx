@@ -14,7 +14,7 @@ export default function Rules({ onNavigate }) {
                             <div className="step-badge green">1</div>
                             <div>
                                 <div className="step-title">Choose Your Card</div>
-                                <p className="step-text">Pick up to 2 available cards from 1-900 during registration.</p>
+                                <p className="step-text">Pick up to 2 available cards from 1-1200 during registration.</p>
                             </div>
                         </section>
                         <section className="step-card">
