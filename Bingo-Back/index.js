@@ -58,6 +58,7 @@ const {
     markSuperCountdownAnnounced,
     findActiveSuperPresaleGame,
     cancelStaleSuperPresales,
+    cancelSuperPresaleGame,
     updateSuperPresaleSchedule,
     finalizeSuperBingoGame,
 } = require('./services/superBingoService');
@@ -351,6 +352,17 @@ async function tryRestoreSuperPresale(room) {
         const selectedCount = countSelectedCartelas(room);
         const selectedPlayersCount = countSelectedPlayers(room);
         const currentPrizePool = Math.floor(selectedCount * room.stake * 0.8);
+
+        // Expired presale with no buyers — cancel and open a fresh schedule instead of looping.
+        if (room.scheduledStartAt <= Date.now() && selectedPlayersCount === 0) {
+            try {
+                await cancelSuperPresaleGame(active.gameId);
+                console.log(`Super Bingo expired empty presale cancelled: ${active.gameId}`);
+            } catch (error) {
+                console.error('Failed to cancel expired empty Super Bingo presale:', error);
+            }
+            return false;
+        }
 
         console.log(
             `Super Bingo presale restored: ${room.currentGameId}, regCode=${room.regCode}, entries=${selectedCount}, superMode=${room.superMode}, scheduledStartAt=${new Date(room.scheduledStartAt).toISOString()}`
@@ -760,6 +772,12 @@ async function startGame(room) {
         // No players, start new registration immediately
         console.log(`No players joined game ${room.currentGameId} - skipping database creation and starting new registration`);
         if (room.isSuperBingo) {
+            const expiredGameId = room.currentGameId;
+            try {
+                await cancelSuperPresaleGame(expiredGameId);
+            } catch (error) {
+                console.error('Failed to cancel empty Super Bingo presale:', error);
+            }
             await startSuperPresale(room);
         } else {
             startRegistration(room);

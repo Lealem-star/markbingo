@@ -191,6 +191,20 @@ async function cancelStaleSuperPresales(exceptGameId = null) {
     await Game.updateMany(query, { status: 'cancelled' });
 }
 
+async function cancelSuperPresaleGame(gameId) {
+    if (!gameId) return;
+    await Game.updateOne(
+        { gameId, status: 'registration' },
+        {
+            $set: {
+                status: 'cancelled',
+                superMode: 'presale',
+                finishedAt: new Date(),
+            },
+        }
+    );
+}
+
 async function finalizeSuperBingoGame(gameId) {
     if (!gameId) return;
     await Game.updateOne(
@@ -219,6 +233,7 @@ module.exports = {
     markSuperCountdownAnnounced,
     findActiveSuperPresaleGame,
     cancelStaleSuperPresales,
+    cancelSuperPresaleGame,
     updateSuperPresaleSchedule,
     finalizeSuperBingoGame,
 };
