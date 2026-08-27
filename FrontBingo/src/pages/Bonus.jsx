@@ -165,7 +165,7 @@ export default function Bonus({ onNavigate }) {
             setHistory(historyData?.history || []);
         } catch (err) {
             console.error('Failed to load bonus data:', err);
-            showError('Could not load BestBingo Bonus.');
+            showError('Could not load ChapaBingo Bonus.');
         } finally {
             setLoading(false);
         }
@@ -188,7 +188,7 @@ export default function Bonus({ onNavigate }) {
                 <div className="bonus-logo">
                     <span className="bonus-logo-icon">⚽</span>
                     <span className="bonus-logo-text">
-                        <span className="bonus-logo-good">Good</span>Bingo Bonus
+                        <span className="bonus-logo-good">Chapa</span>Bingo Bonus
                     </span>
                 </div>
                 <div className="bonus-header-actions">

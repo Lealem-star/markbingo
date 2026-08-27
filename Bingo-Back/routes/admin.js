@@ -1269,7 +1269,7 @@ router.get('/stats/wallets/total-play', adminMiddleware, async (req, res) => {
     }
 });
 
-// --- BestBingo Bonus (match prediction) ---
+// --- ChapaBingo Bonus (match prediction) ---
 
 router.get('/bonus/matches', adminMiddleware, async (req, res) => {
     try {

@@ -47,9 +47,9 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
                     <div className="app-header">
                         <div className="app-logo">
                             <div className="logo-circle">
-                                <img src={lbLogo} alt="BestBingo Logo" className="logo-image" />
+                                <img src={lbLogo} alt="Chapa Bingo Logo" className="logo-image" />
                             </div>
-                            <span className="app-title">BestBingo</span>
+                            <span className="app-title">Chapa Bingo</span>
                         </div>
                         <button className="rules-button" onClick={() => onNavigate?.('rules')}>
                             <span className="rules-icon">❓</span>
@@ -57,7 +57,7 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
                         </button>
                     </div>
                     <h1 className="text-center text-3xl md:text-4xl font-extrabold leading-tight mt-6 text-gray-900">
-                        Welcome to BestBingo
+                        Welcome to Chapa Bingo
                     </h1>
                     <div className="text-center text-gray-700 mt-4">
                         <p>Choose your stake amount to start playing</p>
@@ -81,7 +81,7 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
                             </button>
                             <button onClick={() => onNavigate?.('bonus')} className="stake-btn stake-bonus">
                                 <div className="play-icon-small">⚽</div>
-                                <span>BestBingo Bonus</span>
+                                <span>ChapaBingo Bonus</span>
                             </button>
                         </div>
                     </div>
@@ -118,7 +118,7 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
                                                     className="w-full h-48 sm:h-56 md:h-64 object-cover"
                                                     onError={(e) => {
                                                         e.target.src = lbLogo;
-                                                        e.target.alt = 'BestBingo Logo';
+                                                        e.target.alt = 'Chapa Bingo Logo';
                                                     }}
                                                 />
                                             ) : (
@@ -132,7 +132,7 @@ export default function Game({ onNavigate, onStakeSelected, selectedStake }) {
                                                         e.target.style.display = 'none';
                                                         const fallbackImg = document.createElement('img');
                                                         fallbackImg.src = lbLogo;
-                                                        fallbackImg.alt = 'BestBingo Logo';
+                                                        fallbackImg.alt = 'Chapa Bingo Logo';
                                                         fallbackImg.className = 'w-full h-48 sm:h-56 md:h-64 object-cover';
                                                         e.target.parentNode.insertBefore(fallbackImg, e.target);
                                                     }}

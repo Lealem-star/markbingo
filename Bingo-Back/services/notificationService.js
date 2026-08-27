@@ -140,7 +140,7 @@ class NotificationService {
 
             const payoutAmount = Number(payout) || 0;
             const text = [
-                '⚽ BestBingo Bonus — You Won!',
+                '⚽ ChapaBingo Bonus — You Won!',
                 '',
                 `${team1Flag || '🏳️'} ${team1Name} ${finalScore1} - ${finalScore2} ${team2Name} ${team2Flag || '🏳️'}`,
                 '',
@@ -152,7 +152,7 @@ class NotificationService {
 
             const reply_markup = {
                 inline_keyboard: [
-                    [{ text: '⚽ BestBingo Bonus', web_app: { url: `${WEBAPP_URL}?page=bonus` } }],
+                    [{ text: '⚽ ChapaBingo Bonus', web_app: { url: `${WEBAPP_URL}?page=bonus` } }],
                     [{ text: '💼 Check Balance', callback_data: 'balance' }]
                 ]
             };

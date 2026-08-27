@@ -185,8 +185,8 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 ? { text: 'SuperBingo | 50 ብር', web_app: { url: `${baseUrl}?stake=50` } }
                 : { text: 'SuperBingo | 50 ብር', callback_data: 'play_stake_50' };
             const bonusBtn = isHttpsWebApp
-                ? { text: '⚽ BestBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }
-                : { text: '⚽ BestBingo Bonus', callback_data: 'play_bonus' };
+                ? { text: '⚽ ChapaBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }
+                : { text: '⚽ ChapaBingo Bonus', callback_data: 'play_bonus' };
 
             return {
                 text: '🕹️ *PLAY IN:*\nChoose a room to join the game:',
@@ -438,7 +438,7 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                             if (inviter.telegramId) {
                                 await ctx.telegram.sendMessage(
                                     inviter.telegramId,
-                                    `🎉 Great news! Someone joined BestBingo using your invite link!`
+                                    `🎉 Great news! Someone joined Chapa Bingo using your invite link!`
                                 ).catch(() => { }); // Ignore errors if user blocked bot
                             }
                         }
@@ -479,12 +479,12 @@ function startTelegramBot({ BOT_TOKEN, WEBAPP_URL }) {
                 registered = !!(user && (user.isRegistered || user.phone));
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nBestBingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
+                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nChapa Bingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
                     const photoPath = path.join(__dirname, '..', 'static', 'lb.png');
                     const photo = fs.existsSync(photoPath) ? { source: fs.createReadStream(photoPath) } : (WEBAPP_URL || '').replace(/\/$/, '') + '/lb.png';
                     return ctx.replyWithPhoto(photo, { caption: regText, reply_markup: regKeyboard.reply_markup, parse_mode: 'Markdown' });
                 }
-                const welcomeText = `👋 Welcome to BestBingo! Choose an Option below.`;
+                const welcomeText = `👋 Welcome to Chapa Bingo! Choose an Option below.`;
                 const playBtn = isHttpsWebApp
                     ? [{ text: '🎮 Play-10', web_app: { url: webAppUrl + '?stake=10' } }]
                     : [{ text: '🎮 Play-10', callback_data: 'play' }];
@@ -947,7 +947,7 @@ Thank you for your dedication! 🙏`;
 
                 if (!registered) {
                     const regKeyboard = { reply_markup: { keyboard: [[{ text: '📱 Share Contact', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } };
-                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nBestBingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
+                    const regText = '🛡️ *ምዝገባ ያስፈልጋል (Registration Required)*\n\nChapa Bingoን ለመጠቀም ከታች  Share Phone የሚለውን ይጫኑት። ከዛም Share የሚለውን ይጫኑ';
                     return ctx.reply(regText, { ...regKeyboard, parse_mode: 'Markdown' });
                 }
 
@@ -1082,7 +1082,7 @@ Thank you for your dedication! 🙏`;
             try {
                 if (!(await ensureNotBlocked(ctx))) return;
                 const inviteLink = `https://t.me/${ctx.botInfo.username}?start=invite_${ctx.from.id}`;
-                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('Join me in BestBingo!')}`;
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('Join me in Chapa Bingo!')}`;
                 return ctx.reply('Here is your referral link', {
                     reply_markup: {
                         inline_keyboard: [
@@ -1491,11 +1491,11 @@ Thank you for your dedication! 🙏`;
             if (!(await requireRegistration(ctx))) return;
             if (isHttpsWebApp) {
                 const baseUrl = (webAppUrl || '').replace(/\/$/, '');
-                ctx.answerCbQuery('Opening BestBingo Bonus…');
-                return ctx.reply('⚽ *BestBingo Bonus* — predict the exact match score!', {
+                ctx.answerCbQuery('Opening ChapaBingo Bonus…');
+                return ctx.reply('⚽ *ChapaBingo Bonus* — predict the exact match score!', {
                     parse_mode: 'Markdown',
                     reply_markup: {
-                        inline_keyboard: [[{ text: '⚽ Open BestBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }]]
+                        inline_keyboard: [[{ text: '⚽ Open ChapaBingo Bonus', web_app: { url: `${baseUrl}?page=bonus` } }]]
                     }
                 });
             }
@@ -2047,7 +2047,7 @@ Thank you for your dedication! 🙏`;
             if (!(await requireRegistration(ctx))) return;
             ctx.answerCbQuery('🔗 Invite friends...');
             const inviteLink = `https://t.me/${ctx.botInfo.username}?start=invite_${ctx.from.id}`;
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('Join me in BestBingo!')}`;
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('Join me in Chapa Bingo!')}`;
             return ctx.reply('Here is your referral link', {
                 reply_markup: {
                     inline_keyboard: [
@@ -2060,7 +2060,7 @@ Thank you for your dedication! 🙏`;
         bot.action('back_to_menu', async (ctx) => {
             if (!(await requireRegistration(ctx))) return;
             ctx.answerCbQuery('🔙 Back to menu');
-            const welcomeText = `👋 Welcome to BestBingo! Choose an Option below.`;
+            const welcomeText = `👋 Welcome to Chapa Bingo! Choose an Option below.`;
             const playBtn = isHttpsWebApp
                 ? [{ text: '🎮 Play-10', web_app: { url: webAppUrl + '?stake=10' } }]
                 : [{ text: '🎮 Play-10', callback_data: 'play' }];
@@ -2244,7 +2244,7 @@ Thank you for your dedication! 🙏`;
                     // Private welcome message to the registering user (no broadcast, no phone number)
                     if (isNewRegistration) {
                         await ctx.reply(
-                            `${displayName} እንኳን ደህና መጡ!\n\nBestBingo ይደሰቱ።`,
+                            `${displayName} እንኳን ደህና መጡ!\n\nChapa Bingo ይደሰቱ።`,
                             { reply_markup: { remove_keyboard: true } }
                         );
                     } else {

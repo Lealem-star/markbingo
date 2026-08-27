@@ -431,12 +431,12 @@ export function AuthProvider({ children }) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4 bg-white text-gray-900">
                 <div className="text-center w-full max-w-sm">
-                    {/* Animated BestBingo Logo - Mobile First */}
+                    {/* Animated Chapa Bingo Logo - Mobile First */}
                     <div className="relative mb-6 mx-auto w-fit">
                         <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto">
                             <img
                                 src="/lb.png"
-                                alt="BestBingo Logo"
+                                alt="Chapa Bingo Logo"
                                 className="w-full h-full object-contain animate-pulse"
                             />
                             {/* Spinning loader overlay */}
@@ -487,7 +487,7 @@ export function AuthProvider({ children }) {
 
                             <strong>How to access:</strong><br />
 
-                            1. Open the BestBingo bot in Telegram<br />
+                            1. Open the Chapa Bingo bot in Telegram<br />
 
                             2. Click the "Play" button<br />
 

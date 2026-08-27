@@ -110,7 +110,7 @@ export default function AdminBonus() {
     return (
         <div className="admin-container admin-home-container">
             <div className="admin-card">
-                <h2 className="admin-title">⚽ BestBingo Bonus</h2>
+                <h2 className="admin-title">⚽ ChapaBingo Bonus</h2>
                 <p className="admin-subtitle">Create World Cup score predictions — 10 ETB entry, 80% pool split on exact score. Multiple matches can be open at the same time.</p>
 
                 <form onSubmit={createMatch} className="admin-form">
